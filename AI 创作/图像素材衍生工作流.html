@@ -92,8 +92,10 @@
         .step.done .step-title   { color: var(--text-primary); }
         .step.wait .step-title   { color: var(--text-quaternary); }
 
+        /* [Ant Design 导航规范] 步骤连接线应 flex:1 自适应，不固定宽度 */
         .step-connector {
-            width: 120px;
+            flex: 1;
+            min-width: 40px;
             height: 1px;
             background: var(--border-secondary);
             margin: 0 16px;
@@ -249,9 +251,10 @@
             gap: 8px;
             flex-wrap: wrap;
         }
+        /* [Ant Design 按钮规范] 数量选择按钮，高度 32px 与主按钮统一 */
         .count-btn {
             min-width: 48px;
-            height: 36px;
+            height: 32px;
             padding: 0 16px;
             border: 1px solid var(--border);
             border-radius: 6px;
@@ -268,16 +271,17 @@
             border-color: var(--primary);
             color: #fff;
         }
+        /* [Ant Design 布局规范] 8px 基准，gap 应为 8px */
         .count-custom {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             font-size: 13px;
             color: var(--text-secondary);
         }
         .count-custom input {
             width: 72px;
-            height: 36px;
+            height: 32px;
             border: 1px solid var(--border);
             border-radius: 6px;
             text-align: center;
@@ -317,9 +321,10 @@
             border-color: var(--primary);
             background: var(--primary-bg);
         }
+        /* [Ant Design 数据录入规范] Radio 直径 16px，dot 8px */
         .api-radio {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             border: 1px solid var(--border);
             border-radius: 50%;
             flex-shrink: 0;
@@ -334,8 +339,8 @@
             border-width: 1px;
         }
         .api-radio-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: transparent;
             transition: background 0.2s;
@@ -383,9 +388,9 @@
             justify-content: space-between;
         }
 
-        /* [Ant Design 按钮规范] 主按钮突出完成/推荐操作，一个按钮区最多一个主按钮 */
+        /* [Ant Design 按钮规范 spec/buttons.zh-CN.md] 中型按钮高度 32px */
         .btn {
-            height: 36px;
+            height: 32px;
             padding: 0 20px;
             border-radius: 6px;
             font-size: 14px;
@@ -528,6 +533,11 @@
 </div>
 
 <div class="page-container">
+
+    <!-- 页面标题 -->
+    <div style="margin-bottom: 20px;">
+        <h1 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">大字报裂变衍生工作流</h1>
+    </div>
 
     <!-- 步骤条 -->
     <div class="steps" id="steps">
@@ -828,7 +838,15 @@ function setStep(n) {
 
     steps.forEach(s => {
         const sn = parseInt(s.dataset.step);
-        s.className = 'step ' + (sn < n ? 'done' : sn === n ? 'active' : 'wait');
+        const newClass = sn < n ? 'done' : sn === n ? 'active' : 'wait';
+        s.className = 'step ' + newClass;
+        // [Ant Design 导航规范] done 状态显示 checkmark，而非数字
+        const numEl = s.querySelector('.step-num');
+        if (newClass === 'done') {
+            numEl.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        } else {
+            numEl.textContent = sn;
+        }
     });
 
     connector.className = 'step-connector' + (n >= 2 ? ' filled' : '');
