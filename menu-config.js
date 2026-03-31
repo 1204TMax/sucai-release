@@ -1,0 +1,122 @@
+/**
+ * 菜单配置文件
+ *
+ * 所有菜单和页面的对应关系都在这里配置。
+ * 新增页面只需要两步：
+ *   1. 在对应文件夹里创建 .html 文件
+ *   2. 在下面的配置里加一行
+ *
+ * 结构说明：
+ *   - id：模块唯一标识（英文，不要改）
+ *   - name：顶部一级菜单显示的名称
+ *   - icon：菜单图标（SVG 路径）
+ *   - children：二级菜单列表
+ *     - name：侧边栏显示的名称
+ *     - page：对应的 HTML 文件路径（相对于本文件所在目录）
+ *     - icon：菜单图标（SVG 路径）
+ *   - bottom：底部固定菜单（如"我的"），结构同 children
+ */
+
+const MENU_CONFIG = [
+  {
+    id: 'home',
+    name: '首页',
+    children: [
+      {
+        name: '首页',
+        page: '首页/index.html',
+        icon: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>'
+      }
+    ]
+  },
+  {
+    id: 'ai',
+    name: 'AI创作',
+    children: [
+      {
+        name: '通用生成',
+        page: 'AI 创作/通用生成.html',
+        icon: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>'
+      }
+    ]
+  },
+  {
+    id: 'material',
+    name: '素材管理',
+    children: [
+      {
+        name: '素材库',
+        page: '素材管理/index.html',
+        icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><circle cx="15.5" cy="8.5" r="1.5"></circle><circle cx="15.5" cy="15.5" r="1.5"></circle><circle cx="8.5" cy="15.5" r="1.5"></circle>'
+      },
+      {
+        name: '物料库',
+        page: '素材管理/物料库.html',
+        icon: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>'
+      },
+      {
+        name: '原料库',
+        page: '素材管理/原料库.html',
+        icon: '<line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line>'
+      },
+      {
+        name: '品类管理',
+        page: '素材管理/category.html',
+        icon: '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path>'
+      },
+      {
+        name: '产品管理',
+        page: '素材管理/product.html',
+        icon: '<path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>'
+      }
+    ]
+  },
+  {
+    id: 'settings',
+    name: '系统设置',
+    children: [
+      {
+        name: '模型配置',
+        page: '系统设置/model-config.html',
+        icon: '<path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path>'
+      },
+{
+        name: '算力成本',
+        page: '系统设置/compute-cost.html',
+        icon: '<line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>'
+      }
+    ]
+  }
+];
+
+// 底部固定菜单 - 常用功能（始终显示在侧边栏底部，所有模块共享）
+const BOTTOM_SHORTCUTS = [
+  {
+    name: '大字报裂变',
+    page: 'AI 创作/工作流.html',
+    icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line>'
+  },
+  {
+    name: '素材库',
+    page: '素材管理/index.html',
+    icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><circle cx="15.5" cy="8.5" r="1.5"></circle><circle cx="15.5" cy="15.5" r="1.5"></circle><circle cx="8.5" cy="15.5" r="1.5"></circle>'
+  },
+  {
+    name: 'AI通用生成',
+    page: 'AI 创作/通用生成.html',
+    icon: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>'
+  }
+];
+
+// 底部固定菜单 - 我的
+const BOTTOM_MENU = [
+  {
+    name: '我的任务',
+    page: '首页/my-tasks.html',
+    icon: '<path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>'
+  }
+];
+
+// 默认首页（打开系统时加载的页面）
+const DEFAULT_PAGE = '首页/index.html';
+const DEFAULT_TAB_NAME = '首页';

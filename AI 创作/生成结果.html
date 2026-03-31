@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生成结果 - 量化投放系统</title>
+    <style>
+        /* ══════════════════════════════════════════
+           CSS Variables
+           [Ant Design colors spec: 品牌色 #1677ff]
+           [Ant Design shadow spec: 三层阴影体系]
+        ══════════════════════════════════════════ */
+        :root {
+            --primary: #1677ff;
+            --primary-hover: #4096ff;
+            --primary-bg: #e6f4ff;
+            --danger: #ff4d4f;
+            --danger-hover: #ff7875;
+            --danger-bg: #fff2f0;
+            --text-primary: rgba(0,0,0,0.88);
+            --text-secondary: rgba(0,0,0,0.45);
+            --border: rgba(0,0,0,0.15);
+            --border-light: rgba(0,0,0,0.06);
+            --bg-layout: #f0f2f6;
+            --bg-card: #ffffff;
+            --bg-hover: rgba(0,0,0,0.04);
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            /* shadow-1-down */
+            --shadow-1: 0 1px 2px -2px rgba(0,0,0,0.16), 0 3px 6px 0 rgba(0,0,0,0.12), 0 5px 12px 4px rgba(0,0,0,0.09);
+            /* shadow-2-down */
+            --shadow-2: 0 3px 6px -4px rgba(0,0,0,0.12), 0 6px 16px 0 rgba(0,0,0,0.08), 0 9px 28px 8px rgba(0,0,0,0.05);
+            /* shadow-3-down */
+            --shadow-3: 0 6px 16px -8px rgba(0,0,0,0.08), 0 9px 28px 0 rgba(0,0,0,0.05), 0 12px 48px 16px rgba(0,0,0,0.03);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                         "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            font-size: 14px;
+            line-height: 1.5715;
+            background: var(--bg-layout);
+            color: var(--text-primary);
+            padding: 20px;
+        }
+
+        /* ── Toolbar Card ── */
+        .toolbar-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03);
+        }
+
+        .toolbar-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .task-info { min-width: 0; }
+
+        /* [Ant Design font spec: 标题 18px/font-weight 600] */
+        .task-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .task-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 16px;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        /* ── Segmented Control ── */
+        /* [Ant Design data-entry spec: Segmented 分段控制器] */
+        .segmented {
+            display: inline-flex;
+            background: rgba(0,0,0,0.04);
+            border-radius: 6px;
+            padding: 2px;
+        }
+
+        .seg-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 4px;
+            border: none;
+            font-size: 13px;
+            font-family: inherit;
+            color: var(--text-secondary);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .seg-btn:hover { color: var(--text-primary); }
+
+        .seg-btn.active {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+        }
+
+        /* ── Buttons ── */
+        /* [Ant Design buttons spec: 次按钮/主按钮/危险按钮] */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 15px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            height: 32px;
+        }
+
+        .btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+            color: #fff;
+        }
+
+        .btn-danger {
+            color: var(--danger);
+            border-color: var(--danger);
+            background: #fff;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-bg);
+        }
+
+        .btn-danger-fill {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: #fff;
+        }
+
+        .btn-danger-fill:hover {
+            background: var(--danger-hover);
+            border-color: var(--danger-hover);
+            color: #fff;
+        }
+
+        .divider-v {
+            width: 1px;
+            height: 20px;
+            background: rgba(0,0,0,0.06);
+            margin: 0 4px;
+        }
+
+        .batch-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ── Ratio Tabs (胶囊型) ── */
+        /* [Ant Design navigation spec: 胶囊型 Tabs] */
+        .ratio-tabs {
+            display: flex;
+            background: rgba(0,0,0,0.04);
+            border-radius: 20px;
+            padding: 3px;
+            gap: 2px;
+            margin-top: 12px;
+        }
+
+        .ratio-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 14px;
+            border-radius: 16px;
+            border: none;
+            font-size: 13px;
+            font-family: inherit;
+            color: var(--text-secondary);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ratio-tab:hover { color: var(--text-primary); }
+
+        .ratio-tab.active {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-weight: 500;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        .tab-count { font-size: 11px; opacity: 0.7; }
+
+        /* ── Image Grid ── */
+        .grid-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .grid-row-last {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* ── Image Item ── */
+        .img-item {
+            position: relative;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            cursor: pointer;
+            flex-shrink: 0;
+            /* [Ant Design shadow spec: Layer 0 - rest state] */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* [Ant Design shadow spec: Layer 1 - hover 悬浮] */
+        /* [Ant Design invitation spec: 悬停邀请] */
+        .img-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-2);
+            z-index: 1;
+        }
+
+        .img-block {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.8);
+            user-select: none;
+        }
+
+        /* ── Overlay ── */
+        .img-overlay {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+
+        .img-overlay::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 56px;
+            background: linear-gradient(to top, rgba(0,0,0,0.45), transparent);
+            border-radius: 0 0 var(--radius-md) var(--radius-md);
+            pointer-events: none;
+        }
+
+        .img-item:hover .img-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .img-item.selected .img-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* ── Overlay Action Icons ── */
+        /* [Ant Design buttons spec: 图标按钮必须有 Tooltip] */
+        .img-actions {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            display: flex;
+            gap: 4px;
+            z-index: 2;
+        }
+
+        .icon-btn {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: rgba(255,255,255,0.9);
+            color: rgba(0,0,0,0.65);
+            cursor: pointer;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .icon-btn:hover {
+            background: #fff;
+            color: var(--primary);
+        }
+
+        .icon-btn.danger:hover {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        /* [Ant Design feedback spec: Tooltip 文字提示] */
+        .icon-btn .tip {
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 10;
+        }
+
+        .icon-btn .tip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid transparent;
+            border-top-color: rgba(0,0,0,0.75);
+        }
+
+        .icon-btn:hover .tip { opacity: 1; }
+
+        /* ── Checkbox (batch mode) ── */
+        .img-cb {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            z-index: 3;
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 2px solid rgba(255,255,255,0.85);
+            background: rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            opacity: 0;
+        }
+
+        .img-cb.checked {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .img-cb svg { opacity: 0; }
+        .img-cb.checked svg { opacity: 1; }
+
+        body.batch-mode .img-item:hover .img-cb,
+        body.batch-mode .img-item.selected .img-cb {
+            opacity: 1;
+        }
+
+        .img-item.selected .img-cb { opacity: 1; }
+
+        .img-item.selected {
+            outline: 2px solid var(--primary);
+            outline-offset: -2px;
+        }
+
+        /* ── Modal Overlay ── */
+        /* [Ant Design feedback spec: Modal 对话框] */
+        .modal-mask {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-mask.visible { display: flex; }
+
+        /* ── Preview Modal ── */
+        .preview-box {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-width: 90vw;
+            max-height: 90vh;
+        }
+
+        .preview-img-area {
+            position: relative;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-canvas {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.85);
+            user-select: none;
+        }
+
+        .preview-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+            z-index: 2;
+        }
+
+        .preview-close:hover { background: rgba(255,255,255,0.3); }
+
+        .preview-footer {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        /* ── Confirm Modal ── */
+        /* [Ant Design feedback spec: 对话框反馈 for destructive operations] */
+        .confirm-box {
+            width: 416px;
+            padding: 24px;
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-3);
+        }
+
+        .confirm-head {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .confirm-icon { color: #faad14; flex-shrink: 0; margin-top: 1px; }
+
+        /* [Ant Design font spec: 标题 16px/600] */
+        .confirm-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .confirm-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .confirm-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        /* ── Selected count badge ── */
+        .sel-count {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-right: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     Toolbar
+══════════════════════════════════════════ -->
+<div class="toolbar-card">
+    <div class="toolbar-top">
+        <div class="task-info">
+            <div class="task-name">图像素材衍生#22</div>
+            <div class="task-meta">
+                <span>创建时间：2026-03-30 14:32</span>
+                <span>创建人：张三</span>
+            </div>
+        </div>
+
+        <div class="toolbar-actions" id="toolbarActions">
+            <!-- [Ant Design data-entry: Segmented for view density] -->
+            <div class="segmented">
+                <button class="seg-btn" onclick="setDensity('sparse',this)">少</button>
+                <button class="seg-btn active" onclick="setDensity('medium',this)">中等</button>
+                <button class="seg-btn" onclick="setDensity('dense',this)">多</button>
+            </div>
+
+            <div class="divider-v"></div>
+
+            <!-- [Ant Design buttons: 次按钮] -->
+            <button class="btn" onclick="downloadAll()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                下载全部
+            </button>
+
+            <button class="btn" id="batchBtn" onclick="toggleBatch()">批量选择</button>
+
+            <!-- Batch action buttons -->
+            <div class="batch-actions" id="batchBar" style="display:none;">
+                <span class="sel-count" id="selCount">已选 0 项</span>
+                <button class="btn" onclick="batchDownload()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    下载
+                </button>
+                <!-- [Ant Design buttons: 危险按钮 for delete] -->
+                <button class="btn btn-danger" onclick="batchDelete()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                    删除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- [Ant Design navigation: 胶囊型 Tabs] -->
+    <div class="ratio-tabs" id="ratioTabs"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     Image Grid (Justified Layout)
+══════════════════════════════════════════ -->
+<div id="grid"></div>
+
+<!-- ══════════════════════════════════════════
+     Preview Modal
+══════════════════════════════════════════ -->
+<div class="modal-mask" id="previewMask" onclick="if(event.target===this)closePreview()">
+    <div class="preview-box">
+        <div class="preview-img-area">
+            <button class="preview-close" onclick="closePreview()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div class="preview-canvas" id="previewCanvas"></div>
+        </div>
+        <div class="preview-footer" id="previewFoot"></div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     Confirm Delete Modal
+══════════════════════════════════════════ -->
+<div class="modal-mask" id="confirmMask">
+    <div class="confirm-box">
+        <div class="confirm-head">
+            <div class="confirm-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+            <div>
+                <div class="confirm-title" id="cfmTitle">确定删除？</div>
+                <div class="confirm-desc" id="cfmDesc">此操作不可撤销，图像将被永久删除。</div>
+            </div>
+        </div>
+        <!-- [Ant Design buttons spec: 危险主按钮 for confirm delete] -->
+        <div class="confirm-footer">
+            <button class="btn" onclick="closeCfm()">取消</button>
+            <button class="btn btn-danger-fill" onclick="execDelete()">删除</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// Mock Data — 16 images, 3 ratio groups
+// ═══════════════════════════════════════════════════
+const COLORS = [
+    '#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD',
+    '#FF8C69','#6C5CE7','#00B894','#FD79A8','#FDCB6E','#74B9FF',
+    '#A29BFE','#55EFC4','#E17055','#81ECEC'
+];
+
+let images = [
+    { id:1,  ratio:'9:16',  ar:9/16,  color:COLORS[0],  name:'竖屏-001' },
+    { id:2,  ratio:'9:16',  ar:9/16,  color:COLORS[1],  name:'竖屏-002' },
+    { id:3,  ratio:'9:16',  ar:9/16,  color:COLORS[2],  name:'竖屏-003' },
+    { id:4,  ratio:'9:16',  ar:9/16,  color:COLORS[3],  name:'竖屏-004' },
+    { id:5,  ratio:'9:16',  ar:9/16,  color:COLORS[4],  name:'竖屏-005' },
+    { id:6,  ratio:'9:16',  ar:9/16,  color:COLORS[5],  name:'竖屏-006' },
+    { id:7,  ratio:'16:9',  ar:16/9,  color:COLORS[6],  name:'横屏-001' },
+    { id:8,  ratio:'16:9',  ar:16/9,  color:COLORS[7],  name:'横屏-002' },
+    { id:9,  ratio:'16:9',  ar:16/9,  color:COLORS[8],  name:'横屏-003' },
+    { id:10, ratio:'16:9',  ar:16/9,  color:COLORS[9],  name:'横屏-004' },
+    { id:11, ratio:'16:9',  ar:16/9,  color:COLORS[10], name:'横屏-005' },
+    { id:12, ratio:'16:9',  ar:16/9,  color:COLORS[11], name:'横屏-006' },
+    { id:13, ratio:'1:1',   ar:1,     color:COLORS[12], name:'方图-001' },
+    { id:14, ratio:'1:1',   ar:1,     color:COLORS[13], name:'方图-002' },
+    { id:15, ratio:'1:1',   ar:1,     color:COLORS[14], name:'方图-003' },
+    { id:16, ratio:'1:1',   ar:1,     color:COLORS[15], name:'方图-004' },
+];
+
+// ═══════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════
+let curRatio  = 'all';
+let density   = 'medium';          // sparse | medium | dense
+let batchMode = false;
+let selected  = new Set();
+let delCtx    = null;               // { type:'single'|'batch', id }
+
+const ROW_H = { sparse: 260, medium: 200, dense: 150 };
+const GAP = 8;
+
+// ═══════════════════════════════════════════════════
+// SVG icon helpers
+// ═══════════════════════════════════════════════════
+const ico = {
+    dl:   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+    del:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>',
+    redo: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5"/></svg>',
+    eye:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+    chk:  '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+};
+
+// ═══════════════════════════════════════════════════
+// Justified Layout (Flickr-style)
+// ═══════════════════════════════════════════════════
+function justify(imgs, cw, th) {
+    const rows = [];
+    let row = [], arSum = 0;
+
+    for (const img of imgs) {
+        row.push(img);
+        arSum += img.ar;
+        if (arSum * th + GAP * (row.length - 1) >= cw) {
+            const aw = cw - GAP * (row.length - 1);
+            const rh = aw / arSum;
+            rows.push({ items: row.map(i => ({ ...i, w: i.ar * rh, h: rh })), last: false });
+            row = []; arSum = 0;
+        }
+    }
+    if (row.length) {
+        rows.push({ items: row.map(i => ({ ...i, w: i.ar * th, h: th })), last: true });
+    }
+    return rows;
+}
+
+// ═══════════════════════════════════════════════════
+// Render
+// ═══════════════════════════════════════════════════
+function filtered() {
+    return curRatio === 'all' ? images : images.filter(i => i.ratio === curRatio);
+}
+
+function renderTabs() {
+    const el = document.getElementById('ratioTabs');
+    const counts = {};
+    images.forEach(i => counts[i.ratio] = (counts[i.ratio] || 0) + 1);
+    const ratios = Object.keys(counts);
+
+    // 只有一个比例时不显示 Tabs
+    if (ratios.length <= 1) { el.style.display = 'none'; return; }
+
+    el.style.display = 'flex';
+    el.innerHTML = '';
+
+    const mk = (label, key) => {
+        const b = document.createElement('button');
+        b.className = 'ratio-tab' + (curRatio === key ? ' active' : '');
+        b.innerHTML = label;
+        b.onclick = () => { curRatio = key; render(); };
+        el.appendChild(b);
+    };
+
+    mk(`全部 <span class="tab-count">(${images.length})</span>`, 'all');
+    ratios.forEach(r => mk(`${r} <span class="tab-count">(${counts[r]})</span>`, r));
+}
+
+function renderGrid() {
+    const container = document.getElementById('grid');
+    const cw = container.offsetWidth;
+    if (!cw) return;
+
+    const rows = justify(filtered(), cw, ROW_H[density]);
+    container.innerHTML = '';
+
+    rows.forEach(row => {
+        const rowEl = document.createElement('div');
+        rowEl.className = row.last ? 'grid-row-last' : 'grid-row';
+        row.items.forEach(item => rowEl.appendChild(mkCard(item)));
+        container.appendChild(rowEl);
+    });
+}
+
+function mkCard(item) {
+    const el = document.createElement('div');
+    el.className = 'img-item' + (selected.has(item.id) ? ' selected' : '');
+    el.style.width  = Math.round(item.w) + 'px';
+    el.style.height = Math.round(item.h) + 'px';
+    el.dataset.id = item.id;
+
+    // Color block
+    el.innerHTML = `
+        <div class="img-block" style="background:linear-gradient(135deg,${item.color}dd,${item.color})">${item.name}</div>
+        <div class="img-cb${selected.has(item.id) ? ' checked' : ''}" data-cb="1">${ico.chk}</div>
+        <div class="img-overlay">
+            <div class="img-actions">${mkActions(item)}</div>
+        </div>`;
+
+    el.addEventListener('click', e => {
+        if (e.target.closest('[data-ib]')) return;
+        if (batchMode) {
+            toggleSel(item.id);
+        } else {
+            openPreview(item);
+        }
+    });
+
+    return el;
+}
+
+function mkActions(item) {
+    let h = '';
+    if (batchMode) {
+        h += ibtn('预览', ico.eye, `openPreview(find(${item.id}))`);
+    }
+    h += ibtn('下载',     ico.dl,   `dlItem(${item.id})`);
+    h += ibtn('再次生成', ico.redo, `regenItem(${item.id})`);
+    h += ibtn('删除',     ico.del,  `askDel('single',${item.id})`, true);
+    return h;
+}
+
+function ibtn(label, svg, action, danger) {
+    return `<button class="icon-btn${danger ? ' danger' : ''}" data-ib="1" onclick="event.stopPropagation();${action}">
+        ${svg}<span class="tip">${label}</span>
+    </button>`;
+}
+
+// ═══════════════════════════════════════════════════
+// Actions
+// ═══════════════════════════════════════════════════
+function find(id) { return images.find(i => i.id === id); }
+
+function setDensity(d, el) {
+    density = d;
+    document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    renderGrid();
+}
+
+function toggleBatch() {
+    batchMode = !batchMode;
+    selected.clear();
+    const btn = document.getElementById('batchBtn');
+    const bar = document.getElementById('batchBar');
+    if (batchMode) {
+        btn.textContent = '取消';
+        btn.classList.add('btn-primary');
+        bar.style.display = 'inline-flex';
+        document.body.classList.add('batch-mode');
+    } else {
+        btn.textContent = '批量选择';
+        btn.classList.remove('btn-primary');
+        bar.style.display = 'none';
+        document.body.classList.remove('batch-mode');
+    }
+    updateSelCount();
+    renderGrid();
+}
+
+function toggleSel(id) {
+    selected.has(id) ? selected.delete(id) : selected.add(id);
+    const card = document.querySelector(`.img-item[data-id="${id}"]`);
+    if (card) {
+        card.classList.toggle('selected', selected.has(id));
+        const cb = card.querySelector('[data-cb]');
+        if (cb) cb.classList.toggle('checked', selected.has(id));
+    }
+    updateSelCount();
+}
+
+function updateSelCount() {
+    const el = document.getElementById('selCount');
+    if (el) el.textContent = selected.size ? `已选 ${selected.size} 项` : '';
+}
+
+function downloadAll()   { alert('下载全部（' + filtered().length + ' 张）'); }
+function batchDownload()  { if (!selected.size) return alert('请先选择图像'); alert('下载已选 ' + selected.size + ' 张'); }
+function batchDelete()    { if (!selected.size) return alert('请先选择图像'); askDel('batch'); }
+function dlItem(id)       { alert('下载：' + find(id).name); }
+function regenItem(id)    { alert('再次生成：' + find(id).name); }
+
+// ═══════════════════════════════════════════════════
+// Delete Confirm
+// [Ant Design feedback spec: 对话框反馈 for destructive ops]
+// ═══════════════════════════════════════════════════
+function askDel(type, id) {
+    delCtx = { type, id };
+    const t = document.getElementById('cfmTitle');
+    const d = document.getElementById('cfmDesc');
+    if (type === 'batch') {
+        t.textContent = `确定删除选中的 ${selected.size} 张图像？`;
+        d.textContent = '此操作不可撤销，选中的图像将被永久删除。';
+    } else {
+        const img = find(id);
+        t.textContent = `确定删除「${img ? img.name : '该图像'}」？`;
+        d.textContent = '此操作不可撤销，该图像将被永久删除。';
+    }
+    document.getElementById('confirmMask').classList.add('visible');
+}
+
+function closeCfm() {
+    document.getElementById('confirmMask').classList.remove('visible');
+    delCtx = null;
+}
+
+function execDelete() {
+    if (!delCtx) return;
+    if (delCtx.type === 'batch') {
+        images = images.filter(i => !selected.has(i.id));
+        selected.clear();
+        updateSelCount();
+    } else {
+        images = images.filter(i => i.id !== delCtx.id);
+        closePreview();
+    }
+    closeCfm();
+    render();
+}
+
+// ═══════════════════════════════════════════════════
+// Preview Modal
+// ═══════════════════════════════════════════════════
+function openPreview(item) {
+    if (!item) return;
+    const mask = document.getElementById('previewMask');
+    const canvas = document.getElementById('previewCanvas');
+    const foot = document.getElementById('previewFoot');
+
+    const pw = Math.min(item.ar * 500, 800);
+    const ph = Math.min(500, 800 / item.ar);
+    canvas.style.cssText = `
+        background:linear-gradient(135deg,${item.color}dd,${item.color});
+        width:${pw}px; height:${ph}px;
+        max-width:80vw; max-height:70vh;
+        border-radius:8px 8px 0 0;
+    `;
+    canvas.textContent = item.name;
+
+    // 预览模式下不展示「预览」按钮
+    foot.innerHTML = `
+        <button class="btn" onclick="dlItem(${item.id})">
+            ${ico.dl} 下载
+        </button>
+        <button class="btn" onclick="regenItem(${item.id})">
+            ${ico.redo} 再次生成
+        </button>
+        <button class="btn btn-danger" onclick="closePreview();askDel('single',${item.id})">
+            ${ico.del} 删除
+        </button>
+    `;
+    mask.classList.add('visible');
+}
+
+function closePreview() {
+    document.getElementById('previewMask').classList.remove('visible');
+}
+
+// ═══════════════════════════════════════════════════
+// Master render
+// ═══════════════════════════════════════════════════
+function render() { renderTabs(); renderGrid(); }
+
+let _rt;
+window.addEventListener('resize', () => { clearTimeout(_rt); _rt = setTimeout(renderGrid, 100); });
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通用生成 - 量化投放系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                         "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            font-size: 14px;
+            line-height: 1.5715;
+            background: #f0f2f6;
+            min-height: 100vh;
+            padding: 102px 24px 40px;
+        }
+
+        .page { display: flex; flex-direction: column; align-items: center; }
+
+        .hero-title {
+            font-size: 26px; font-weight: 600; color: #1a1a1a;
+            letter-spacing: -0.01em; margin-bottom: 22px; text-align: center;
+        }
+
+        .toggle-row {
+            width: 100%; max-width: 960px; position: relative;
+            display: flex; justify-content: center; align-items: center;
+            margin-bottom: 18px;
+        }
+        .type-toggle {
+            display: inline-flex; background: rgba(0,0,0,0.06);
+            border-radius: 24px; padding: 3px; gap: 2px;
+        }
+        .history-btn {
+            position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+            display: inline-flex; align-items: center; gap: 5px;
+            height: 34px; padding: 0 14px; border-radius: 20px;
+            border: 1px solid rgba(0,0,0,0.15); background: rgba(0,0,0,0.02);
+            color: #555; font-size: 13px; font-family: inherit;
+            cursor: pointer; transition: border-color 0.14s, background 0.14s, color 0.14s;
+        }
+        .history-btn:hover { color: #1a1a1a; border-color: rgba(0,0,0,0.28); background: rgba(0,0,0,0.04); }
+        .history-btn svg { flex-shrink: 0; }
+        .type-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 20px; border-radius: 20px; border: none;
+            font-size: 13.5px; font-weight: 500; font-family: inherit;
+            color: #888; background: transparent; cursor: pointer; transition: all 0.18s;
+        }
+        .type-btn.active { background: #fff; color: #1a1a1a; box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
+        .type-btn svg { flex-shrink: 0; }
+
+        /* ── 大输入框 ── */
+        .input-box {
+            width: 100%; max-width: 960px; background: #fff;
+            border-radius: 16px; border: 1px solid rgba(0,0,0,0.08);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07); position: relative;
+        }
+
+        .input-top {
+            display: flex; align-items: flex-start;
+            padding: 18px 18px 12px; gap: 12px;
+        }
+
+        /* 左侧上传区块 */
+        .upload-block {
+            width: 68px; flex-shrink: 0; height: 108px; margin-top: 14px;
+            background: #f7f7f7; border: 1.5px dashed rgba(0,0,0,0.14);
+            border-radius: 10px; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; color: #c8c8c8;
+            transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+        }
+        .upload-block:hover { border-color: #1677ff; color: #1677ff; background-color: #f0f7ff; }
+        #uploadInput { display: none; }
+
+        textarea.prompt {
+            flex: 1; min-height: 135px; border: none; outline: none;
+            font-size: 15px; font-family: inherit; color: #1a1a1a;
+            background: transparent; resize: none; line-height: 1.65;
+        }
+        textarea.prompt::placeholder { color: #c0c0c0; }
+
+        /* ── 参考图缩略图条 ── */
+        .ref-strip {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            padding: 10px 18px 12px;
+            border-top: 1px solid rgba(0,0,0,0.06);
+        }
+        .ref-strip:empty { display: none; }
+
+        /* 缩略图条里的小添加按钮 */
+        .ref-add {
+            width: 60px; height: 60px; flex-shrink: 0;
+            border-radius: 8px; background: #f7f7f7;
+            border: 1.5px dashed rgba(0,0,0,0.14);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #c8c8c8;
+            transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+        }
+        .ref-add:hover { border-color: #1677ff; color: #1677ff; background-color: #f0f7ff; }
+
+        .ref-item {
+            position: relative; width: 60px; height: 60px;
+            border-radius: 8px; overflow: hidden; flex-shrink: 0;
+            border: 1px solid rgba(0,0,0,0.08); background: #f0f0f0;
+        }
+        .ref-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .ref-del {
+            position: absolute; top: 3px; right: 3px;
+            width: 18px; height: 18px;
+            background: rgba(0,0,0,0.62); border-radius: 50%;
+            color: #fff; font-size: 10px; display: none;
+            align-items: center; justify-content: center;
+            cursor: pointer; line-height: 1; z-index: 1;
+        }
+        .ref-item:hover .ref-del { display: flex; }
+
+        /* ── 工具栏 ── */
+        .toolbar {
+            display: flex; align-items: center; gap: 6px;
+            padding: 10px 14px 12px;
+            position: relative; flex-wrap: wrap;
+        }
+
+        /* 选项胶囊 */
+        .opt-pill {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 5px 11px; border-radius: 20px;
+            border: 1px solid rgba(0,0,0,0.13);
+            font-size: 13px; color: #555; cursor: pointer;
+            transition: border-color 0.14s, background 0.14s, color 0.14s;
+            position: relative; user-select: none; flex-shrink: 0;
+            background: #fff;
+        }
+        .opt-pill:hover { border-color: rgba(0,0,0,0.28); background: rgba(0,0,0,0.02); }
+        .opt-pill.open  { border-color: #1a1a1a; background: rgba(0,0,0,0.03); color: #1a1a1a; }
+        .opt-pill-val {
+            font-weight: 500; color: #333;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .opt-pill.open .opt-pill-val { color: #1a1a1a; }
+        .arr { font-size: 9px; opacity: 0.25; transition: transform 0.15s, opacity 0.15s; }
+        .opt-pill.open .arr { transform: rotate(180deg); opacity: 0.5; }
+
+        /* 比例小图标（pill 内）*/
+        .pill-ratio-box {
+            display: inline-block;
+            border: 1.5px solid currentColor;
+            border-radius: 1.5px;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+
+        /* ── 下拉浮层 ── */
+        .opt-dd {
+            position: absolute; top: calc(100% + 8px); left: 0;
+            background: #fff; border-radius: 14px;
+            border: 1px solid rgba(0,0,0,0.07);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.04), 0 20px 48px rgba(0,0,0,0.1);
+            padding: 16px 18px; z-index: 400; display: none;
+        }
+        .opt-dd.show { display: block; }
+        .dd-section-title {
+            font-size: 10px; color: #aaa; font-weight: 600;
+            letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px;
+        }
+        .dd-section + .dd-section { margin-top: 18px; }
+
+        /* 模型列表 */
+        .model-list { display: flex; flex-direction: column; gap: 2px; }
+        .model-opt {
+            position: relative; padding: 8px 10px; border-radius: 8px;
+            cursor: pointer; font-size: 13px; color: #333;
+            transition: background 0.12s; white-space: nowrap;
+        }
+        .model-opt:hover { background: rgba(0,0,0,0.04); }
+        .model-opt.active { background: #1a1a1a; color: #fff; font-weight: 500; }
+        .model-opt::after {
+            content: attr(data-desc);
+            position: absolute; left: calc(100% + 10px); top: 50%;
+            transform: translateY(-50%);
+            background: rgba(20,20,20,0.88); color: #fff;
+            font-size: 12px; font-weight: normal;
+            padding: 7px 11px; border-radius: 8px;
+            white-space: nowrap; pointer-events: none;
+            opacity: 0; transition: opacity 0.15s; z-index: 600;
+        }
+        .model-opt:hover::after { opacity: 1; }
+
+        /* 比例 chips */
+        .ratio-row { display: flex; flex-wrap: nowrap; gap: 3px; }
+        .ratio-chip {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: flex-end; gap: 5px;
+            padding: 6px 8px 8px; border-radius: 9px; cursor: pointer;
+            transition: background 0.12s; min-width: 40px; position: relative;
+            height: 52px;
+        }
+        .ratio-chip:hover  { background: rgba(0,0,0,0.05); }
+        .ratio-chip.active { background: #1a1a1a; }
+        .ratio-chip.active .ratio-box { background: transparent; border-color: rgba(255,255,255,0.7); }
+        .ratio-chip.active .ratio-lbl { color: #fff; font-weight: 600; }
+        .ratio-box { background: transparent; border: 1.5px solid rgba(0,0,0,0.22); border-radius: 2px; flex-shrink: 0; }
+        .ratio-lbl { font-size: 11px; color: #777; white-space: nowrap; }
+
+        /* 自定义比例 hover 操作按钮 */
+        .chip-actions {
+            position: absolute; top: 2px; right: 2px;
+            display: none; gap: 2px; z-index: 2;
+        }
+        .ratio-chip.custom:hover .chip-actions { display: flex; }
+        .chip-action {
+            width: 15px; height: 15px; border-radius: 50%;
+            background: rgba(0,0,0,0.5); color: #fff;
+            font-size: 9px; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; line-height: 1;
+            transition: background 0.12s;
+        }
+        .chip-action:hover { background: rgba(0,0,0,0.8); }
+
+        /* 添加自定义比例按钮 */
+        .custom-add-btn {
+            display: flex; align-items: center; justify-content: center;
+            padding: 8px; border-radius: 9px; font-size: 12px;
+            color: #aaa; cursor: pointer; border: 1.5px dashed rgba(0,0,0,0.1);
+            transition: all 0.15s; margin-top: 6px; font-weight: 500;
+        }
+        .custom-add-btn:hover { color: #1a1a1a; border-color: rgba(0,0,0,0.28); background: rgba(0,0,0,0.03); }
+
+        /* 自定义比例输入行 */
+        .custom-input-row {
+            display: flex; align-items: center; gap: 6px; margin-top: 8px;
+        }
+        .custom-input {
+            width: 56px; height: 30px;
+            border: 1px solid rgba(0,0,0,0.1); border-radius: 7px;
+            text-align: center; font-size: 13px; font-family: inherit;
+            color: #222; outline: none; background: rgba(0,0,0,0.03);
+            transition: border-color 0.15s, background 0.15s;
+            -moz-appearance: textfield;
+        }
+        .custom-input::-webkit-inner-spin-button,
+        .custom-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+        .custom-input:focus { border-color: #1a1a1a; background: #fff; }
+        .custom-sep { font-size: 14px; color: #ccc; font-weight: 300; }
+        .custom-confirm {
+            width: 30px; height: 30px; border-radius: 50%;
+            border: none; background: #1a1a1a; color: #fff;
+            font-size: 14px; cursor: pointer; display: flex;
+            align-items: center; justify-content: center;
+            transition: background 0.15s;
+        }
+        .custom-confirm:hover { background: #333; }
+        .custom-cancel {
+            width: 30px; height: 30px; border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1); background: transparent; color: #aaa;
+            font-size: 14px; cursor: pointer; display: flex;
+            align-items: center; justify-content: center;
+            transition: all 0.15s;
+        }
+        .custom-cancel:hover { border-color: rgba(0,0,0,0.28); color: #555; }
+
+        /* 分辨率选项 */
+        .res-toggle { display: flex; gap: 6px; }
+        .res-large {
+            flex: 1; padding: 8px 10px; text-align: center;
+            font-size: 12px; font-weight: 500; cursor: pointer;
+            color: #666; background: rgba(0,0,0,0.04);
+            border-radius: 9px; border: 1px solid transparent;
+            transition: all 0.15s;
+        }
+        .res-large:hover { background: rgba(0,0,0,0.07); color: #333; }
+        .res-large.active { background: #1a1a1a; color: #fff; border-color: transparent; }
+        .res-star { font-size: 9px; opacity: 0.45; vertical-align: super; }
+        .res-large.active .res-star { opacity: 0.55; }
+
+        /* 普通 chips */
+        .dd-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+        .dd-chip {
+            padding: 5px 12px; border-radius: 8px; font-size: 13px;
+            color: #555; background: rgba(0,0,0,0.04); border: 1px solid transparent;
+            cursor: pointer; transition: all 0.12s;
+        }
+        .dd-chip:hover  { background: rgba(0,0,0,0.07); color: #222; }
+        .dd-chip.active { background: #1a1a1a; color: #fff; border-color: transparent; font-weight: 500; }
+
+        /* 自定义数量输入框 */
+        .count-custom-wrap {
+            display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
+        }
+        .count-custom-input {
+            width: 56px; height: 30px; padding: 0 8px;
+            border: 1px solid rgba(0,0,0,0.1); border-radius: 8px;
+            font-size: 13px; font-family: inherit; color: #555;
+            background: rgba(0,0,0,0.04); outline: none; text-align: center;
+            transition: border-color 0.15s, background 0.15s;
+            -moz-appearance: textfield;
+        }
+        .count-custom-input::-webkit-inner-spin-button,
+        .count-custom-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+        .count-custom-input:focus { border-color: #1a1a1a; background: #fff; color: #1a1a1a; }
+        .count-custom-input.active { border-color: #1a1a1a; background: #1a1a1a; color: #fff; }
+        .count-confirm-btn {
+            height: 30px; padding: 0 10px; border-radius: 8px;
+            border: none; background: #1a1a1a; color: #fff;
+            font-size: 12px; font-weight: 500; font-family: inherit;
+            cursor: pointer; white-space: nowrap; transition: background 0.15s;
+        }
+        .count-confirm-btn:hover { background: #333; }
+
+        /* ── 生成按钮（文字版）── */
+        .gen-btn {
+            margin-left: auto; height: 34px; padding: 0 22px;
+            border-radius: 20px; border: none;
+            font-size: 14px; font-weight: 500; font-family: inherit;
+            cursor: pointer; background: #d8d8d8; color: rgba(255,255,255,0.75);
+            transition: background 0.2s, transform 0.1s;
+            flex-shrink: 0; display: flex; align-items: center; gap: 6px;
+        }
+        .gen-btn.has-text       { background: #1677ff; color: #fff; }
+        .gen-btn.has-text:hover { background: #4096ff; transform: scale(1.03); }
+        .gen-btn.has-text:active{ background: #0958d9; transform: scale(0.97); }
+        .gen-btn.loading        { background: #1677ff; color: #fff; opacity: 0.8; cursor: not-allowed; }
+
+        .spin {
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff;
+            border-radius: 50%; animation: rot 0.55s linear infinite; display: none;
+        }
+        @keyframes rot { to { transform: rotate(360deg); } }
+
+        /* 解析按钮 */
+        .parse-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            height: 28px; padding: 0 10px; border-radius: 20px;
+            border: 1px solid rgba(0,0,0,0.15); background: rgba(0,0,0,0.02);
+            font-size: 12px; font-weight: 500; font-family: inherit;
+            color: #555; cursor: pointer; white-space: nowrap;
+            transition: border-color 0.14s, background 0.14s, color 0.14s;
+        }
+        .parse-btn:hover { border-color: rgba(0,0,0,0.3); color: #1a1a1a; background: rgba(0,0,0,0.04); }
+        .parse-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        /* ── 上传来源下拉菜单 ── */
+        .upload-dropdown {
+            position: absolute; z-index: 500;
+            background: #fff; border-radius: 10px;
+            border: 1px solid rgba(0,0,0,0.08);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            padding: 4px 0; min-width: 140px;
+            display: none;
+        }
+        .upload-dropdown.show { display: block; }
+        .upload-dropdown-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 14px; font-size: 13px; color: #333;
+            cursor: pointer; transition: background 0.12s;
+            white-space: nowrap;
+        }
+        .upload-dropdown-item:first-child { border-radius: 8px 8px 0 0; }
+        .upload-dropdown-item:last-child { border-radius: 0 0 8px 8px; }
+        .upload-dropdown-item:hover { background: #f5f7fa; color: #1a1a1a; }
+        .upload-dropdown-item svg { width: 16px; height: 16px; color: #999; flex-shrink: 0; }
+
+        /* ── 素材库弹窗 ── */
+        .asset-modal-mask {
+            position: fixed; inset: 0; z-index: 2000;
+            background: rgba(0,0,0,0.45);
+            display: none; align-items: center; justify-content: center;
+        }
+        .asset-modal-mask.show { display: flex; }
+        .asset-modal {
+            width: 900px; max-width: 92vw; height: 600px; max-height: 80vh;
+            background: #fff; border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .asset-modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
+        }
+        .asset-modal-title { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+        .asset-modal-close {
+            width: 28px; height: 28px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #999; transition: all 0.15s;
+        }
+        .asset-modal-close:hover { background: #f5f5f5; color: #333; }
+        .asset-modal-body {
+            display: flex; flex: 1; overflow: hidden;
+        }
+        /* 左侧分类 */
+        .asset-sidebar {
+            width: 140px; flex-shrink: 0;
+            border-right: 1px solid #f0f0f0;
+            padding: 8px 0; overflow-y: auto;
+        }
+        .asset-sidebar-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 16px; font-size: 13px; color: #666;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .asset-sidebar-item:hover { color: #1a1a1a; background: #fafafa; }
+        .asset-sidebar-item.active { color: #1a1a1a; background: #f0f5ff; font-weight: 500; }
+        .asset-sidebar-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+        /* 右侧内容 */
+        .asset-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .asset-filter-bar {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .asset-search {
+            flex: 1; min-width: 160px; height: 32px; padding: 0 10px 0 32px;
+            border: 1px solid #e0e0e0; border-radius: 6px;
+            font-size: 13px; font-family: inherit; color: #333;
+            outline: none; background: #fafafa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") 10px center no-repeat;
+            transition: border-color 0.15s;
+        }
+        .asset-search:focus { border-color: #1677ff; background-color: #fff; }
+        .asset-filter-select {
+            height: 32px; padding: 0 28px 0 10px; border: 1px solid #e0e0e0;
+            border-radius: 6px; font-size: 13px; font-family: inherit;
+            color: #555; background: #fafafa; outline: none; cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 10px center;
+        }
+        .asset-filter-select:focus { border-color: #1677ff; }
+        /* 内容网格 */
+        .asset-grid-wrap { flex: 1; overflow-y: auto; padding: 16px; }
+        .asset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+        }
+        .asset-card {
+            border-radius: 8px; overflow: hidden; cursor: pointer;
+            border: 2px solid transparent; transition: border-color 0.15s, box-shadow 0.15s;
+            background: #f5f5f5;
+        }
+        .asset-card:hover { border-color: #d0d0d0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .asset-card.selected { border-color: #1677ff; box-shadow: 0 0 0 1px #1677ff; }
+        .asset-card-thumb {
+            width: 100%; aspect-ratio: 1; background: #eee;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; position: relative;
+        }
+        .asset-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .asset-card-name {
+            padding: 6px 8px; font-size: 12px; color: #555;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .asset-card-check {
+            position: absolute; top: 6px; right: 6px;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #1677ff; color: #fff; font-size: 12px;
+            display: none; align-items: center; justify-content: center;
+        }
+        .asset-card.selected .asset-card-check { display: flex; }
+        /* 底部操作栏 */
+        .asset-modal-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 20px; border-top: 1px solid #f0f0f0; flex-shrink: 0;
+        }
+        .asset-selected-count { font-size: 13px; color: #999; }
+        .asset-selected-count strong { color: #1677ff; font-weight: 600; }
+        .asset-footer-btns { display: flex; gap: 8px; }
+        .asset-btn-cancel {
+            height: 32px; padding: 0 16px; border-radius: 6px;
+            border: 1px solid #e0e0e0; background: #fff;
+            font-size: 13px; font-family: inherit; color: #555;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .asset-btn-cancel:hover { border-color: #bbb; color: #333; }
+        .asset-btn-confirm {
+            height: 32px; padding: 0 16px; border-radius: 6px;
+            border: none; background: #1677ff; color: #fff;
+            font-size: 13px; font-weight: 500; font-family: inherit;
+            cursor: pointer; transition: background 0.15s;
+        }
+        .asset-btn-confirm:hover { background: #4096ff; }
+        .asset-btn-confirm:disabled { background: #d8d8d8; cursor: not-allowed; }
+
+        /* 预览浮层 */
+        .asset-preview-mask {
+            position: fixed; inset: 0; z-index: 2100;
+            background: rgba(0,0,0,0.7);
+            display: none; align-items: center; justify-content: center;
+        }
+        .asset-preview-mask.show { display: flex; }
+        .asset-preview-img {
+            max-width: 80vw; max-height: 80vh; border-radius: 8px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+        }
+        .asset-preview-close {
+            position: absolute; top: 20px; right: 20px;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255,255,255,0.15); color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 20px; transition: background 0.15s;
+        }
+        .asset-preview-close:hover { background: rgba(255,255,255,0.3); }
+
+        /* ── 任务列表 ── */
+        .task-list { display: flex; flex-direction: column; gap: 1px; background: #f0f0f0; }
+        .task-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 16px; background: #fff; cursor: pointer;
+            transition: background 0.12s;
+        }
+        .task-row:hover { background: #fafafa; }
+        .task-row-icon {
+            width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px;
+        }
+        .task-row-icon.generating { background: #e6f7ff; color: #1677ff; }
+        .task-row-icon.done       { background: #f6ffed; color: #52c41a; }
+        .task-row-icon.failed     { background: #fff2f0; color: #ff4d4f; }
+        .task-row-body { flex: 1; min-width: 0; }
+        .task-row-title {
+            font-size: 13px; font-weight: 500; color: #1a1a1a;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .task-row-meta { font-size: 12px; color: #999; margin-top: 2px; display: flex; gap: 12px; }
+        .task-row-arrow { color: #ccc; flex-shrink: 0; }
+        .task-row-status {
+            font-size: 12px; padding: 2px 8px; border-radius: 4px; flex-shrink: 0;
+        }
+        .task-row-status.done    { background: #f6ffed; color: #52c41a; }
+        .task-row-status.running { background: #e6f7ff; color: #1677ff; }
+        .task-row-status.failed  { background: #fff2f0; color: #ff4d4f; }
+
+        /* 任务详情页 */
+        .task-detail { display: none; flex-direction: column; height: 100%; }
+        .task-detail.show { display: flex; }
+        .task-detail-header {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
+        }
+        .task-detail-back {
+            display: flex; align-items: center; gap: 4px;
+            font-size: 13px; color: #1677ff; cursor: pointer;
+            transition: opacity 0.15s; flex-shrink: 0;
+        }
+        .task-detail-back:hover { opacity: 0.7; }
+        .task-detail-back svg { width: 14px; height: 14px; }
+        .task-detail-name {
+            font-size: 14px; font-weight: 500; color: #1a1a1a;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .task-detail-grid-wrap { flex: 1; overflow-y: auto; padding: 16px; }
+
+        /* ── 工作流 ── */
+        .workflow-wrap { width: 100%; max-width: 860px; margin-top: 64px; transform: translateX(min(-300px, calc(50vw - 50% - 300px))); }
+        @media (max-width: 1200px) { .workflow-wrap { transform: none; } }
+        .wf-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .wf-title { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+        .wf-grid { display: flex; flex-wrap: wrap; gap: 16px; }
+        .wf-card {
+            width: 264px; background: #fff; border-radius: 14px;
+            border: 1px solid rgba(0,0,0,0.07); overflow: hidden; cursor: pointer;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+        .wf-card:hover {
+            border-color: rgba(22,119,255,0.35);
+            box-shadow: 0 6px 24px rgba(22,119,255,0.12); transform: translateY(-3px);
+        }
+        .wf-thumb {
+            width: 100%; aspect-ratio: 1 / 1; position: relative; overflow: hidden;
+        }
+        /* 底部蒙层 + 标签 */
+        .wf-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 24px 10px 10px;
+            background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 100%);
+            display: flex; align-items: flex-end;
+        }
+        .wf-tag {
+            display: inline-flex; align-items: center; padding: 2px 9px;
+            background: rgba(255,255,255,0.18); backdrop-filter: blur(6px);
+            color: #fff; border-radius: 5px; font-size: 12px; font-weight: 500;
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed; top: 16px; left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background: rgba(20,20,20,0.82); color: #fff;
+            padding: 7px 18px; border-radius: 8px; font-size: 13px;
+            z-index: 9999; opacity: 0; pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="page">
+
+    <h1 class="hero-title">今天想创作点什么？</h1>
+
+    <div class="toggle-row">
+        <div class="type-toggle">
+            <button class="type-btn active" data-type="image" onclick="switchType(this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                </svg>图像
+            </button>
+            <button class="type-btn" data-type="video" onclick="switchType(this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>
+                </svg>视频
+            </button>
+        </div>
+        <button class="history-btn" onclick="openHistory()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            生成历史
+        </button>
+    </div>
+
+    <div class="input-box" id="inputBox">
+        <input type="file" id="uploadInput" accept="image/*" multiple onchange="onUpload(event)">
+
+        <div class="input-top">
+            <div class="upload-block" id="uploadBlock" onclick="showUploadMenu(event, this)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+            </div>
+            <textarea class="prompt" id="prompt" rows="3"
+                placeholder="尝试描述您想要创建的图像"
+                oninput="onInput()"></textarea>
+        </div>
+
+        <!-- 参考图缩略图 -->
+        <div class="ref-strip" id="refStrip"></div>
+
+        <div class="toolbar" id="toolbar">
+            <div id="optArea" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"></div>
+            <button id="parseBtn" class="parse-btn" onclick="parseRefImage()" style="display:none">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275 1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                解析参考图提示词
+            </button>
+            <button class="gen-btn" id="genBtn" onclick="doGenerate()">
+                <span id="genText">生成</span>
+                <div class="spin" id="genSpin"></div>
+            </button>
+        </div>
+    </div>
+
+    <div class="workflow-wrap">
+        <div class="wf-header"><span class="wf-title">工作流</span></div>
+        <div class="wf-grid">
+            <div class="wf-card" onclick="useWorkflow('image')">
+                <div class="wf-thumb">
+                    <img src="工作流.png" alt="图像素延生" style="width:100%;height:100%;object-fit:cover;display:block;">
+                    <div class="wf-overlay"><span class="wf-tag">图像</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- 上传来源下拉菜单 -->
+<div class="upload-dropdown" id="uploadDropdown">
+    <div class="upload-dropdown-item" onclick="triggerUpload()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        本地上传
+    </div>
+    <div class="upload-dropdown-item" onclick="openAssetModal('素材库')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        素材库
+    </div>
+    <div class="upload-dropdown-item" onclick="openAssetModal('物料库')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        物料库
+    </div>
+    <div class="upload-dropdown-item" onclick="openAssetModal('原料库')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        原料库
+    </div>
+    <div class="upload-dropdown-item" onclick="openAssetModal('产品物料')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        产品物料
+    </div>
+    <div class="upload-dropdown-item" onclick="openAssetModal('我的任务')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
+        我的任务
+    </div>
+</div>
+
+<!-- 素材库弹窗 -->
+<div class="asset-modal-mask" id="assetModalMask" onclick="if(event.target===this)closeAssetModal()">
+    <div class="asset-modal">
+        <div class="asset-modal-header">
+            <div class="asset-modal-title" id="assetModalTitle">选择素材</div>
+            <div class="asset-modal-close" onclick="closeAssetModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+        </div>
+        <div class="asset-modal-body">
+            <div class="asset-sidebar" id="assetSidebar">
+                <div class="asset-sidebar-item active" data-cat="素材库" onclick="switchAssetCat(this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    素材库
+                </div>
+                <div class="asset-sidebar-item" data-cat="物料库" onclick="switchAssetCat(this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                    物料库
+                </div>
+                <div class="asset-sidebar-item" data-cat="原料库" onclick="switchAssetCat(this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    原料库
+                </div>
+                <div class="asset-sidebar-item" data-cat="产品物料" onclick="switchAssetCat(this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    产品物料
+                </div>
+                <div class="asset-sidebar-item" data-cat="我的任务" onclick="switchAssetCat(this)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
+                    我的任务
+                </div>
+            </div>
+            <div class="asset-main">
+                <div class="asset-filter-bar" id="assetFilterBar"></div>
+                <div class="asset-grid-wrap" id="assetGridWrap">
+                    <div class="asset-grid" id="assetGrid"></div>
+                </div>
+                <div class="task-detail" id="taskDetail">
+                    <div class="task-detail-header">
+                        <div class="task-detail-back" onclick="backToTaskList()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                            返回
+                        </div>
+                        <div class="task-detail-name" id="taskDetailName"></div>
+                    </div>
+                    <div class="task-detail-grid-wrap">
+                        <div class="asset-grid" id="taskDetailGrid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="asset-modal-footer">
+            <div class="asset-selected-count">已选择 <strong id="assetSelCount">0</strong> 项</div>
+            <div class="asset-footer-btns">
+                <button class="asset-btn-cancel" onclick="closeAssetModal()">取消</button>
+                <button class="asset-btn-confirm" id="assetConfirmBtn" disabled onclick="confirmAssetSelect()">确认添加</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 预览浮层 -->
+<div class="asset-preview-mask" id="assetPreviewMask" onclick="closeAssetPreview()">
+    <div class="asset-preview-close" onclick="closeAssetPreview()">✕</div>
+    <img class="asset-preview-img" id="assetPreviewImg" src="" alt="">
+</div>
+
+<script>
+const RATIO_SIZES = {
+    '1:1':[16,16], '2:3':[11,16], '3:2':[16,11],
+    '3:4':[12,16], '4:3':[16,12],
+    '9:16':[9,16], '16:9':[16,9], '21:9':[16,7],
+};
+
+const MODELS = [
+    { id: 'seedream5', name: 'seedream5.0', desc: '字节最强大的图像模型，对中文字体支持友好' },
+    { id: 'banana2',   name: 'banana2',     desc: '谷歌的图像模型，对提示词的理解能力很强大' },
+];
+
+const OPTS = {
+    image: [
+        { key: 'model',     type: 'model' },
+        { key: 'ratio-res', type: 'ratio-res',
+          ratioValues: ['1:1','2:3','3:2','3:4','4:3','9:16','16:9','21:9'] },
+        { key: 'count',     type: 'count',
+          values: ['1','2','3','4','5','6','7','8','9','10'] },
+    ],
+    video: [
+        { key: 'ratio', label: '屏幕比', type: 'ratio',
+          values: ['16:9','9:16','1:1','4:3','3:4'], def: '16:9' },
+        { key: 'dur',   label: '时长',   type: 'chips',
+          values: ['5秒','10秒','15秒','30秒'], def: '5秒' },
+        { key: 'style', label: '风格',   type: 'chips',
+          values: ['写实','动漫','电影感'], def: '写实' },
+        { key: 'res',   label: '分辨率', type: 'res',
+          values: ['720P','1080P','4K'], def: '1080P' },
+    ],
+};
+
+let curType = 'image';
+const sel = {
+    image: { model: 'seedream5', ratio: '1:1', res: '2K', sizeW: 2048, sizeH: 2048, count: '1', customRatios: [] },
+    video: { ratio: '16:9', dur: '5秒', style: '写实', res: '1080P' },
+};
+
+function onInput() {
+    const has = document.getElementById('prompt').value.trim().length > 0;
+    document.getElementById('genBtn').className = 'gen-btn' + (has ? ' has-text' : '');
+}
+
+// ── 上传来源菜单 ──
+function showUploadMenu(e, anchor) {
+    e.stopPropagation();
+    const dd = document.getElementById('uploadDropdown');
+    if (dd.classList.contains('show')) { dd.classList.remove('show'); return; }
+    const rect = anchor.getBoundingClientRect();
+    dd.style.left = rect.left + 'px';
+    dd.style.top = (rect.bottom + 6) + 'px';
+    dd.classList.add('show');
+}
+document.addEventListener('click', () => document.getElementById('uploadDropdown').classList.remove('show'));
+
+function triggerUpload() {
+    document.getElementById('uploadDropdown').classList.remove('show');
+    document.getElementById('uploadInput').click();
+}
+
+function onUpload(e) {
+    const strip = document.getElementById('refStrip');
+
+    // 第一次上传：隐藏左侧大按钮，在缩略图条最左侧插入小添加按钮
+    if (!document.getElementById('refAddBtn')) {
+        document.getElementById('uploadBlock').style.display = 'none';
+        const addBtn = document.createElement('div');
+        addBtn.className = 'ref-add';
+        addBtn.id = 'refAddBtn';
+        addBtn.onclick = function(ev) { showUploadMenu(ev, this); };
+        addBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>`;
+        strip.insertBefore(addBtn, strip.firstChild);
+        document.getElementById('parseBtn').style.display = '';
+    }
+
+    Array.from(e.target.files).forEach(f => {
+        const url = URL.createObjectURL(f);
+        const item = document.createElement('div');
+        item.className = 'ref-item';
+        item.innerHTML = `<img src="${url}" alt=""><div class="ref-del" onclick="removeRef(this)">✕</div>`;
+        strip.appendChild(item);
+    });
+    e.target.value = '';
+}
+
+// 从素材库弹窗添加图片到参考图
+function addRefFromUrl(url) {
+    const strip = document.getElementById('refStrip');
+    if (!document.getElementById('refAddBtn')) {
+        document.getElementById('uploadBlock').style.display = 'none';
+        const addBtn = document.createElement('div');
+        addBtn.className = 'ref-add';
+        addBtn.id = 'refAddBtn';
+        addBtn.onclick = function(ev) { showUploadMenu(ev, this); };
+        addBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>`;
+        strip.insertBefore(addBtn, strip.firstChild);
+        document.getElementById('parseBtn').style.display = '';
+    }
+    const item = document.createElement('div');
+    item.className = 'ref-item';
+    item.innerHTML = `<img src="${url}" alt=""><div class="ref-del" onclick="removeRef(this)">✕</div>`;
+    strip.appendChild(item);
+}
+
+function removeRef(btn) {
+    btn.parentElement.remove();
+    // 所有缩略图都删完了：移除小添加按钮，恢复左侧大按钮
+    const strip = document.getElementById('refStrip');
+    if (!strip.querySelector('.ref-item')) {
+        document.getElementById('refAddBtn')?.remove();
+        document.getElementById('uploadBlock').style.display = '';
+        document.getElementById('parseBtn').style.display = 'none';
+    }
+}
+
+// ── 素材库弹窗 ──
+const MOCK_ASSETS = {
+    '素材库': [
+        { id: 's1', name: '城市夜景.jpg',   thumb: 'https://picsum.photos/seed/city1/200/200',  type: 'image' },
+        { id: 's2', name: '海滩日落.jpg',   thumb: 'https://picsum.photos/seed/beach1/200/200', type: 'image' },
+        { id: 's3', name: '山间晨雾.jpg',   thumb: 'https://picsum.photos/seed/mount1/200/200', type: 'image' },
+        { id: 's4', name: '都市街景.jpg',   thumb: 'https://picsum.photos/seed/street1/200/200',type: 'image' },
+        { id: 's5', name: '星空银河.jpg',   thumb: 'https://picsum.photos/seed/star1/200/200',  type: 'image' },
+        { id: 's6', name: '古镇小巷.jpg',   thumb: 'https://picsum.photos/seed/town1/200/200',  type: 'image' },
+        { id: 's7', name: '樱花公园.jpg',   thumb: 'https://picsum.photos/seed/sakura1/200/200',type: 'image' },
+        { id: 's8', name: '高山流水.jpg',   thumb: 'https://picsum.photos/seed/river1/200/200', type: 'image' },
+    ],
+    '物料库': [
+        { id: 'm1', name: '产品主图_A.jpg', thumb: 'https://picsum.photos/seed/prod1/200/200',  type: 'image' },
+        { id: 'm2', name: '产品主图_B.jpg', thumb: 'https://picsum.photos/seed/prod2/200/200',  type: 'image' },
+        { id: 'm3', name: '广告背景_1.jpg', thumb: 'https://picsum.photos/seed/ad1/200/200',    type: 'image' },
+        { id: 'm4', name: '广告背景_2.jpg', thumb: 'https://picsum.photos/seed/ad2/200/200',    type: 'image' },
+        { id: 'm5', name: 'Banner模板.jpg', thumb: 'https://picsum.photos/seed/ban1/200/200',   type: 'image' },
+        { id: 'm6', name: '详情页头图.jpg', thumb: 'https://picsum.photos/seed/detail1/200/200',type: 'image' },
+    ],
+    '原料库': [
+        { id: 'r1', name: '肌理纹理_01.jpg', thumb: 'https://picsum.photos/seed/tex1/200/200', type: 'image' },
+        { id: 'r2', name: '肌理纹理_02.jpg', thumb: 'https://picsum.photos/seed/tex2/200/200', type: 'image' },
+        { id: 'r3', name: '光效素材_01.jpg', thumb: 'https://picsum.photos/seed/light1/200/200',type: 'image' },
+        { id: 'r4', name: '渐变背景_01.jpg', thumb: 'https://picsum.photos/seed/grad1/200/200', type: 'image' },
+        { id: 'r5', name: '噪点背景_01.jpg', thumb: 'https://picsum.photos/seed/noise1/200/200',type: 'image' },
+    ],
+    '产品物料': [],
+    '我的任务': [],
+};
+
+const MOCK_PRODUCTS = [
+    { id: 'prod1', name: '水光精华露', category: '护肤', sku: 'SKU-2001', thumb: 'https://picsum.photos/seed/pico1/200/200', materials: [
+        { id: 'pm1', name: 'icon_主图.jpg',    thumb: 'https://picsum.photos/seed/pi1/200/200', tag: 'icon' },
+        { id: 'pm2', name: 'icon_白底.jpg',    thumb: 'https://picsum.photos/seed/pi2/200/200', tag: 'icon' },
+        { id: 'pm3', name: '截图_详情页_01.jpg', thumb: 'https://picsum.photos/seed/psc1/200/200', tag: '截图' },
+        { id: 'pm4', name: '截图_详情页_02.jpg', thumb: 'https://picsum.photos/seed/psc2/200/200', tag: '截图' },
+        { id: 'pm5', name: '录屏_开箱.mp4',    thumb: 'https://picsum.photos/seed/pv1/200/200', tag: '录屏' },
+    ]},
+    { id: 'prod2', name: '玻尿酸面膜', category: '护肤', sku: 'SKU-2002', thumb: 'https://picsum.photos/seed/pico2/200/200', materials: [
+        { id: 'pm6', name: 'icon_主图.jpg',    thumb: 'https://picsum.photos/seed/pi3/200/200', tag: 'icon' },
+        { id: 'pm7', name: '截图_效果对比.jpg', thumb: 'https://picsum.photos/seed/psc3/200/200', tag: '截图' },
+        { id: 'pm8', name: '截图_成分表.jpg',  thumb: 'https://picsum.photos/seed/psc4/200/200', tag: '截图' },
+        { id: 'pm9', name: '录屏_使用教程.mp4', thumb: 'https://picsum.photos/seed/pv2/200/200', tag: '录屏' },
+    ]},
+    { id: 'prod3', name: '持久哑光唇釉', category: '彩妆', sku: 'SKU-3001', thumb: 'https://picsum.photos/seed/pico3/200/200', materials: [
+        { id: 'pm10', name: 'icon_色号展示.jpg', thumb: 'https://picsum.photos/seed/pi4/200/200', tag: 'icon' },
+        { id: 'pm11', name: '截图_试色_01.jpg', thumb: 'https://picsum.photos/seed/psc5/200/200', tag: '截图' },
+        { id: 'pm12', name: '截图_试色_02.jpg', thumb: 'https://picsum.photos/seed/psc6/200/200', tag: '截图' },
+        { id: 'pm13', name: '截图_包装.jpg',   thumb: 'https://picsum.photos/seed/psc7/200/200', tag: '截图' },
+        { id: 'pm14', name: '录屏_上嘴效果.mp4', thumb: 'https://picsum.photos/seed/pv3/200/200', tag: '录屏' },
+        { id: 'pm15', name: '录屏_持久测试.mp4', thumb: 'https://picsum.photos/seed/pv4/200/200', tag: '录屏' },
+    ]},
+    { id: 'prod4', name: '坚果能量棒', category: '食品', sku: 'SKU-4001', thumb: 'https://picsum.photos/seed/pico4/200/200', materials: [
+        { id: 'pm16', name: 'icon_产品图.jpg', thumb: 'https://picsum.photos/seed/pi5/200/200', tag: 'icon' },
+        { id: 'pm17', name: '截图_营养表.jpg', thumb: 'https://picsum.photos/seed/psc8/200/200', tag: '截图' },
+        { id: 'pm18', name: '录屏_拆包.mp4',  thumb: 'https://picsum.photos/seed/pv5/200/200', tag: '录屏' },
+    ]},
+];
+
+const MOCK_TASKS = [
+    { id: 'task1', name: '护肤品春季推广素材', type: '图片生成', status: 'done',    time: '2026-03-30 14:22', count: 6, thumbs: [
+        { id: 'td1', name: '推广图_01.jpg', thumb: 'https://picsum.photos/seed/tg1/200/200' },
+        { id: 'td2', name: '推广图_02.jpg', thumb: 'https://picsum.photos/seed/tg2/200/200' },
+        { id: 'td3', name: '推广图_03.jpg', thumb: 'https://picsum.photos/seed/tg3/200/200' },
+        { id: 'td4', name: '推广图_04.jpg', thumb: 'https://picsum.photos/seed/tg4/200/200' },
+        { id: 'td5', name: '推广图_05.jpg', thumb: 'https://picsum.photos/seed/tg5/200/200' },
+        { id: 'td6', name: '推广图_06.jpg', thumb: 'https://picsum.photos/seed/tg6/200/200' },
+    ]},
+    { id: 'task2', name: '618大促主图批量生成', type: '图片生成', status: 'done', time: '2026-03-29 09:15', count: 8, thumbs: [
+        { id: 'td7',  name: '主图_01.jpg', thumb: 'https://picsum.photos/seed/zg1/200/200' },
+        { id: 'td8',  name: '主图_02.jpg', thumb: 'https://picsum.photos/seed/zg2/200/200' },
+        { id: 'td9',  name: '主图_03.jpg', thumb: 'https://picsum.photos/seed/zg3/200/200' },
+        { id: 'td10', name: '主图_04.jpg', thumb: 'https://picsum.photos/seed/zg4/200/200' },
+    ]},
+    { id: 'task3', name: '产品短视频素材', type: '视频生成', status: 'running', time: '2026-03-31 11:40', count: 0, thumbs: [] },
+    { id: 'task4', name: '社交媒体封面图', type: '图片生成', status: 'done', time: '2026-03-28 16:05', count: 4, thumbs: [
+        { id: 'td11', name: '封面_01.jpg', thumb: 'https://picsum.photos/seed/fm1/200/200' },
+        { id: 'td12', name: '封面_02.jpg', thumb: 'https://picsum.photos/seed/fm2/200/200' },
+        { id: 'td13', name: '封面_03.jpg', thumb: 'https://picsum.photos/seed/fm3/200/200' },
+        { id: 'td14', name: '封面_04.jpg', thumb: 'https://picsum.photos/seed/fm4/200/200' },
+    ]},
+    { id: 'task5', name: '直播间背景图', type: '图片生成', status: 'failed', time: '2026-03-27 20:30', count: 0, thumbs: [] },
+];
+
+const FILTER_DEFAULT = `
+    <select class="asset-filter-select" onchange="filterAssets()"><option value="">时间范围</option><option value="7d">近7天</option><option value="30d">近30天</option><option value="90d">近90天</option><option value="180d">近半年</option><option value="365d">近一年</option></select>
+    <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部品类</option><option value="skincare">护肤</option><option value="makeup">彩妆</option><option value="food">食品</option><option value="digital">数码</option><option value="clothing">服饰</option></select>
+    <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部产品</option><option value="prod_a">产品A</option><option value="prod_b">产品B</option><option value="prod_c">产品C</option></select>
+    <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部类型</option><option value="image">图片</option><option value="video">视频</option></select>
+    <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部CP</option><option value="cp1">CP-01</option><option value="cp2">CP-02</option><option value="cp3">CP-03</option></select>
+    <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部画幅</option><option value="1:1">1:1</option><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="4:3">4:3</option><option value="3:4">3:4</option></select>`;
+
+const FILTER_TASK = `
+    <select class="asset-filter-select" onchange="filterAssets()"><option value="">创建时间</option><option value="7d">近7天</option><option value="30d">近30天</option><option value="90d">近90天</option></select>
+    <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部任务类型</option><option value="img">图片生成</option><option value="vid">视频生成</option></select>`;
+
+const FILTER_PRODUCT = `
+    <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部品类</option><option value="skincare">护肤</option><option value="makeup">彩妆</option><option value="food">食品</option><option value="digital">数码</option></select>
+    <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部产品</option><option value="prod1">水光精华露</option><option value="prod2">玻尿酸面膜</option><option value="prod3">持久哑光唇釉</option><option value="prod4">坚果能量棒</option></select>`;
+
+let assetSelected = new Set();
+let assetCurrentCat = '素材库';
+
+function renderFilterBar() {
+    const bar = document.getElementById('assetFilterBar');
+    if (assetCurrentCat === '我的任务') bar.innerHTML = FILTER_TASK;
+    else if (assetCurrentCat === '产品物料') bar.innerHTML = FILTER_PRODUCT;
+    else bar.innerHTML = FILTER_DEFAULT;
+}
+
+function openAssetModal(cat) {
+    document.getElementById('uploadDropdown').classList.remove('show');
+    assetCurrentCat = cat;
+    assetSelected.clear();
+    document.getElementById('assetModalTitle').textContent = cat === '我的任务' ? '我的任务' : '选择' + cat.replace('库', '');
+    document.querySelectorAll('.asset-sidebar-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.cat === cat);
+    });
+    renderFilterBar();
+    renderAssetContent();
+    updateAssetFooter();
+    document.getElementById('assetModalMask').classList.add('show');
+}
+
+function closeAssetModal() {
+    document.getElementById('assetModalMask').classList.remove('show');
+    backToTaskList();
+}
+
+function switchAssetCat(el) {
+    document.querySelectorAll('.asset-sidebar-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    assetCurrentCat = el.dataset.cat;
+    assetSelected.clear();
+    document.getElementById('assetModalTitle').textContent = assetCurrentCat === '我的任务' ? '我的任务' : '选择' + assetCurrentCat.replace('库', '');
+    renderFilterBar();
+    backToTaskList();
+    renderAssetContent();
+    updateAssetFooter();
+}
+
+function renderAssetContent() {
+    document.getElementById('taskDetail').classList.remove('show');
+    if (assetCurrentCat === '我的任务') {
+        document.getElementById('assetGridWrap').style.display = 'none';
+        renderTaskList();
+    } else if (assetCurrentCat === '产品物料') {
+        document.getElementById('assetGridWrap').style.display = 'none';
+        renderProductList();
+    } else {
+        document.getElementById('assetGridWrap').style.display = '';
+        renderAssetGrid();
+    }
+}
+
+function renderTaskList() {
+    const wrap = document.getElementById('assetGridWrap');
+    wrap.style.display = '';
+    const statusLabel = { done: '已完成', running: '生成中', failed: '失败' };
+    wrap.innerHTML = `<div class="task-list">${MOCK_TASKS.map(t => `
+        <div class="task-row" onclick="openTaskDetail('${t.id}')">
+            <div class="task-row-icon ${t.status}">
+                ${t.status === 'done' ? '✓' : t.status === 'running' ? '⟳' : '✕'}
+            </div>
+            <div class="task-row-body">
+                <div class="task-row-title">${t.name}</div>
+                <div class="task-row-meta">
+                    <span>${t.type}</span>
+                    <span>${t.time}</span>
+                    <span>${t.count} 张</span>
+                </div>
+            </div>
+            <span class="task-row-status ${t.status}">${statusLabel[t.status]}</span>
+            <span class="task-row-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+        </div>
+    `).join('')}</div>`;
+}
+
+function renderProductList() {
+    const wrap = document.getElementById('assetGridWrap');
+    wrap.style.display = '';
+    wrap.innerHTML = `<div class="task-list">${MOCK_PRODUCTS.map(p => `
+        <div class="task-row" onclick="openProductDetail('${p.id}')">
+            <div style="width:40px;height:40px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#f0f0f0">
+                <img src="${p.thumb}" style="width:100%;height:100%;object-fit:cover;display:block" alt="">
+            </div>
+            <div class="task-row-body">
+                <div class="task-row-title">${p.name}</div>
+                <div class="task-row-meta">
+                    <span>${p.category}</span>
+                    <span>${p.sku}</span>
+                    <span>${p.materials.length} 个物料</span>
+                </div>
+            </div>
+            <span class="task-row-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+        </div>
+    `).join('')}</div>`;
+}
+
+function openProductDetail(prodId) {
+    const prod = MOCK_PRODUCTS.find(p => p.id === prodId);
+    if (!prod || !prod.materials.length) return;
+    document.getElementById('assetGridWrap').style.display = 'none';
+    document.getElementById('assetFilterBar').style.display = 'none';
+    document.getElementById('taskDetailName').textContent = prod.name;
+    const grid = document.getElementById('taskDetailGrid');
+    grid.innerHTML = prod.materials.map(a => `
+        <div class="asset-card${assetSelected.has(a.id) ? ' selected' : ''}" data-id="${a.id}" onclick="toggleAssetCard(this, '${a.id}')">
+            <div class="asset-card-thumb">
+                <img src="${a.thumb}" alt="${a.name}" loading="lazy">
+                <div class="asset-card-check">✓</div>
+            </div>
+            <div class="asset-card-name" title="${a.name}"><span style="color:#1677ff;font-size:11px;margin-right:3px">${a.tag}</span>${a.name}</div>
+        </div>
+    `).join('');
+    grid.querySelectorAll('.asset-card').forEach(card => {
+        card.addEventListener('dblclick', function(e) {
+            e.stopPropagation();
+            const img = this.querySelector('img');
+            if (img) showAssetPreview(img.src);
+        });
+    });
+    document.getElementById('taskDetail').classList.add('show');
+}
+
+function openTaskDetail(taskId) {
+    const task = MOCK_TASKS.find(t => t.id === taskId);
+    if (!task || !task.thumbs.length) return;
+    document.getElementById('assetGridWrap').style.display = 'none';
+    document.getElementById('assetFilterBar').style.display = 'none';
+    document.getElementById('taskDetailName').textContent = task.name;
+    const grid = document.getElementById('taskDetailGrid');
+    grid.innerHTML = task.thumbs.map(a => `
+        <div class="asset-card${assetSelected.has(a.id) ? ' selected' : ''}" data-id="${a.id}" onclick="toggleAssetCard(this, '${a.id}')">
+            <div class="asset-card-thumb">
+                <img src="${a.thumb}" alt="${a.name}" loading="lazy">
+                <div class="asset-card-check">✓</div>
+            </div>
+            <div class="asset-card-name" title="${a.name}">${a.name}</div>
+        </div>
+    `).join('');
+    grid.querySelectorAll('.asset-card').forEach(card => {
+        card.addEventListener('dblclick', function(e) {
+            e.stopPropagation();
+            const img = this.querySelector('img');
+            if (img) showAssetPreview(img.src);
+        });
+    });
+    document.getElementById('taskDetail').classList.add('show');
+}
+
+function backToTaskList() {
+    document.getElementById('taskDetail').classList.remove('show');
+    document.getElementById('assetFilterBar').style.display = '';
+    if (assetCurrentCat === '我的任务') renderTaskList();
+    else if (assetCurrentCat === '产品物料') renderProductList();
+    else document.getElementById('assetGridWrap').style.display = '';
+}
+
+function renderAssetGrid() {
+    const grid = document.getElementById('assetGrid');
+    const items = MOCK_ASSETS[assetCurrentCat] || [];
+    grid.innerHTML = items.map(a => `
+        <div class="asset-card${assetSelected.has(a.id) ? ' selected' : ''}" data-id="${a.id}" onclick="toggleAssetCard(this, '${a.id}')">
+            <div class="asset-card-thumb">
+                <img src="${a.thumb}" alt="${a.name}" loading="lazy">
+                <div class="asset-card-check">✓</div>
+            </div>
+            <div class="asset-card-name" title="${a.name}">${a.name}</div>
+        </div>
+    `).join('');
+    grid.querySelectorAll('.asset-card').forEach(card => {
+        card.addEventListener('dblclick', function(e) {
+            e.stopPropagation();
+            const img = this.querySelector('img');
+            if (img) showAssetPreview(img.src);
+        });
+    });
+}
+
+function toggleAssetCard(card, id) {
+    if (assetSelected.has(id)) {
+        assetSelected.delete(id);
+        card.classList.remove('selected');
+    } else {
+        assetSelected.add(id);
+        card.classList.add('selected');
+    }
+    updateAssetFooter();
+}
+
+function updateAssetFooter() {
+    document.getElementById('assetSelCount').textContent = assetSelected.size;
+    document.getElementById('assetConfirmBtn').disabled = assetSelected.size === 0;
+}
+
+function confirmAssetSelect() {
+    const items = MOCK_ASSETS[assetCurrentCat] || [];
+    items.forEach(a => { if (assetSelected.has(a.id)) addRefFromUrl(a.thumb); });
+    MOCK_TASKS.forEach(t => t.thumbs.forEach(a => { if (assetSelected.has(a.id)) addRefFromUrl(a.thumb); }));
+    MOCK_PRODUCTS.forEach(p => p.materials.forEach(a => { if (assetSelected.has(a.id)) addRefFromUrl(a.thumb); }));
+    closeAssetModal();
+}
+
+function showAssetPreview(src) {
+    document.getElementById('assetPreviewImg').src = src;
+    document.getElementById('assetPreviewMask').classList.add('show');
+}
+function closeAssetPreview() {
+    document.getElementById('assetPreviewMask').classList.remove('show');
+}
+
+function filterAssets() { renderAssetGrid(); }
+
+// ── 解析参考图 ──
+const PARSE_PROMPTS = [
+    '一位优雅的女性站在城市街头，身穿简约白色西装，背景是模糊的霓虹灯光，电影感光线，高清写实风格',
+    '古朴的中式茶馆内，茶烟袅袅，阳光透过木质雕花窗户洒落，暖色调，细腻纹理，写实摄影风格',
+    '未来科技感实验室，蓝紫色冷光，金属质感设备，全息投影界面，赛博朋克风格，超高清渲染',
+    '春日樱花树下，花瓣随风飘落，少女侧坐其中，浅粉色调，柔光，日系胶片风格',
+    '深邃宇宙背景，星云与星系交织，宏观视角，壮阔震撼，写实科学插画风格',
+];
+function parseRefImage() {
+    const btn = document.getElementById('parseBtn');
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    const origHTML = btn.innerHTML;
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:rot 0.6s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 解析中…';
+    setTimeout(() => {
+        const p = PARSE_PROMPTS[Math.floor(Math.random() * PARSE_PROMPTS.length)];
+        const ta = document.getElementById('prompt');
+        ta.value = p;
+        onInput();
+        btn.disabled = false;
+        btn.innerHTML = origHTML;
+    }, 1000);
+}
+
+// ── 尺寸推算 ──
+function updateSize(ratio, res) {
+    const base = res === '4K' ? 4096 : res === '1K' ? 1024 : 2048;
+    const parts = ratio.split(':').map(Number);
+    if (parts.length !== 2 || !parts[1]) {
+        sel[curType].sizeW = sel[curType].sizeH = base;
+    } else {
+        const [a, b] = parts;
+        if (a >= b) { sel[curType].sizeW = base; sel[curType].sizeH = Math.round(base * b / a); }
+        else        { sel[curType].sizeH = base; sel[curType].sizeW = Math.round(base * a / b); }
+    }
+}
+
+// ── 渲染选项 ──
+function renderOpts() {
+    const area = document.getElementById('optArea');
+    area.innerHTML = '';
+
+    OPTS[curType].forEach(opt => {
+        const pill = document.createElement('div');
+        pill.className = 'opt-pill';
+        pill.id = 'pill-' + opt.key;
+
+        let pillVal = '', ddInner = '';
+
+        if (opt.type === 'model') {
+            const m = MODELS.find(x => x.id === sel[curType].model) || MODELS[0];
+            pillVal = m.name;
+            ddInner = `<div class="dd-section">
+                <div class="dd-section-title">模型</div>
+                <div class="model-list">
+                    ${MODELS.map(mx => `
+                        <div class="model-opt${mx.id === sel[curType].model ? ' active' : ''}"
+                             data-desc="${mx.desc}"
+                             onclick="pickOpt(event,'model','${mx.id}')">${mx.name}</div>
+                    `).join('')}
+                </div>
+            </div>`;
+
+        } else if (opt.type === 'ratio-res') {
+            const ratio = sel[curType].ratio;
+            const res   = sel[curType].res;
+            const resLabel = res === '4K' ? '超清 4K' : res === '1K' ? '1K' : '高清 2K';
+            const customRatios = sel[curType].customRatios || [];
+
+            // Compute ratio icon for pill
+            const ratioNums = ratio.split(':').map(Number);
+            let rw = 14, rh = 14;
+            if (RATIO_SIZES[ratio]) { [rw, rh] = RATIO_SIZES[ratio]; }
+            else if (ratioNums.length === 2 && ratioNums[1]) {
+                const mx = 16;
+                if (ratioNums[0] >= ratioNums[1]) { rw = mx; rh = Math.round(mx * ratioNums[1] / ratioNums[0]); }
+                else { rh = mx; rw = Math.round(mx * ratioNums[0] / ratioNums[1]); }
+            }
+            const sc = 11 / Math.max(rw, rh);
+            const iw = Math.round(rw * sc), ih = Math.round(rh * sc);
+
+            pillVal = `<span class="pill-ratio-box" style="width:${iw}px;height:${ih}px;"></span>${ratio} · ${resLabel}`;
+
+            // Build custom ratio chips
+            const customChips = customRatios.map((cr, i) => {
+                const parts = cr.split(':').map(Number);
+                let cw = 14, ch = 14;
+                if (parts.length === 2 && parts[1]) {
+                    const mx = 16;
+                    if (parts[0] >= parts[1]) { cw = mx; ch = Math.round(mx * parts[1] / parts[0]); }
+                    else { ch = mx; cw = Math.round(mx * parts[0] / parts[1]); }
+                }
+                return `<div class="ratio-chip custom${cr===ratio?' active':''}"
+                             onclick="pickRatioRes(event,'ratio','${cr}')">
+                    <div class="chip-actions">
+                        <span class="chip-action" onclick="editCustomRatio(event,${i})" title="编辑">✎</span>
+                        <span class="chip-action" onclick="deleteCustomRatio(event,${i})" title="删除">✕</span>
+                    </div>
+                    <div class="ratio-box" style="width:${cw}px;height:${ch}px;"></div>
+                    <span class="ratio-lbl">${cr}</span>
+                </div>`;
+            }).join('');
+
+            const addBtn = customRatios.length < 5
+                ? `<div class="custom-add-btn" onclick="showCustomInput(event)">+ 添加自定义比例</div>`
+                : '';
+
+            ddInner = `<div class="dd-section">
+                <div class="dd-section-title">预设比例</div>
+                <div class="ratio-row">
+                    ${opt.ratioValues.map(v => {
+                        const [w,h] = RATIO_SIZES[v] || [14,14];
+                        return `<div class="ratio-chip${v===ratio?' active':''}"
+                                     onclick="pickRatioRes(event,'ratio','${v}')">
+                            <div class="ratio-box" style="width:${w}px;height:${h}px;"></div>
+                            <span class="ratio-lbl">${v}</span>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>
+            <div class="dd-section">
+                <div class="dd-section-title">自定义比例</div>
+                ${customRatios.length ? `<div class="ratio-row">${customChips}</div>` : ''}
+                ${addBtn}
+                <div class="custom-input-row" id="customInputRow" style="display:none;">
+                    <input type="number" class="custom-input" id="customW" placeholder="宽"
+                           min="1" max="9999" onclick="event.stopPropagation()" onkeydown="onCustomKey(event)">
+                    <span class="custom-sep">:</span>
+                    <input type="number" class="custom-input" id="customH" placeholder="高"
+                           min="1" max="9999" onclick="event.stopPropagation()" onkeydown="onCustomKey(event)">
+                    <button class="custom-confirm" onclick="saveCustomRatio(event)">✓</button>
+                    <button class="custom-cancel" onclick="cancelCustomInput(event)">✕</button>
+                </div>
+            </div>
+            <div class="dd-section">
+                <div class="res-toggle">
+                    <div class="res-large${res==='1K'?' active':''}" onclick="pickRatioRes(event,'res','1K')">1K</div>
+                    <div class="res-large${res==='2K'?' active':''}" onclick="pickRatioRes(event,'res','2K')">高清 2K</div>
+                    <div class="res-large${res==='4K'?' active':''}" onclick="pickRatioRes(event,'res','4K')">超清 4K <span class="res-star">✦</span></div>
+                </div>
+            </div>`;
+
+        } else if (opt.type === 'ratio') {
+            const val = sel[curType][opt.key];
+            pillVal = val;
+            ddInner = `<div class="dd-section">
+                <div class="dd-section-title">${opt.label}</div>
+                <div class="ratio-row">
+                    ${opt.values.map(v => {
+                        const [w,h] = RATIO_SIZES[v] || [14,14];
+                        return `<div class="ratio-chip${v===val?' active':''}"
+                                     onclick="pickOpt(event,'${opt.key}','${v}')">
+                            <div class="ratio-box" style="width:${w}px;height:${h}px;"></div>
+                            <span class="ratio-lbl">${v}</span>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>`;
+
+        } else if (opt.type === 'res') {
+            const val = sel[curType][opt.key];
+            pillVal = val;
+            ddInner = `<div class="dd-section">
+                <div class="dd-section-title">${opt.label}</div>
+                <div class="dd-chips">
+                    ${opt.values.map(v =>
+                        `<span class="dd-chip${v===val?' active':''}"
+                               onclick="pickOpt(event,'${opt.key}','${v}')">${v}</span>`
+                    ).join('')}
+                </div>
+            </div>`;
+
+        } else if (opt.type === 'count') {
+            const val = sel[curType].count || '1';
+            const isCustom = !opt.values.includes(val);
+            pillVal = val;
+            ddInner = `<div class="dd-section">
+                <div class="dd-section-title">生成数量</div>
+                <div class="dd-chips" style="flex-wrap:nowrap;">
+                    ${opt.values.map(v =>
+                        `<span class="dd-chip${v===val?' active':''}"
+                               onclick="pickOpt(event,'count','${v}')">${v}</span>`
+                    ).join('')}
+                    <span class="count-custom-wrap">
+                        <input class="count-custom-input${isCustom?' active':''}"
+                               id="countCustomInput"
+                               type="number" min="1" max="99"
+                               value="${isCustom ? val : ''}"
+                               placeholder="自定义"
+                               onclick="event.stopPropagation()"
+                               onkeydown="onCountKey(event)">
+                        <button class="count-confirm-btn" onclick="confirmCount(event)">确认</button>
+                    </span>
+                </div>
+            </div>`;
+
+        } else {
+            const val = sel[curType][opt.key];
+            pillVal = val;
+            ddInner = `<div class="dd-section">
+                <div class="dd-section-title">${opt.label}</div>
+                <div class="dd-chips">
+                    ${opt.values.map(v =>
+                        `<span class="dd-chip${v===val?' active':''}"
+                               onclick="pickOpt(event,'${opt.key}','${v}')">${v}</span>`
+                    ).join('')}
+                </div>
+            </div>`;
+        }
+
+        pill.innerHTML = `
+            <span class="opt-pill-val">${pillVal}</span>
+            <span class="arr">▾</span>
+            <div class="opt-dd" id="dd-${opt.key}">${ddInner}</div>`;
+
+        pill.addEventListener('click', e => {
+            e.stopPropagation();
+            const dd = pill.querySelector('.opt-dd');
+            const isOpen = pill.classList.contains('open');
+            closeAll();
+            if (!isOpen) { pill.classList.add('open'); dd.classList.add('show'); }
+        });
+
+        area.appendChild(pill);
+    });
+}
+
+function confirmCount(e) {
+    e.stopPropagation();
+    const input = document.getElementById('countCustomInput');
+    const v = parseInt(input?.value);
+    if (!v || v < 1) return;
+    sel[curType].count = String(Math.min(99, v));
+    closeAll();
+    renderOpts();
+}
+
+function onCountKey(e) {
+    if (e.key === 'Enter') confirmCount(e);
+}
+
+function onCountInput(e) {
+    const v = parseInt(e.target.value);
+    if (!v || v < 1) return;
+    sel[curType].count = String(Math.min(99, v));
+    const pill = document.getElementById('pill-count');
+    if (pill) pill.querySelector('.opt-pill-val').textContent = `${sel[curType].count} 张`;
+}
+
+function pickOpt(e, key, val) {
+    e.stopPropagation();
+    sel[curType][key] = val;
+    closeAll();
+    renderOpts();
+}
+
+function pickRatioRes(e, type, val) {
+    e.stopPropagation();
+    if (type === 'ratio') sel[curType].ratio = val;
+    else sel[curType].res = val;
+    updateSize(sel[curType].ratio, sel[curType].res);
+    reopenRatioPanel();
+}
+
+let editingCustomIndex = -1;
+
+function showCustomInput(e) {
+    e.stopPropagation();
+    editingCustomIndex = -1;
+    const row = document.getElementById('customInputRow');
+    if (row) {
+        row.style.display = 'flex';
+        const wInput = document.getElementById('customW');
+        const hInput = document.getElementById('customH');
+        wInput.value = ''; hInput.value = '';
+        wInput.focus();
+    }
+}
+
+function cancelCustomInput(e) {
+    e.stopPropagation();
+    editingCustomIndex = -1;
+    const row = document.getElementById('customInputRow');
+    if (row) row.style.display = 'none';
+}
+
+function saveCustomRatio(e) {
+    e.stopPropagation();
+    const w = parseInt(document.getElementById('customW')?.value);
+    const h = parseInt(document.getElementById('customH')?.value);
+    if (!w || !h || w < 1 || h < 1) { showToast('请输入有效的宽高值'); return; }
+    const ratio = `${w}:${h}`;
+    const customs = sel[curType].customRatios || [];
+    if (editingCustomIndex >= 0) {
+        customs[editingCustomIndex] = ratio;
+    } else {
+        if (customs.length >= 5) { showToast('最多添加 5 个自定义比例'); return; }
+        customs.push(ratio);
+    }
+    sel[curType].customRatios = customs;
+    editingCustomIndex = -1;
+    sel[curType].ratio = ratio;
+    updateSize(ratio, sel[curType].res);
+    reopenRatioPanel();
+}
+
+function editCustomRatio(e, index) {
+    e.stopPropagation();
+    const customs = sel[curType].customRatios || [];
+    const parts = customs[index].split(':').map(Number);
+    editingCustomIndex = index;
+    const row = document.getElementById('customInputRow');
+    if (row) {
+        row.style.display = 'flex';
+        document.getElementById('customW').value = parts[0] || '';
+        document.getElementById('customH').value = parts[1] || '';
+        document.getElementById('customW').focus();
+    }
+}
+
+function deleteCustomRatio(e, index) {
+    e.stopPropagation();
+    const customs = sel[curType].customRatios || [];
+    const removed = customs.splice(index, 1)[0];
+    if (sel[curType].ratio === removed) {
+        sel[curType].ratio = '1:1';
+        updateSize('1:1', sel[curType].res);
+    }
+    reopenRatioPanel();
+}
+
+function onCustomKey(e) {
+    if (e.key === 'Enter') { saveCustomRatio(e); }
+    else if (e.key === 'Escape') { cancelCustomInput(e); }
+}
+
+function reopenRatioPanel() {
+    renderOpts();
+    const pill = document.getElementById('pill-ratio-res');
+    const dd   = document.getElementById('dd-ratio-res');
+    if (pill && dd) { pill.classList.add('open'); dd.classList.add('show'); }
+}
+
+function openHistory() {
+    parent.postMessage({ action: 'openTab', title: '生成历史', url: 'AI 创作/生成历史.html' }, '*');
+}
+
+function switchType(btn) {
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    curType = btn.dataset.type;
+    document.getElementById('prompt').placeholder =
+        curType === 'image' ? '尝试描述您想要创建的图像' : '尝试描述您想要创建的视频';
+    closeAll();
+    renderOpts();
+}
+
+function useWorkflow(type) {
+    if (type === 'image') {
+        parent.postMessage({ action: 'openTab', title: '图像素材衍生', url: 'AI 创作/图像素材衍生工作流.html' }, '*');
+        return;
+    }
+    const btn = document.querySelector(`.type-btn[data-type="${type}"]`);
+    if (btn) switchType(btn);
+    document.getElementById('prompt').focus();
+}
+
+function doGenerate() {
+    const txt = document.getElementById('prompt').value.trim();
+    if (!txt) { document.getElementById('prompt').focus(); return; }
+    if (document.getElementById('genBtn').classList.contains('loading')) return;
+    localStorage.setItem('pendingGen', JSON.stringify({
+        type: curType,
+        prompt: txt,
+        opts: JSON.parse(JSON.stringify(sel[curType]))
+    }));
+    parent.postMessage({ action: 'openTab', title: '生成详情', url: 'AI 创作/生成详情.html' }, '*');
+}
+
+function closeAll() {
+    document.querySelectorAll('.opt-pill.open').forEach(p => p.classList.remove('open'));
+    document.querySelectorAll('.opt-dd.show').forEach(d => d.classList.remove('show'));
+}
+
+let _tt;
+function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(_tt);
+    _tt = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+document.addEventListener('click', closeAll);
+
+updateSize(sel.image.ratio, sel.image.res);
+renderOpts();
+</script>
+</body>
+</html>

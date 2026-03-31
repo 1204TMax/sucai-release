@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>量化投放系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background-color: #f5f7fa;
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* 顶部导航栏 */
+        .top-header {
+            height: 56px;
+            background: linear-gradient(90deg, #1a2a3a 0%, #243447 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        /* 一级菜单 */
+        .main-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu-item {
+            padding: 0 20px;
+            height: 56px;
+            line-height: 56px;
+            color: rgba(255,255,255,0.75);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .menu-item:hover {
+            color: #fff;
+        }
+
+        .menu-item.active {
+            color: #fff;
+            font-weight: 500;
+        }
+
+
+        /* 头部右侧 */
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-icon-btn {
+            color: rgba(255,255,255,0.75);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.3s;
+            font-size: 13px;
+        }
+
+        .header-icon-btn:hover {
+            color: #fff;
+        }
+
+        .header-icon-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* 版本切换 */
+        .version-switch {
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .version-btn {
+            padding: 4px 12px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.75);
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+
+        .version-btn.active {
+            background: #4a9eff;
+            color: #fff;
+        }
+
+        .version-btn:not(.active):hover {
+            color: #fff;
+        }
+
+        /* 用户信息 */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        .user-info:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .user-name {
+            color: rgba(255,255,255,0.9);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 主体布局 */
+        .main-layout {
+            display: flex;
+            margin-top: 56px;
+            min-height: calc(100vh - 56px);
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 200px;
+            background: #fff;
+            border-right: 1px solid #e8e8e8;
+            position: fixed;
+            top: 56px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            padding: 12px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-top {
+            flex: 1;
+        }
+
+        .sidebar-bottom {
+            padding-top: 8px;
+            margin-top: 8px;
+        }
+
+        .submenu-section {
+            margin-bottom: 4px;
+        }
+
+        .submenu-item {
+            padding: 10px 20px;
+            color: #666;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .submenu-item:hover {
+            color: #4a9eff;
+            background: #f5f7fa;
+        }
+
+        .submenu-item.active {
+            color: #4a9eff;
+            background: #e6f7ff;
+        }
+
+        .submenu-item svg {
+            width: 16px;
+            height: 16px;
+            color: #999;
+            flex-shrink: 0;
+        }
+
+        .group-title-bottom {
+            padding: 12px 20px 8px 20px;
+            color: #999;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: #e8e8e8;
+            margin: 12px 20px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 标签页 */
+        .tabs-container {
+            background: #fff;
+            border-bottom: 1px solid #e8e8e8;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            height: 40px;
+        }
+
+        .tabs-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+            overflow-x: auto;
+        }
+
+        .tab-item {
+            padding: 0 16px;
+            height: 40px;
+            line-height: 40px;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .tab-item:hover {
+            color: #4a9eff;
+        }
+
+        .tab-item.active {
+            color: #4a9eff;
+            background: #fff;
+            font-weight: 500;
+        }
+
+
+        .tab-close {
+            width: 14px;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+            opacity: 0.6;
+        }
+
+        .tab-close:hover {
+            background: #e8e8e8;
+            opacity: 1;
+        }
+
+        .tab-close svg {
+            width: 10px;
+            height: 10px;
+        }
+
+        .tab-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-action-btn {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+            color: #999;
+        }
+
+        .tab-action-btn:hover {
+            background: #f5f7fa;
+            color: #666;
+        }
+
+        .tab-action-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* 内容区域 */
+        .content-area {
+            flex: 1;
+            overflow: hidden;
+            background: #f5f7fa;
+        }
+
+        .content-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #f5f7fa;
+        }
+
+        /* 隐藏的侧边栏内容 */
+        .sidebar-content {
+            display: none;
+        }
+
+        .sidebar-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="top-header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-icon">量</div>
+                <span>量化投放系统</span>
+            </div>
+            <!-- 一级菜单（由 JS 动态生成） -->
+            <nav class="main-menu" id="main-menu"></nav>
+        </div>
+
+        <div class="header-right">
+            <div class="header-icon-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 16v-4M12 8h.01"></path>
+                </svg>
+                <span>帮助指引</span>
+            </div>
+            <div class="header-icon-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="M21 21l-4.35-4.35"></path>
+                </svg>
+            </div>
+            <div class="header-icon-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+            </div>
+            <div class="version-switch">
+                <div class="version-btn active">国内版</div>
+                <div class="version-btn">国际版</div>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">张</div>
+                <span class="user-name">
+                    张三
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主体布局 -->
+    <div class="main-layout">
+        <!-- 侧边栏（由 JS 动态生成） -->
+        <aside class="sidebar" id="sidebar"></aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 标签页 -->
+            <div class="tabs-container">
+                <div class="tabs-wrapper" id="tabs-wrapper"></div>
+                <div class="tab-actions">
+                    <div class="tab-action-btn" id="close-all-tabs" title="关闭所有标签页">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 内容区域 -->
+            <div class="content-area">
+                <iframe class="content-frame" id="content-frame"></iframe>
+            </div>
+        </main>
+    </div>
+
+    <!-- 引入菜单配置 -->
+    <script src="menu-config.js"></script>
+    <script>
+        // ============================================================
+        // 以下是框架逻辑，一般不需要修改
+        // 如需新增页面，请只修改 menu-config.js
+        // ============================================================
+
+        let currentModule = MENU_CONFIG[0].id;
+        const openTabs = new Map();
+
+        // 生成 SVG 图标
+        function svgIcon(pathContent) {
+            return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${pathContent}</svg>`;
+        }
+
+        // ---------- 初始化顶部一级菜单 ----------
+        function renderMainMenu() {
+            const container = document.getElementById('main-menu');
+            MENU_CONFIG.forEach((module, index) => {
+                const div = document.createElement('div');
+                div.className = 'menu-item' + (index === 0 ? ' active' : '');
+                div.dataset.module = module.id;
+                div.textContent = module.name;
+                div.addEventListener('click', () => switchModule(module.id));
+                container.appendChild(div);
+            });
+        }
+
+        // ---------- 初始化侧边栏 ----------
+        function renderSidebar() {
+            const sidebar = document.getElementById('sidebar');
+
+            // 上部区域
+            const topDiv = document.createElement('div');
+            topDiv.className = 'sidebar-top';
+
+            MENU_CONFIG.forEach((module, moduleIndex) => {
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'sidebar-content' + (moduleIndex === 0 ? ' active' : '');
+                contentDiv.dataset.for = module.id;
+
+                const section = document.createElement('div');
+                section.className = 'submenu-section';
+
+                module.children.forEach((child, childIndex) => {
+                    const item = document.createElement('div');
+                    item.className = 'submenu-item' + (moduleIndex === 0 && childIndex === 0 ? ' active' : '');
+                    item.dataset.page = child.page;
+                    item.innerHTML = (child.icon ? svgIcon(child.icon) : '') + child.name;
+                    item.addEventListener('click', () => onSubmenuClick(item));
+                    section.appendChild(item);
+                });
+
+                contentDiv.appendChild(section);
+                topDiv.appendChild(contentDiv);
+            });
+
+            sidebar.appendChild(topDiv);
+
+            // 底部固定菜单 - 常用功能
+            if (typeof BOTTOM_SHORTCUTS !== 'undefined' && BOTTOM_SHORTCUTS.length > 0) {
+                const shortcutsDiv = document.createElement('div');
+                shortcutsDiv.className = 'sidebar-bottom';
+                shortcutsDiv.innerHTML = '<div class="menu-divider"></div><div class="group-title-bottom">常用功能</div>';
+
+                const section = document.createElement('div');
+                section.className = 'submenu-section';
+
+                BOTTOM_SHORTCUTS.forEach(child => {
+                    const item = document.createElement('div');
+                    item.className = 'submenu-item';
+                    item.dataset.page = child.page;
+                    item.innerHTML = (child.icon ? svgIcon(child.icon) : '') + child.name;
+                    item.addEventListener('click', () => onSubmenuClick(item));
+                    section.appendChild(item);
+                });
+
+                shortcutsDiv.appendChild(section);
+                sidebar.appendChild(shortcutsDiv);
+            }
+
+            // 底部固定菜单 - 我的
+            if (BOTTOM_MENU && BOTTOM_MENU.length > 0) {
+                const bottomDiv = document.createElement('div');
+                bottomDiv.className = 'sidebar-bottom';
+                bottomDiv.innerHTML = '<div class="menu-divider"></div><div class="group-title-bottom">我的</div>';
+
+                const section = document.createElement('div');
+                section.className = 'submenu-section';
+
+                BOTTOM_MENU.forEach(child => {
+                    const item = document.createElement('div');
+                    item.className = 'submenu-item';
+                    item.dataset.page = child.page;
+                    item.innerHTML = (child.icon ? svgIcon(child.icon) : '') + child.name;
+                    item.addEventListener('click', () => onSubmenuClick(item));
+                    section.appendChild(item);
+                });
+
+                bottomDiv.appendChild(section);
+                sidebar.appendChild(bottomDiv);
+            }
+        }
+
+        // ---------- 切换一级菜单 ----------
+        function switchModule(moduleId) {
+            if (moduleId === currentModule) return;
+
+            // 更新顶栏激活状态
+            document.querySelectorAll('.main-menu .menu-item').forEach(m => m.classList.remove('active'));
+            document.querySelector(`.menu-item[data-module="${moduleId}"]`).classList.add('active');
+
+            // 切换侧边栏
+            document.querySelectorAll('.sidebar-content').forEach(s => s.classList.remove('active'));
+            document.querySelector(`.sidebar-content[data-for="${moduleId}"]`).classList.add('active');
+
+            // 加载该模块第一个页面
+            const firstItem = document.querySelector(`.sidebar-content[data-for="${moduleId}"] .submenu-item`);
+            if (firstItem) {
+                document.querySelectorAll('.submenu-item').forEach(i => i.classList.remove('active'));
+                firstItem.classList.add('active');
+                loadPage(firstItem.textContent.trim(), firstItem.dataset.page);
+            }
+
+            currentModule = moduleId;
+        }
+
+        // ---------- 侧边栏菜单点击 ----------
+        function onSubmenuClick(item) {
+            document.querySelectorAll('.submenu-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            loadPage(item.textContent.trim(), item.dataset.page);
+        }
+
+        // ---------- 加载页面到 iframe ----------
+        function loadPage(tabName, src) {
+            document.getElementById('content-frame').src = src;
+
+            if (!openTabs.has(tabName)) {
+                openTabs.set(tabName, { name: tabName, src: src });
+                addTab(tabName);
+            }
+            activateTab(tabName);
+        }
+
+        // ---------- 标签页操作 ----------
+        function addTab(name) {
+            const wrapper = document.getElementById('tabs-wrapper');
+            const tab = document.createElement('div');
+            tab.className = 'tab-item';
+            tab.dataset.tab = name;
+            tab.innerHTML = `
+                <span>${name}</span>
+                <span class="tab-close" onclick="closeTab('${name.replace(/'/g, "\\'")}', event)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </span>
+            `;
+            tab.onclick = function(e) {
+                if (!e.target.closest('.tab-close')) activateTab(name);
+            };
+            wrapper.appendChild(tab);
+        }
+
+        function activateTab(name) {
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            const tab = document.querySelector(`.tab-item[data-tab="${name}"]`);
+            if (tab) {
+                tab.classList.add('active');
+                const info = openTabs.get(name);
+                if (info) document.getElementById('content-frame').src = info.src;
+            }
+        }
+
+        function closeTab(name, event) {
+            event.stopPropagation();
+            if (openTabs.size <= 1) return;
+
+            openTabs.delete(name);
+            const tab = document.querySelector(`.tab-item[data-tab="${name}"]`);
+            if (tab) tab.remove();
+
+            const lastTab = Array.from(openTabs.keys()).pop();
+            activateTab(lastTab);
+        }
+
+        // 关闭所有标签
+        document.getElementById('close-all-tabs').addEventListener('click', function() {
+            openTabs.clear();
+            openTabs.set(DEFAULT_TAB_NAME, { name: DEFAULT_TAB_NAME, src: DEFAULT_PAGE });
+            document.getElementById('tabs-wrapper').innerHTML = '';
+            addTab(DEFAULT_TAB_NAME);
+            activateTab(DEFAULT_TAB_NAME);
+        });
+
+        // ---------- iframe postMessage 通信 ----------
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.action === 'openTab' && e.data.url) {
+                loadPage(e.data.title || e.data.url, e.data.url);
+            }
+            if (e.data && e.data.action === 'closeCurrentTab') {
+                const activeTab = document.querySelector('.tab-item.active');
+                if (activeTab) closeTab(activeTab.dataset.tab, new Event('click'));
+            }
+        });
+
+        // ---------- 初始化 ----------
+        renderMainMenu();
+        renderSidebar();
+        openTabs.set(DEFAULT_TAB_NAME, { name: DEFAULT_TAB_NAME, src: DEFAULT_PAGE });
+        addTab(DEFAULT_TAB_NAME);
+        activateTab(DEFAULT_TAB_NAME);
+    </script>
+</body>
+</html>

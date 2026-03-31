@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>物料库 - 量化投放系统</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- [Ant Design 数据录入规范 spec/data-entry.zh-CN.md] 引入 antd 组件库 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.24.7/dist/reset.min.css">
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/antd@5.24.7/dist/antd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #1d2129; font-size: 14px; }
+
+  .custom-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+  .custom-scroll::-webkit-scrollbar-thumb { background: #c9cdd4; border-radius: 3px; }
+  .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+
+  select, input[type="text"], input[type="number"], input[type="date"] {
+    height: 32px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 0 10px;
+    font-size: 12px; color: #333; background: #fff; outline: none; transition: border-color 0.2s;
+  }
+  select:focus, input:focus { border-color: #1890ff; }
+  select {
+    padding-right: 28px; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%234e5969' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 8px center;
+  }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; min-width: 2800px; }
+  .table-wrapper { overflow-x: auto; border: 1px solid #e8e8e8; border-radius: 6px; }
+
+  /* Group header (level 1) */
+  thead .group-header th {
+    text-align: center; font-weight: 600; font-size: 12px; color: #1a1a1a;
+    padding: 8px 12px; border-bottom: 1px solid #e8e8e8; background: #fafafa;
+    letter-spacing: 0.5px; position: sticky; top: 0; z-index: 8;
+  }
+  thead .group-header th.g-basic   { background: #f0f7ff; }
+  thead .group-header th.g-tag     { background: #f9f0ff; }
+  thead .group-header th.g-source  { background: #e6fffb; }
+  thead .group-header th.g-quality { background: #fff7e6; }
+  thead .group-header th.g-related { background: #f6ffed; }
+  thead .group-header th.g-heat    { background: #fff1f0; }
+  thead .group-header th.g-op      { background: #fafafa; }
+  thead .group-header th.g-cb      { background: #fafafa; }
+
+  /* Sub header (level 2) */
+  thead .sub-header th {
+    padding: 8px 10px; text-align: left; font-weight: 500; font-size: 11px; color: #666;
+    border-bottom: 1px solid #e8e8e8; background: #fafafa; white-space: nowrap;
+    position: sticky; top: 36px; z-index: 7;
+  }
+  /* PLACEHOLDER_STYLES */
+
+  .sort-icons { display: inline-flex; flex-direction: column; margin-left: 3px; font-size: 8px; line-height: 1; vertical-align: middle; }
+  .sort-icons span { color: #ccc; cursor: pointer; line-height: 8px; }
+  .sort-icons span:hover, .sort-icons span.active { color: #1890ff; }
+
+  /* Border-left for first sub-header in each group */
+  .border-left-blue   { }
+  .border-left-purple { }
+  .border-left-cyan   { }
+  .border-left-orange { }
+  .border-left-green  { }
+  .border-left-red    { }
+
+  /* Table body */
+  td { padding: 10px 10px; border-bottom: 1px solid #f0f0f0; font-size: 12px; color: #333; vertical-align: top; }
+  tr:hover td { background: #fafafa; }
+  tr { cursor: pointer; }
+
+  /* Platform data in cells */
+  .platform-data { display: flex; flex-direction: column; gap: 3px; }
+  .platform-row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+  .platform-name { color: #999; min-width: 24px; }
+  .rate-val { color: #333; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .rate-val.good { color: #52c41a; }
+  .rate-val.mid  { color: #fa8c16; }
+  .rate-val.bad  { color: #f5222d; }
+
+  /* Heat cell */
+  .heat-cell { display: flex; align-items: center; gap: 6px; }
+  .heat-bar-track { width: 48px; height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+  .heat-bar-fill { height: 100%; border-radius: 3px; background: #1890ff; transition: width 0.3s; }
+  .heat-high .heat-bar-fill { background: #f5222d; }
+  .heat-mid .heat-bar-fill  { background: #fa8c16; }
+  .heat-low .heat-bar-fill  { background: #52c41a; }
+  .heat-num { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* Thumbnail */
+  .thumb-box { width: 72px; height: 40px; border-radius: 4px; overflow: hidden; background: #f2f3f5; flex-shrink: 0; position: relative; }
+  .thumb-box:hover .thumb-play { opacity: 1; }
+  .thumb-play { position: absolute; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; cursor: pointer; }
+
+  /* Tags */
+  .tag-sm { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 11px; margin: 1px 2px; }
+
+  /* Lib tabs */
+  .lib-tab { padding: 4px 16px; font-size: 13px; border-radius: 4px; cursor: pointer; transition: all 0.2s; border: none; background: none; color: #86909c; }
+  .lib-tab.active { background: #1890ff; color: #fff; }
+
+  /* Page buttons */
+  .page-btn {
+    min-width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; color: #333; background: #fff; cursor: pointer; transition: all 0.15s;
+  }
+  .page-btn:hover { border-color: #1890ff; color: #1890ff; }
+  .page-btn.active { background: #1890ff; color: #fff; border-color: #1890ff; }
+  .page-btn:disabled { color: #d9d9d9; cursor: not-allowed; }
+
+  .checkbox-input { width: 15px; height: 15px; accent-color: #1890ff; cursor: pointer; }
+
+  /* Drawer */
+  .drawer-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 100; transition: opacity 0.25s; }
+  .drawer-panel { position: fixed; top: 0; right: 0; height: 100%; width: 720px; max-width: 90vw; background: #fff; z-index: 101; box-shadow: -4px 0 16px rgba(0,0,0,0.08); transition: transform 0.25s ease; overflow-y: auto; }
+
+  /* Video modal */
+  .video-modal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); }
+  .video-modal-content { background: #000; border-radius: 8px; overflow: hidden; width: 560px; max-width: 90vw; aspect-ratio: 16/9; position: relative; }
+
+  /* Toast */
+  #toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #1d2129; color: #fff; font-size: 13px; padding: 8px 18px; border-radius: 6px; z-index: 9999; pointer-events: none; transition: opacity 0.3s; }
+
+  /* Action menu */
+  .action-menu { position: absolute; right: 0; top: 100%; margin-top: 4px; background: #fff; border-radius: 6px; box-shadow: 0 3px 12px rgba(0,0,0,0.12); border: 1px solid #e8e8e8; padding: 4px 0; z-index: 20; width: 130px; }
+  .action-menu button { display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12px; border: none; background: none; cursor: pointer; color: #333; }
+  .action-menu button:hover { background: #f5f5f5; }
+</style>
+</head>
+<body>
+
+<div class="flex flex-col" style="min-height:100vh;">
+
+  <!-- 顶栏 -->
+  <header class="bg-white px-5 py-3 flex items-center justify-between border-b border-gray-200 sticky top-0 z-20">
+    <div class="flex items-center gap-3">
+      <h1 class="text-base font-semibold text-gray-900">物料库</h1>
+      <span class="text-sm text-gray-400" id="libLabel">正式库</span>
+      <span class="text-sm text-gray-400">共 <b class="text-gray-700" id="totalNum">152</b> 条</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="openImportModal()" class="flex items-center gap-1.5 px-3 h-8 rounded text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white transition-colors">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        上传物料
+      </button>
+      <button class="px-3 h-8 rounded text-sm border border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-500">导出列表</button>
+      <div class="flex items-center gap-1 bg-gray-100 rounded p-0.5">
+        <button class="lib-tab active" data-lib="formal" onclick="switchLib(this)">正式库</button>
+        <button class="lib-tab" data-lib="optimize" onclick="switchLib(this)">待优化库</button>
+        <button class="lib-tab" data-lib="trash" onclick="switchLib(this)">回收站</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- [Ant Design 列表筛选规范 spec/data-list.zh-CN.md] 筛选区 React 挂载点 -->
+  <div id="filterArea" class="bg-white px-5 pt-4 pb-4 border-b border-gray-200"></div>
+
+  <!-- 批量操作条 -->
+  <div id="batchBar" class="bg-blue-50 px-5 py-2 border-b border-blue-100 items-center gap-3 hidden">
+    <span class="text-sm text-blue-600 font-medium" id="selectedCount">已选 0 项</span>
+    <button class="text-xs px-3 py-1 rounded border border-gray-300 bg-white text-gray-600 hover:border-blue-400 hover:text-blue-500">移至待优化库</button>
+    <button class="text-xs px-3 py-1 rounded border border-gray-300 bg-white text-red-500 hover:border-red-400">移至回收站</button>
+    <button class="text-xs px-3 py-1 rounded border border-gray-300 bg-white text-gray-600 hover:border-blue-400 hover:text-blue-500">批量打标签</button>
+    <button class="text-xs text-gray-400 hover:text-gray-600 ml-1" onclick="clearSelection()">取消选择</button>
+  </div>
+
+  <!-- 表格区域 -->
+  <div class="flex-1 px-5 py-3">
+    <div class="bg-white rounded-lg overflow-hidden flex flex-col" style="height:calc(100vh - 240px);min-height:400px;">
+      <div class="table-wrapper flex-1 custom-scroll">
+        <table>
+          <thead>
+            <tr class="group-header">
+              <th class="g-cb" rowspan="2" style="width:40px;"><input type="checkbox" class="checkbox-input" id="selectAll" onchange="toggleAll(this)"></th>
+              <th class="g-basic" colspan="6">物料基础信息</th>
+              <th class="g-tag" colspan="3">标签体系</th>
+              <th class="g-source" colspan="4">来源信息</th>
+              <th class="g-quality" colspan="10">物料质量 / 投放表现</th>
+              <th class="g-related" colspan="1">关联素材</th>
+              <th class="g-heat" colspan="4">使用热度</th>
+              <th class="g-op" rowspan="2" style="min-width:100px;">操作</th>
+            </tr>
+            <tr class="sub-header">
+              <th class="border-left-blue" style="min-width:230px;">物料信息</th>
+              <th style="min-width:80px;">画幅</th>
+              <th style="min-width:60px;">品类</th>
+              <th style="min-width:80px;">产品</th>
+              <th style="min-width:70px;">类型</th>
+              <th style="min-width:80px;">入库时间</th>
+              <th class="border-left-purple" style="min-width:50px;">语言</th>
+              <th style="min-width:60px;">位置</th>
+              <th style="min-width:110px;">自定义标签</th>
+              <th class="border-left-cyan" style="min-width:75px;">来源类型</th>
+              <th style="min-width:130px;">来源素材</th>
+              <th style="min-width:65px;">生成方式</th>
+              <th style="min-width:55px;">上传人</th>
+              <th class="border-left-orange" style="min-width:70px;">合成素材数 <span class="sort-icons"><span onclick="doSort('compCount','asc')">▲</span><span onclick="doSort('compCount','desc')">▼</span></span></th>
+              <th style="min-width:100px;">各平台计划数</th>
+              <th style="min-width:90px;">各平台使用数</th>
+              <th style="min-width:110px;">各平台完播率 <span class="sort-icons"><span>▲</span><span>▼</span></span></th>
+              <th style="min-width:100px;">各平台点击率 <span class="sort-icons"><span>▲</span><span>▼</span></span></th>
+              <th style="min-width:100px;">各平台拒审率 <span class="sort-icons"><span>▲</span><span>▼</span></span></th>
+              <th style="min-width:110px;">各平台同质化率 <span class="sort-icons"><span>▲</span><span>▼</span></span></th>
+              <th style="min-width:70px;">历史计划 <span class="sort-icons"><span>▲</span><span>▼</span></span></th>
+              <th style="min-width:70px;">在投计划 <span class="sort-icons"><span>▲</span><span>▼</span></span></th>
+              <th style="min-width:100px;">出池率 <span class="sort-icons"><span>▲</span><span>▼</span></span></th>
+              <th class="border-left-green" style="min-width:90px;">被引用素材 <span class="sort-icons"><span>▲</span><span>▼</span></span></th>
+              <th class="border-left-red" style="min-width:90px;">7天引用 <span class="sort-icons"><span>▲</span><span>▼</span></span></th>
+              <th style="min-width:90px;">30天引用 <span class="sort-icons"><span>▲</span><span>▼</span></span></th>
+              <th style="min-width:80px;">首次使用</th>
+              <th style="min-width:80px;">最近使用</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <!-- 分页 -->
+      <div class="flex items-center justify-between px-4 py-2.5 border-t border-gray-200 bg-white shrink-0">
+        <span class="text-sm text-gray-400">共 <span id="pageTotal">152</span> 条</span>
+        <div class="flex items-center gap-1">
+          <button class="page-btn" disabled>上一页</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <span class="px-1 text-gray-400">...</span>
+          <button class="page-btn">16</button>
+          <button class="page-btn">下一页</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 详情抽屉 -->
+<div id="drawerMask" class="drawer-mask hidden" style="opacity:0" onclick="closeDrawer()"></div>
+<div id="drawerPanel" class="drawer-panel" style="transform:translateX(100%)">
+  <div class="sticky top-0 bg-white border-b border-gray-200 px-5 py-3 flex items-center justify-between z-10">
+    <h2 class="font-semibold text-sm" id="drawerTitle">物料详情</h2>
+    <button onclick="closeDrawer()" class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div id="drawerContent" class="p-5"></div>
+</div>
+
+<!-- 导入弹层 -->
+<div id="importModal" class="hidden" style="position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);">
+  <div class="bg-white rounded-xl shadow-2xl w-[520px] max-w-[90vw]" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+      <h3 class="font-semibold text-sm text-gray-900">上传物料</h3>
+      <button onclick="closeImportModal()" class="p-1 rounded hover:bg-gray-100 text-gray-400"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="p-5">
+      <div id="dropZone" class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/40 transition-colors"
+        onclick="document.getElementById('fileInput').click()">
+        <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3"><svg width="22" height="22" fill="none" stroke="#1890ff" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+        <p class="text-sm text-gray-700 font-medium mb-1">点击选择或拖拽文件至此处</p>
+        <p class="text-xs text-gray-400">支持 MP4、MOV、AVI、JPG、PNG，单文件最大 2GB</p>
+        <input type="file" id="fileInput" class="hidden" multiple accept="video/*,image/*">
+      </div>
+      <div class="mt-4 grid grid-cols-2 gap-3">
+        <div><label class="block text-xs text-gray-500 mb-1">品类</label><select class="w-full"><option>请选择</option><option>美妆</option><option>个护</option><option>保健品</option><option>3C数码</option></select></div>
+        <div><label class="block text-xs text-gray-500 mb-1">产品</label><select class="w-full"><option>请选择</option><option>亮肤面霜A</option><option>蓝牙耳机Pro</option><option>益生菌X</option></select></div>
+        <div><label class="block text-xs text-gray-500 mb-1">物料类型</label><select class="w-full"><option>请选择</option><option>口播</option><option>产品演示</option><option>真人剧情</option><option>大字报</option></select></div>
+        <div><label class="block text-xs text-gray-500 mb-1">来源类型</label><select class="w-full"><option>请选择</option><option>爆款拆分</option><option>工作流</option><option>通用生成</option><option>手动上传</option></select></div>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 px-5 py-4 border-t border-gray-100">
+      <button onclick="closeImportModal()" class="px-4 py-2 text-sm rounded border border-gray-200 text-gray-600 hover:bg-gray-50">取消</button>
+      <button onclick="closeImportModal();showToast('上传中...')" class="px-4 py-2 text-sm rounded bg-blue-500 hover:bg-blue-600 text-white font-medium">开始上传</button>
+    </div>
+  </div>
+</div>
+
+<!-- 视频预览弹层 -->
+<div id="videoModal" class="video-modal hidden" onclick="closeVideoModal()">
+  <div class="video-modal-content" onclick="event.stopPropagation()">
+    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+      <svg class="opacity-60" width="48" height="48" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </div>
+    <button onclick="closeVideoModal()" class="absolute top-3 right-3 w-8 h-8 bg-black/50 rounded-full flex items-center justify-center text-white/80 hover:text-white"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    <span class="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-0.5 rounded" id="modalDuration">00:08</span>
+  </div>
+</div>
+
+<script>
+// ============ Data ============
+const materials = [
+  { id:'M20260301001', name:'面霜-口播开头-自信女生', dur:'0:08', ratio:'竖版 9:16', createTime:'2026-03-01', cat:'美妆', prod:'亮肤面霜A', type:'口播', lang:'中文', posTag:'片头', tags:['爆款','高转化'], srcType:'爆款拆分', srcId:'S20260228012', genBy:'自动拆分', uploader:'系统',
+    compCount:23,
+    platPlan:{jl:86,tx:42,ks:31}, platUse:{jl:12,tx:7,ks:4},
+    platFinish:{jl:72.3,tx:68.1,ks:70.5}, platClick:{jl:5.8,tx:4.2,ks:5.1},
+    platReject:{jl:2.1,tx:1.8,ks:3.2}, platHomo:{jl:38.5,tx:22.1,ks:28.3},
+    histPlan:159, activePlan:47, platPool:{jl:18.2,tx:12.5,ks:15.8},
+    refCount:23, hot7:8, hot30:18, firstUsed:'2026-03-02', lastUsed:'2026-03-30', color:'#818cf8' },
+  { id:'M20260305023', name:'蓝牙耳机-产品展示-旋转', dur:'0:15', ratio:'横版 16:9', createTime:'2026-03-05', cat:'3C数码', prod:'蓝牙耳机Pro', type:'产品演示', lang:'英语', posTag:'片中', tags:['产品特写'], srcType:'工作流', srcId:null, genBy:'AI生成', uploader:'AI工作流',
+    compCount:15,
+    platPlan:{jl:52,tx:28}, platUse:{jl:8,tx:7},
+    platFinish:{jl:65.2,tx:58.3}, platClick:{jl:6.1,tx:4.8},
+    platReject:{jl:8.5,tx:4.2}, platHomo:{jl:18.2,tx:15.6},
+    histPlan:80, activePlan:22, platPool:{jl:22.0,tx:10.3},
+    refCount:15, hot7:4, hot30:9, firstUsed:'2026-03-06', lastUsed:'2026-03-28', color:'#34d399' },
+  { id:'M20260310045', name:'益生菌-大字报-限时优惠', dur:'0:05', ratio:'竖版 9:16', createTime:'2026-03-10', cat:'保健品', prod:'益生菌X', type:'大字报', lang:'中文', posTag:'片尾', tags:['促销','CTA'], srcType:'通用生成', srcId:null, genBy:'AI生成', uploader:'张三',
+    compCount:31,
+    platPlan:{jl:110,tx:65,ks:48}, platUse:{jl:18,tx:9,ks:4},
+    platFinish:{jl:55.8,tx:52.1,ks:48.9}, platClick:{jl:7.2,tx:6.8,ks:5.5},
+    platReject:{jl:1.5,tx:2.3,ks:1.8}, platHomo:{jl:45.2,tx:32.1,ks:38.6},
+    histPlan:223, activePlan:58, platPool:{jl:20.1,tx:16.8,ks:11.2},
+    refCount:31, hot7:7, hot30:22, firstUsed:'2026-03-10', lastUsed:'2026-03-31', color:'#f97316' },
+  { id:'M20260312067', name:'剧情-闺蜜推荐面霜', dur:'0:22', ratio:'竖版 9:16', createTime:'2026-03-12', cat:'美妆', prod:'亮肤面霜A', type:'真人剧情', lang:'中文', posTag:'片中', tags:['剧情向','社交场景'], srcType:'手动上传', srcId:null, genBy:'人工剪辑', uploader:'李四',
+    compCount:8,
+    platPlan:{jl:22,ks:15}, platUse:{jl:5,ks:3},
+    platFinish:{jl:78.5,ks:75.2}, platClick:{jl:8.3,ks:7.1},
+    platReject:{jl:12.5,ks:9.1}, platHomo:{jl:12.5,ks:8.3},
+    histPlan:37, activePlan:12, platPool:{jl:25.0,ks:18.5},
+    refCount:8, hot7:2, hot30:5, firstUsed:'2026-03-13', lastUsed:'2026-03-27', color:'#6366f1' },
+  { id:'M20260315088', name:'智能手表-品牌LOGO片尾', dur:'0:12', ratio:'方形 1:1', createTime:'2026-03-15', cat:'3C数码', prod:'智能手表S', type:'口播', lang:'英语', posTag:'片尾', tags:['品牌','通用'], srcType:'通用生成', srcId:null, genBy:'AI生成', uploader:'张三',
+    compCount:42,
+    platPlan:{jl:135,tx:88,ks:62}, platUse:{jl:25,tx:12,ks:5},
+    platFinish:{jl:48.2,tx:45.0,ks:42.8}, platClick:{jl:3.5,tx:2.9,ks:3.1},
+    platReject:{jl:5.2,tx:3.8,ks:6.1}, platHomo:{jl:42.0,tx:35.2,ks:40.1},
+    histPlan:285, activePlan:63, platPool:{jl:15.2,tx:10.8,ks:8.5},
+    refCount:42, hot7:12, hot30:35, firstUsed:'2026-03-15', lastUsed:'2026-03-31', color:'#ec4899' },
+  { id:'M20260320101', name:'耳机-降噪对比-地铁场景', dur:'0:18', ratio:'横版 16:9', createTime:'2026-03-20', cat:'3C数码', prod:'蓝牙耳机Pro', type:'产品演示', lang:'中文', posTag:'片中', tags:['对比测评'], srcType:'爆款拆分', srcId:'S20260318055', genBy:'自动拆分', uploader:'系统',
+    compCount:0,
+    platPlan:{}, platUse:{},
+    platFinish:{}, platClick:{},
+    platReject:{}, platHomo:{},
+    histPlan:0, activePlan:0, platPool:{},
+    refCount:0, hot7:0, hot30:0, firstUsed:'--', lastUsed:'--', color:'#a78bfa' },
+];
+
+const PLAT_NAMES = { jl:'巨量', tx:'腾讯', ks:'快手' };
+const typeTagCls = { '口播':'bg-violet-50 text-violet-600 border border-violet-200', '产品演示':'bg-emerald-50 text-emerald-600 border border-emerald-200', '真人剧情':'bg-orange-50 text-orange-600 border border-orange-200', '大字报':'bg-pink-50 text-pink-600 border border-pink-200' };
+const srcTagCls = { '爆款拆分':'bg-cyan-50 text-cyan-600 border border-cyan-200', '工作流':'bg-orange-50 text-orange-600 border border-orange-200', '通用生成':'bg-green-50 text-green-600 border border-green-200', '手动上传':'bg-gray-100 text-gray-500 border border-gray-200' };
+const posTagCls = { '片头':'bg-purple-50 text-purple-600', '片中':'bg-green-50 text-green-600', '片尾':'bg-red-50 text-red-500' };
+const customTagColors = ['bg-pink-50 text-pink-600 border border-pink-200','bg-orange-50 text-orange-600 border border-orange-200','bg-blue-50 text-blue-600 border border-blue-200','bg-gray-100 text-gray-500 border border-gray-200'];
+
+let selectedIds = new Set();
+let currentData = [...materials];
+
+// ---- Helpers ----
+function rateClass(v, goodT, midT) {
+  if (v >= goodT) return 'good';
+  if (v >= midT) return 'mid';
+  return 'bad';
+}
+function renderPlatNum(obj) {
+  const keys = Object.keys(obj);
+  if (!keys.length) return '<span style="color:#ccc">--</span>';
+  return '<div class="platform-data">' + keys.map(k =>
+    `<div class="platform-row"><span class="platform-name">${PLAT_NAMES[k]||k}</span><span class="rate-val">${obj[k]}</span></div>`
+  ).join('') + '</div>';
+}
+function renderPlatRate(obj, goodT, midT) {
+  const keys = Object.keys(obj);
+  if (!keys.length) return '<span style="color:#ccc">--</span>';
+  return '<div class="platform-data">' + keys.map(k => {
+    const v = obj[k]; const cls = rateClass(v, goodT, midT);
+    return `<div class="platform-row"><span class="platform-name">${PLAT_NAMES[k]||k}</span><span class="rate-val ${cls}">${v.toFixed(1)}%</span></div>`;
+  }).join('') + '</div>';
+}
+function heatLevel(v) { return v >= 7 ? 'high' : v >= 3 ? 'mid' : 'low'; }
+function heatColor(v) { return v >= 7 ? '#f5222d' : v >= 3 ? '#fa8c16' : '#52c41a'; }
+function heatWidth(v) { return Math.min(100, Math.round(v / 15 * 100)); }
+function renderHeat(v) {
+  if (v === 0) return '<span style="color:#ccc">--</span>';
+  const lv = heatLevel(v);
+  return `<div class="heat-cell heat-${lv}"><div class="heat-bar-track"><div class="heat-bar-fill" style="width:${heatWidth(v)}%"></div></div><span class="heat-num" style="color:${heatColor(v)}">${v}${v >= 7 ? ' 🔥' : ''}</span></div>`;
+}
+
+// ---- Render ----
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = currentData.map(m => {
+    const hasData = m.compCount > 0;
+    return `
+    <tr onclick="openDrawer('${m.id}')">
+      <td class="text-center" style="vertical-align:middle" onclick="event.stopPropagation()"><input type="checkbox" class="checkbox-input row-check" data-id="${m.id}" onchange="toggleCheck(this)" ${selectedIds.has(m.id)?'checked':''}></td>
+      <!-- 基础信息 -->
+      <td>
+        <div class="flex items-center gap-2.5">
+          <div class="thumb-box" onclick="event.stopPropagation();openVideoModal('${m.dur}')">
+            <div class="w-full h-full flex items-center justify-center" style="background:linear-gradient(135deg,${m.color}22,${m.color}44)">
+              <svg width="14" height="14" fill="${m.color}" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="thumb-play"><svg width="12" height="12" fill="#fff" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+            <span class="absolute bottom-0.5 right-0.5 bg-black/60 text-white leading-none px-1 py-0.5 rounded" style="font-size:9px">${m.dur}</span>
+          </div>
+          <div><div class="text-xs font-medium text-gray-900 truncate" style="max-width:150px">${m.name}</div><div class="text-[10px] text-gray-400 font-mono mt-0.5">${m.id}</div></div>
+        </div>
+      </td>
+      <td><span class="tag-sm bg-blue-50 text-blue-600 border border-blue-200">${m.ratio}</span></td>
+      <td>${m.cat}</td>
+      <td>${m.prod}</td>
+      <td><span class="tag-sm ${typeTagCls[m.type]||''}">${m.type}</span></td>
+      <td style="color:#999">${m.createTime}</td>
+      <!-- 标签 -->
+      <td><span class="tag-sm bg-gray-100 text-gray-600">${m.lang}</span></td>
+      <td><span class="tag-sm ${posTagCls[m.posTag]||''}">${m.posTag}</span></td>
+      <td><div class="flex flex-wrap gap-1">${m.tags.map((t,i)=>`<span class="tag-sm ${customTagColors[i%customTagColors.length]}">${t}</span>`).join('')}</div></td>
+      <!-- 来源 -->
+      <td><span class="tag-sm ${srcTagCls[m.srcType]||''}">${m.srcType}</span></td>
+      <td>${m.srcId ? `<div class="flex items-center gap-1.5"><div class="w-10 h-6 rounded bg-gray-800 flex items-center justify-center text-white/50 text-[10px] flex-shrink-0">▶</div><a class="text-blue-500 text-[11px] hover:underline cursor-pointer" onclick="event.stopPropagation()">${m.srcId}</a></div>` : '<span style="color:#ccc">—</span>'}</td>
+      <td class="text-xs">${m.genBy}</td>
+      <td class="text-xs">${m.uploader}</td>
+      <!-- 质量 -->
+      <td class="text-center" style="font-weight:600">${hasData ? m.compCount : '<span style="color:#ccc">--</span>'}</td>
+      <td>${renderPlatNum(m.platPlan)}</td>
+      <td>${renderPlatNum(m.platUse)}</td>
+      <td>${renderPlatRate(m.platFinish, 65, 50)}</td>
+      <td>${renderPlatRate(m.platClick, 5, 3)}</td>
+      <td>${renderPlatRate(m.platReject, 3, 8)}</td>
+      <td>${renderPlatRate(m.platHomo, 25, 40)}</td>
+      <td class="text-center">${m.histPlan || '<span style="color:#ccc">--</span>'}</td>
+      <td class="text-center" style="font-weight:600;color:${m.activePlan ? '#1890ff' : '#ccc'}">${m.activePlan || '--'}</td>
+      <td>${renderPlatRate(m.platPool, 15, 10)}</td>
+      <!-- 关联素材 -->
+      <td>${m.refCount ? `<a class="text-blue-500 text-xs hover:underline cursor-pointer" onclick="event.stopPropagation();showToast('查看${m.refCount}条关联素材')">${m.refCount}条素材 →</a>` : '<span style="color:#ccc">--</span>'}</td>
+      <!-- 热度 -->
+      <td>${renderHeat(m.hot7)}</td>
+      <td>${renderHeat(m.hot30)}</td>
+      <td style="color:#999;font-size:11px">${m.firstUsed}</td>
+      <td style="color:#999;font-size:11px">${m.lastUsed}</td>
+      <!-- 操作 -->
+      <td onclick="event.stopPropagation()">
+        <div class="relative inline-block">
+          <button class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600" onclick="toggleMenu(this)">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+          </button>
+          <div class="action-menu hidden">
+            <button onclick="openDrawer('${m.id}')">查看详情</button>
+            <button>编辑属性</button>
+            <button onclick="showToast('下载: ${m.name}')">下载</button>
+            <button style="color:#fa8c16" onclick="showToast('已移至待优化库')">移至待优化</button>
+            <button style="color:#f5222d" onclick="showToast('已移至回收站')">移至回收站</button>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ---- Interactions ----
+function toggleMenu(btn) {
+  const menu = btn.nextElementSibling;
+  document.querySelectorAll('.action-menu').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
+  menu.classList.toggle('hidden');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.action-menu') && !e.target.closest('[onclick*="toggleMenu"]'))
+    document.querySelectorAll('.action-menu').forEach(m => m.classList.add('hidden'));
+});
+
+function toggleAll(el) { document.querySelectorAll('.row-check').forEach(cb => { cb.checked = el.checked; toggleCheck(cb); }); }
+function toggleCheck(cb) { if (cb.checked) selectedIds.add(cb.dataset.id); else selectedIds.delete(cb.dataset.id); updateBatch(); }
+function updateBatch() {
+  const bar = document.getElementById('batchBar');
+  if (selectedIds.size > 0) { bar.classList.remove('hidden'); bar.classList.add('flex'); document.getElementById('selectedCount').textContent = `已选 ${selectedIds.size} 项`; }
+  else { bar.classList.add('hidden'); bar.classList.remove('flex'); }
+}
+function clearSelection() { selectedIds.clear(); document.querySelectorAll('.row-check').forEach(cb => cb.checked = false); document.getElementById('selectAll').checked = false; updateBatch(); }
+function switchLib(btn) { document.querySelectorAll('.lib-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); document.getElementById('libLabel').textContent = {formal:'正式库',optimize:'待优化库',trash:'回收站'}[btn.dataset.lib]; }
+function doSort(field, dir) { currentData = [...materials].sort((a, b) => dir === 'asc' ? a[field] - b[field] : b[field] - a[field]); renderTable(); }
+function resetFilters() { document.querySelectorAll('select').forEach(s => s.selectedIndex = 0); document.querySelectorAll('input[type="text"],input[type="number"]').forEach(i => i.value = ''); }
+
+function openImportModal() { document.getElementById('importModal').style.display = 'flex'; }
+function closeImportModal() { document.getElementById('importModal').style.display = 'none'; }
+function openVideoModal(dur) { document.getElementById('modalDuration').textContent = dur; document.getElementById('videoModal').classList.remove('hidden'); }
+function closeVideoModal() { document.getElementById('videoModal').classList.add('hidden'); }
+
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.style.opacity = '1';
+  clearTimeout(t._timer); t._timer = setTimeout(() => t.style.opacity = '0', 2500);
+}
+
+// ---- Drawer ----
+function openDrawer(id) {
+  const m = materials.find(x => x.id === id);
+  if (!m) return;
+  document.getElementById('drawerTitle').textContent = m.name;
+
+  function infoGrid(items) {
+    return '<div class="grid grid-cols-3 gap-2 text-xs">' + items.map(([l,v]) =>
+      `<div class="bg-gray-50 rounded p-2.5"><span class="text-gray-400 block mb-0.5">${l}</span><span class="text-gray-800 font-medium">${v}</span></div>`
+    ).join('') + '</div>';
+  }
+  function metricGrid(items) {
+    return '<div class="grid grid-cols-5 gap-2">' + items.map(([l,v]) =>
+      `<div class="border border-gray-200 rounded p-3 text-center"><span class="text-[11px] text-gray-400 block mb-1">${l}</span><span class="text-sm font-semibold text-gray-900">${v}</span></div>`
+    ).join('') + '</div>';
+  }
+  function platSection(title, obj, isRate, goodT, midT) {
+    const keys = Object.keys(obj);
+    if (!keys.length) return `<div class="text-xs text-gray-400">${title}：--</div>`;
+    return `<div class="text-xs mb-2"><span class="font-medium text-gray-700">${title}</span></div>
+      <div class="grid grid-cols-${keys.length} gap-2 mb-3">${keys.map(k => {
+        const v = obj[k];
+        const display = isRate ? v.toFixed(1) + '%' : v;
+        const cls = isRate ? rateClass(v, goodT, midT) : '';
+        return `<div class="bg-gray-50 rounded p-2 text-center"><div class="text-[10px] text-gray-400 mb-1">${PLAT_NAMES[k]||k}</div><div class="text-sm font-semibold ${cls ? 'rate-val '+cls : 'text-gray-800'}">${display}</div></div>`;
+      }).join('')}</div>`;
+  }
+
+  document.getElementById('drawerContent').innerHTML = `
+    <div class="space-y-5">
+      <div class="rounded-lg overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 aspect-video flex items-center justify-center relative cursor-pointer" onclick="openVideoModal('${m.dur}')">
+        <div class="w-14 h-14 rounded-full flex items-center justify-center" style="background:${m.color}33"><svg width="24" height="24" fill="${m.color}" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        <span class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">${m.dur}</span>
+      </div>
+      <div><h3 class="text-xs font-semibold text-gray-900 mb-2">物料基础信息</h3>
+        ${infoGrid([['物料ID',m.id],['画幅',m.ratio],['入库时间',m.createTime],['品类',m.cat],['产品',m.prod],['物料类型',m.type]])}
+      </div>
+      <div><h3 class="text-xs font-semibold text-gray-900 mb-2">标签体系</h3>
+        ${infoGrid([['语言',m.lang],['位置标签',m.posTag],['自定义标签',m.tags.join('、')||'--']])}
+      </div>
+      <div><h3 class="text-xs font-semibold text-gray-900 mb-2">来源信息</h3>
+        ${infoGrid([['来源类型',m.srcType],['来源素材ID',m.srcId||'--'],['生成方式',m.genBy],['上传人',m.uploader]])}
+      </div>
+      <div><h3 class="text-xs font-semibold text-gray-900 mb-2">物料质量 / 投放表现</h3>
+        ${metricGrid([['合成素材数',m.compCount],['历史计划数',m.histPlan],['在投计划数',m.activePlan]])}
+        <div class="mt-3">
+          ${platSection('各平台计划数', m.platPlan, false)}
+          ${platSection('各平台使用数', m.platUse, false)}
+          ${platSection('各平台完播率', m.platFinish, true, 65, 50)}
+          ${platSection('各平台点击率', m.platClick, true, 5, 3)}
+          ${platSection('各平台拒审率', m.platReject, true, 3, 8)}
+          ${platSection('各平台同质化率', m.platHomo, true, 25, 40)}
+          ${platSection('各平台出池率', m.platPool, true, 15, 10)}
+        </div>
+      </div>
+      <div><h3 class="text-xs font-semibold text-gray-900 mb-2">使用热度</h3>
+        ${metricGrid([['近7天引用',m.hot7],['近30天引用',m.hot30],['被引用素材',m.refCount+'条'],['首次使用',m.firstUsed],['最近使用',m.lastUsed]])}
+      </div>
+      <div class="flex gap-2 pt-1">
+        <button class="flex-1 py-2 rounded text-xs font-medium bg-amber-50 text-amber-600 hover:bg-amber-100">移至待优化库</button>
+        <button class="flex-1 py-2 rounded text-xs font-medium bg-red-50 text-red-500 hover:bg-red-100">移至回收站</button>
+      </div>
+    </div>`;
+
+  const mask = document.getElementById('drawerMask');
+  const panel = document.getElementById('drawerPanel');
+  mask.classList.remove('hidden');
+  requestAnimationFrame(() => { mask.style.opacity = '1'; panel.style.transform = 'translateX(0)'; });
+}
+function closeDrawer() {
+  const mask = document.getElementById('drawerMask');
+  const panel = document.getElementById('drawerPanel');
+  mask.style.opacity = '0'; panel.style.transform = 'translateX(100%)';
+  setTimeout(() => mask.classList.add('hidden'), 250);
+}
+
+renderTable();
+
+// ============ Ant Design Filter Area ============
+// [Ant Design 数据录入规范 spec/data-entry.zh-CN.md]
+// Select: 选项 > 5 个用下拉选择，暗提示帮助用户理解
+// DatePicker.RangePicker: 日期范围可视化选择
+// InputNumber: 数字范围输入
+// Input: 文本搜索输入
+// [Ant Design 按钮规范 spec/buttons.zh-CN.md] 重置为次按钮
+// [Ant Design 亲密性规范 spec/proximity.zh-CN.md] 8px小号/16px中号/24px大号间距
+
+(function() {
+  const { Select, DatePicker, InputNumber, Input, Button, Space, ConfigProvider, theme } = antd;
+  const { RangePicker } = DatePicker;
+  const e = React.createElement;
+
+  // [Ant Design 布局规范 spec/layout.zh-CN.md] 8px网格基准
+  const labelStyle = { fontSize: 12, color: '#8c8c8c', marginBottom: 4, display: 'block', lineHeight: '20px' };
+  const groupStyle = { display: 'flex', flexDirection: 'column' };
+  const rowStyle = { display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' };
+
+  function FilterGroup({ label, children }) {
+    return e('div', { style: groupStyle },
+      e('span', { style: labelStyle }, label),
+      children
+    );
+  }
+
+  function FilterArea() {
+    return e(ConfigProvider, {
+      theme: { token: { colorPrimary: '#1890ff', borderRadius: 6, fontSize: 13 } }
+    },
+      e('div', null,
+        // [Ant Design 亲密性规范] 行间距16px（中号间距）
+        e('div', { style: { ...rowStyle, marginBottom: 16 } },
+          e(FilterGroup, { label: '品类' },
+            e(Select, { defaultValue: null, placeholder: '全部品类', allowClear: true, style: { width: 130 }, size: 'middle',
+              options: [{value:'美妆',label:'美妆'},{value:'个护',label:'个护'},{value:'保健品',label:'保健品'},{value:'3C数码',label:'3C数码'},{value:'家居',label:'家居'}]
+            })
+          ),
+          e(FilterGroup, { label: '产品' },
+            e(Select, { defaultValue: null, placeholder: '全部产品', allowClear: true, style: { width: 140 }, size: 'middle',
+              options: [{value:'亮肤面霜A',label:'亮肤面霜A'},{value:'蓝牙耳机Pro',label:'蓝牙耳机Pro'},{value:'益生菌X',label:'益生菌X'},{value:'智能手表S',label:'智能手表S'}]
+            })
+          ),
+          e(FilterGroup, { label: '物料类型' },
+            e(Select, { defaultValue: null, placeholder: '全部类型', allowClear: true, style: { width: 120 }, size: 'middle',
+              options: [{value:'口播',label:'口播'},{value:'产品演示',label:'产品演示'},{value:'真人剧情',label:'真人剧情'},{value:'大字报',label:'大字报'}]
+            })
+          ),
+          e(FilterGroup, { label: '位置标签' },
+            e(Select, { defaultValue: null, placeholder: '全部位置', allowClear: true, style: { width: 110 }, size: 'middle',
+              options: [{value:'片头',label:'片头'},{value:'片中',label:'片中'},{value:'片尾',label:'片尾'}]
+            })
+          ),
+          e(FilterGroup, { label: '语言' },
+            e(Select, { defaultValue: null, placeholder: '全部语言', allowClear: true, style: { width: 100 }, size: 'middle',
+              options: [{value:'中文',label:'中文'},{value:'英语',label:'英语'},{value:'日语',label:'日语'},{value:'泰语',label:'泰语'}]
+            })
+          ),
+          e(FilterGroup, { label: '来源类型' },
+            e(Select, { defaultValue: null, placeholder: '全部来源', allowClear: true, style: { width: 130 }, size: 'middle',
+              options: [{value:'爆款拆分',label:'爆款拆分'},{value:'工作流',label:'工作流'},{value:'通用生成',label:'通用生成'},{value:'手动上传',label:'手动上传'}]
+            })
+          ),
+          e(FilterGroup, { label: '画幅' },
+            e(Select, { defaultValue: null, placeholder: '全部画幅', allowClear: true, style: { width: 120 }, size: 'middle',
+              options: [{value:'竖版 9:16',label:'竖版 9:16'},{value:'横版 16:9',label:'横版 16:9'},{value:'方形 1:1',label:'方形 1:1'}]
+            })
+          ),
+          e(FilterGroup, { label: '上传人' },
+            e(Select, { defaultValue: null, placeholder: '全部', allowClear: true, style: { width: 110 }, size: 'middle',
+              options: [{value:'张三',label:'张三'},{value:'李四',label:'李四'},{value:'AI工作流',label:'AI工作流'},{value:'系统拆分',label:'系统拆分'}]
+            })
+          )
+        ),
+        // 第二行
+        e('div', { style: rowStyle },
+          e(FilterGroup, { label: '生成方式' },
+            e(Select, { defaultValue: null, placeholder: '全部', allowClear: true, style: { width: 120 }, size: 'middle',
+              options: [{value:'AI生成',label:'AI生成'},{value:'人工剪辑',label:'人工剪辑'},{value:'自动拆分',label:'自动拆分'}]
+            })
+          ),
+          e(FilterGroup, { label: '合成素材数' },
+            e(Space.Compact, null,
+              e(InputNumber, { placeholder: '≥', style: { width: 72 }, size: 'middle', min: 0 }),
+              e(InputNumber, { placeholder: '≤', style: { width: 72 }, size: 'middle', min: 0 })
+            )
+          ),
+          e(FilterGroup, { label: '使用热度' },
+            e(Select, { defaultValue: null, placeholder: '全部', allowClear: true, style: { width: 120 }, size: 'middle',
+              options: [{value:'过热',label:'过热'},{value:'正常',label:'正常'},{value:'低频',label:'低频'},{value:'未使用',label:'未使用'}]
+            })
+          ),
+          // [Ant Design 数据录入规范] DatePicker 提供可视化日期范围选择
+          e(FilterGroup, { label: '入库时间' },
+            e(RangePicker, { size: 'middle', style: { width: 240 }, placeholder: ['开始日期', '结束日期'] })
+          ),
+          e(FilterGroup, { label: '物料ID' },
+            e(Input, { placeholder: '输入物料ID', allowClear: true, style: { width: 140 }, size: 'middle' })
+          ),
+          // [Ant Design 按钮规范] 重置为次按钮，不用主按钮
+          e('div', { style: { display: 'flex', alignItems: 'flex-end' } },
+            e(Button, { onClick: function() { window.resetFilters && resetFilters(); }, size: 'middle' }, '重置筛选')
+          )
+        )
+      )
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('filterArea')).render(e(FilterArea));
+})();
+</script>
+</body>
+</html>

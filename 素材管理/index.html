@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>素材库 - 量化投放系统</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #1d2129; font-size: 14px; }
+
+  .custom-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+  .custom-scroll::-webkit-scrollbar-thumb { background: #c9cdd4; border-radius: 3px; }
+  .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+
+  /* [AntD data-entry 规范] 控件高度 32px，圆角 6px，边框 #d9d9d9 */
+  select, input[type="text"], input[type="number"], input[type="date"] {
+    height: 32px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 0 11px;
+    font-size: 14px; color: rgba(0,0,0,0.88); background: #fff; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  /* [AntD colors 规范] hover: #4096ff；focus: #1677ff + shadow */
+  select:hover, input[type="text"]:hover, input[type="number"]:hover, input[type="date"]:hover { border-color: #4096ff; }
+  select:focus, input:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.1); }
+  select {
+    padding-left: 11px; padding-right: 30px; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23bfbfbf' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 8px center;
+  }
+
+  /* 筛选区 — 复刻物料库设计 */
+  .filter-area { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-start; padding-bottom:14px; border-bottom:1px solid #f0f0f0; margin-bottom:14px; }
+  .filter-area:last-child { border-bottom:none; padding-bottom:0; margin-bottom:0; }
+  .filter-group { display:flex; flex-direction:column; gap:4px; }
+  .filter-label { font-size:12px; color:#999; white-space:nowrap; line-height:1.4; }
+  .filter-select { font-size:12px !important; color:#333 !important; min-width:130px; }
+  .filter-select:hover { border-color:#d9d9d9 !important; }
+  .filter-select:focus { border-color:#1890ff !important; box-shadow:none !important; }
+  .filter-input { font-size:12px !important; color:#333 !important; }
+  .filter-input:hover { border-color:#d9d9d9 !important; }
+  .filter-input:focus { border-color:#1890ff !important; box-shadow:none !important; }
+  .filter-range { display:flex; align-items:center; gap:6px; }
+  .filter-range span { color:#999; font-size:12px; }
+  .filter-range .filter-input { width:68px; min-width:68px; text-align:center; }
+  .filter-date-range { display:flex; align-items:center; gap:6px; }
+  .filter-date-range span { color:#999; font-size:12px; }
+  .filter-date-range input[type="date"] { font-size:12px !important; color:#333 !important; width:130px; }
+  .filter-date-range input[type="date"]:hover { border-color:#d9d9d9 !important; }
+  .filter-date-range input[type="date"]:focus { border-color:#1890ff !important; box-shadow:none !important; }
+  .btn-reset { background:none; border:1px solid #d9d9d9; color:#666; padding:0 16px; border-radius:6px; font-size:12px; cursor:pointer; height:32px; transition:border-color 0.2s, color 0.2s; }
+  .btn-reset:hover { border-color:#ff4d4f; color:#ff4d4f; }
+
+  table { border-collapse: collapse; width: 100%; }
+  th {
+    background: #f7f8fa; font-weight: 500; color: #86909c; font-size: 12px; white-space: nowrap;
+    border-bottom: 1px solid #e5e6eb; position: sticky; z-index: 5;
+  }
+  thead tr:first-child th { top: 0; z-index: 7; }
+  thead tr:last-child  th { top: 32px; z-index: 6; }
+  td { border-bottom: 1px solid #f2f3f5; font-size: 13px; color: #4e5969; white-space: nowrap; }
+  tr:hover td { background: #f7f8fa; }
+
+  .lib-tab { padding: 4px 16px; font-size: 13px; border-radius: 4px; cursor: pointer; transition: all 0.2s; border: none; background: none; color: #86909c; }
+  .lib-tab.active { background: #4e6ef2; color: #fff; }
+
+  .sort-icon { display: inline-flex; flex-direction: column; margin-left: 2px; vertical-align: middle; line-height: 1; }
+  .sort-icon span { font-size: 8px; line-height: 8px; color: #c9cdd4; cursor: pointer; }
+  .sort-icon span:hover, .sort-icon span.active { color: #4e6ef2; }
+
+  .thumb-box { width: 72px; height: 40px; border-radius: 4px; overflow: hidden; background: #f2f3f5; flex-shrink: 0; position: relative; }
+  .thumb-box:hover .thumb-play { opacity: 1; }
+  .thumb-play { position: absolute; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; cursor: pointer; }
+
+  .status-tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 2px; font-size: 12px; }
+
+  .page-btn {
+    min-width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid #e5e6eb; border-radius: 4px; font-size: 13px; color: #4e5969; background: #fff; cursor: pointer; transition: all 0.15s;
+  }
+  .page-btn:hover { border-color: #4e6ef2; color: #4e6ef2; }
+  .page-btn.active { background: #4e6ef2; color: #fff; border-color: #4e6ef2; }
+  .page-btn:disabled { color: #c9cdd4; cursor: not-allowed; border-color: #e5e6eb; }
+
+  .checkbox-input { width: 15px; height: 15px; accent-color: #4e6ef2; cursor: pointer; }
+  .date-input { width: 120px; }
+  .num-input { width: 56px; text-align: center; }
+
+  /* 详情抽屉 */
+  .drawer-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 100; transition: opacity 0.25s; }
+  .drawer-panel {
+    position: fixed; top: 0; right: 0; height: 100%; width: 640px; max-width: 90vw;
+    background: #fff; z-index: 101; box-shadow: -4px 0 16px rgba(0,0,0,0.08);
+    transition: transform 0.25s ease; overflow-y: auto;
+  }
+
+  /* 视频预览弹层 */
+  .video-modal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); }
+  .video-modal-content { background: #000; border-radius: 8px; overflow: hidden; width: 560px; max-width: 90vw; aspect-ratio: 16/9; position: relative; }
+</style>
+</head>
+<body>
+
+<div class="flex flex-col" style="min-height: 100vh;">
+
+  <!-- 顶栏 -->
+  <header class="bg-white px-5 py-3 flex items-center justify-between border-b border-gray-200 sticky top-0 z-20">
+    <div class="flex items-center gap-3">
+      <h1 class="text-base font-semibold text-gray-900">素材库</h1>
+      <span class="text-sm text-gray-400" id="libLabel">正式库</span>
+      <span class="text-sm text-gray-400">共 <b class="text-gray-700" id="totalNum">86</b> 条</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="openImportModal()" class="flex items-center gap-1.5 px-3 h-8 rounded text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white transition-colors">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        导入素材
+      </button>
+      <div class="flex items-center gap-1 bg-gray-100 rounded p-0.5">
+        <button class="lib-tab active" data-lib="formal" onclick="switchLib(this)">正式库</button>
+        <button class="lib-tab" data-lib="optimize" onclick="switchLib(this)">待优化库</button>
+        <button class="lib-tab" data-lib="trash" onclick="switchLib(this)">回收站</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 筛选区 — 复刻物料库设计：label 在上、控件在下 -->
+  <div class="bg-white border-b border-gray-200" style="padding:14px 20px 0;">
+    <!-- 第一行：基础信息筛选 -->
+    <div class="filter-area">
+      <div class="filter-group">
+        <div class="filter-label">品类</div>
+        <select class="filter-select"><option>全部品类</option><option>美妆</option><option>个护</option><option>保健品</option><option>3C数码</option><option>家居</option></select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">产品</div>
+        <select class="filter-select" style="min-width:140px;"><option>全部产品</option><option>亮肤面霜A</option><option>蓝牙耳机Pro</option><option>益生菌X</option><option>智能手表S</option></select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">素材类型</div>
+        <select class="filter-select"><option>全部类型</option><option>口播</option><option>产品演示</option><option>真人剧情</option><option>大字报</option></select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">语言</div>
+        <select class="filter-select" style="min-width:100px;"><option>全部语言</option><option>中文</option><option>英文</option><option>粤语</option></select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">来源</div>
+        <select class="filter-select"><option>全部来源</option><option>自动混剪</option><option>工作流</option><option>通用生成</option><option>自行上传</option></select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">所属CP</div>
+        <select class="filter-select" style="min-width:100px;"><option>全部CP</option><option>CP-001</option><option>CP-002</option></select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">画幅比</div>
+        <select class="filter-select"><option>全部</option><option>横版 16:9</option><option>竖版 9:16</option><option>方形 1:1</option></select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">推广平台</div>
+        <select class="filter-select"><option>全部平台</option><option>巨量引擎</option><option>腾讯广告</option><option>快手</option></select>
+      </div>
+    </div>
+    <!-- 第二行：时间/数值筛选 -->
+    <div class="filter-area" style="margin-bottom:14px;">
+      <div class="filter-group">
+        <div class="filter-label">入库时间</div>
+        <div class="filter-date-range">
+          <input type="date" value="2025-09-01">
+          <span>至</span>
+          <input type="date" value="2026-03-31">
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">自定义标签</div>
+        <input class="filter-input" type="text" style="width:140px;" placeholder="请输入标签">
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">素材ID</div>
+        <input class="filter-input" type="text" style="width:140px;" placeholder="请输入">
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">在投计划数</div>
+        <div class="filter-range">
+          <input class="filter-input" type="number" placeholder="≥">
+          <span>-</span>
+          <input class="filter-input" type="number" placeholder="≤">
+        </div>
+      </div>
+      <div class="filter-group" style="justify-content:flex-end;">
+        <div class="filter-label">&nbsp;</div>
+        <button class="btn-reset" onclick="resetFilters()">重置筛选</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 批量操作条 -->
+  <div id="batchBar" class="bg-blue-50 px-5 py-2 border-b border-blue-100 items-center gap-2 hidden">
+    <span class="text-sm text-blue-600 font-medium" id="selectedCount">已选 0 项</span>
+    <button onclick="batchDownload()" class="text-sm px-3 py-1 rounded border border-blue-200 text-blue-600 hover:bg-blue-100 ml-2 flex items-center gap-1">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      批量下载
+    </button>
+    <button onclick="batchMigrate('optimize')" class="text-sm px-3 py-1 rounded border border-amber-200 text-amber-600 hover:bg-amber-50">迁移至待优化库</button>
+    <button onclick="batchMigrate('trash')" class="text-sm px-3 py-1 rounded border border-orange-200 text-orange-500 hover:bg-orange-50">迁移至回收站</button>
+    <button onclick="batchDelete()" class="text-sm px-3 py-1 rounded border border-red-200 text-red-500 hover:bg-red-50">删除</button>
+    <button class="text-sm text-gray-400 hover:text-gray-600 ml-1" onclick="clearSelection()">取消选择</button>
+  </div>
+
+  <!-- 表格区域 -->
+  <div class="flex-1 px-5 py-3">
+    <div class="bg-white rounded border border-gray-200 overflow-hidden flex flex-col" style="height: calc(100vh - 230px); min-height: 400px;">
+      <div class="flex-1 overflow-auto custom-scroll">
+        <table>
+          <thead>
+            <!-- 大分类行 -->
+            <tr>
+              <th rowspan="2" class="pl-4 pr-2 w-9 text-center" style="vertical-align:middle; border-right:1px solid #e5e6eb;">
+                <input type="checkbox" class="checkbox-input" id="selectAll" onchange="toggleAll(this)">
+              </th>
+              <th colspan="10" class="px-3 py-1.5 text-center" style="background:#eef2ff; border-bottom:2px solid #c7d4ff; border-right:1px solid #c7d4ff; font-weight:600; color:#4a6cf7;">素材基础信息</th>
+              <th colspan="12" class="px-3 py-1.5 text-center" style="background:#fff8eb; border-bottom:2px solid #fcd34d; border-right:1px solid #fcd34d; font-weight:600; color:#b45309;">投放信息</th>
+              <th colspan="1" class="px-3 py-1.5 text-center" style="background:#fdf4ff; border-bottom:2px solid #d8b4fe; border-right:1px solid #d8b4fe; font-weight:600; color:#7e22ce;">关联物料</th>
+              <th rowspan="2" class="px-3 text-center sticky right-0" style="vertical-align:middle; min-width:60px; box-shadow:-2px 0 4px rgba(0,0,0,0.04); border-left:1px solid #e5e6eb;">操作</th>
+            </tr>
+            <!-- 小分类行 -->
+            <tr>
+              <!-- 素材基础信息 -->
+              <th class="px-3 py-2 text-left" style="min-width:220px;">素材</th>
+              <th class="px-3 py-2 text-left" style="min-width:76px;">画幅比</th>
+              <th class="px-3 py-2 text-left" style="min-width:90px;">入库时间</th>
+              <th class="px-3 py-2 text-left" style="min-width:70px;">品类</th>
+              <th class="px-3 py-2 text-left" style="min-width:100px;">产品</th>
+              <th class="px-3 py-2 text-left" style="min-width:80px;">类型</th>
+              <th class="px-3 py-2 text-left" style="min-width:60px;">语言</th>
+              <th class="px-3 py-2 text-left" style="min-width:76px;">来源</th>
+              <th class="px-3 py-2 text-left" style="min-width:76px;">所属CP</th>
+              <th class="px-3 py-2 text-left" style="min-width:100px; border-right:1px solid #e5e6eb;">标签</th>
+              <!-- 投放信息 — 各平台效果 -->
+              <th class="px-2 py-2 text-right" style="min-width:88px;">各平台计划数<span class="sort-icon"><span onclick="doSort('planCount','asc')">▲</span><span onclick="doSort('planCount','desc')">▼</span></span></th>
+              <th class="px-2 py-2 text-right" style="min-width:90px;">各平台消耗<span class="sort-icon"><span onclick="doSort('cost','asc')">▲</span><span onclick="doSort('cost','desc')">▼</span></span></th>
+              <th class="px-2 py-2 text-right" style="min-width:82px;">各平台ROI</th>
+              <th class="px-2 py-2 text-right" style="min-width:86px;">各平台3s完播率</th>
+              <th class="px-2 py-2 text-right" style="min-width:86px;">各平台5s完播率</th>
+              <th class="px-2 py-2 text-right" style="min-width:80px;">各平台完播率</th>
+              <th class="px-2 py-2 text-right" style="min-width:80px;">各平台点击率</th>
+              <th class="px-2 py-2 text-right" style="min-width:80px;">各平台拒审率</th>
+              <th class="px-2 py-2 text-right" style="min-width:86px; border-right:1px dashed #e5e6eb;">各平台同质化率</th>
+              <!-- 投放信息 — 关联计划数据 -->
+              <th class="px-3 py-2 text-right" style="min-width:80px;">历史计划数</th>
+              <th class="px-3 py-2 text-right" style="min-width:80px;">在投计划数</th>
+              <th class="px-3 py-2 text-right" style="min-width:66px; border-right:1px solid #e5e6eb;">出池率</th>
+              <!-- 关联物料 -->
+              <th class="px-3 py-2 text-left" style="min-width:90px; border-right:1px solid #e5e6eb;">关联物料</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <!-- 分页 -->
+      <div class="flex items-center justify-between px-4 py-2.5 border-t border-gray-200 bg-white shrink-0">
+        <span class="text-sm text-gray-400">共 <span id="pageTotal">86</span> 条</span>
+        <div class="flex items-center gap-1">
+          <button class="page-btn" disabled>上一页</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <span class="px-1 text-gray-400">...</span>
+          <button class="page-btn">9</button>
+          <button class="page-btn">下一页</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 详情抽屉遮罩 -->
+<div id="drawerMask" class="drawer-mask hidden" style="opacity:0" onclick="closeDrawer()"></div>
+<!-- 详情抽屉面板 -->
+<div id="drawerPanel" class="drawer-panel" style="transform:translateX(100%)">
+  <div class="sticky top-0 bg-white border-b border-gray-200 px-5 py-3 flex items-center justify-between z-10">
+    <h2 class="font-semibold text-sm" id="drawerTitle">素材详情</h2>
+    <button onclick="closeDrawer()" class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+  <div id="drawerContent" class="p-5"></div>
+</div>
+
+<!-- 导入素材弹层 -->
+<div id="importModal" style="display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);">
+  <div class="bg-white rounded-xl shadow-2xl w-[520px] max-w-[90vw]" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+      <h3 class="font-semibold text-sm text-gray-900">导入本地素材</h3>
+      <button onclick="closeImportModal()" class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-5">
+      <!-- 拖拽上传区 -->
+      <div id="dropZone" class="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/40 transition-colors"
+        onclick="document.getElementById('fileInput').click()"
+        ondragover="event.preventDefault(); this.classList.add('border-blue-400','bg-blue-50/40')"
+        ondragleave="this.classList.remove('border-blue-400','bg-blue-50/40')"
+        ondrop="handleDrop(event)">
+        <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3">
+          <svg width="22" height="22" fill="none" stroke="#4e6ef2" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <p class="text-sm text-gray-700 font-medium mb-1">点击选择或拖拽文件至此处</p>
+        <p class="text-xs text-gray-400">支持 MP4、MOV、AVI、JPG、PNG，单文件最大 2GB</p>
+        <input type="file" id="fileInput" class="hidden" multiple accept="video/*,image/*" onchange="handleFileSelect(this)">
+      </div>
+      <!-- 已选文件列表 -->
+      <div id="importFileList" class="mt-3 space-y-2 max-h-40 overflow-y-auto custom-scroll"></div>
+      <!-- 属性填写 -->
+      <div class="mt-4 grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">品类</label>
+          <select class="w-full"><option>请选择</option><option>美妆</option><option>个护</option><option>保健品</option><option>3C数码</option><option>家居</option></select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">产品</label>
+          <select class="w-full"><option>请选择</option><option>亮肤面霜A</option><option>蓝牙耳机Pro</option><option>益生菌X</option><option>智能手表S</option></select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">素材类型</label>
+          <select class="w-full"><option>请选择</option><option>口播</option><option>产品演示类</option><option>产品品牌</option><option>真人剧情</option></select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">来源</label>
+          <select class="w-full"><option>请选择</option><option>内部制作</option><option>外部采买</option><option>达人合作</option></select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">推广平台</label>
+          <select class="w-full"><option>请选择</option><option>巨量引擎</option><option>腾讯广告</option><option>快手</option></select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">CP名称</label>
+          <select class="w-full"><option>全部CP</option><option>CP-001</option><option>CP-002</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 px-5 py-4 border-t border-gray-100">
+      <button onclick="closeImportModal()" class="px-4 py-2 text-sm rounded border border-gray-200 text-gray-600 hover:bg-gray-50">取消</button>
+      <button onclick="submitImport()" class="px-4 py-2 text-sm rounded bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors">开始上传</button>
+    </div>
+  </div>
+</div>
+
+<!-- 删除确认弹层 -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);">
+  <div class="bg-white rounded-xl shadow-2xl w-80" onclick="event.stopPropagation()">
+    <div class="p-5 text-center">
+      <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-3">
+        <svg width="22" height="22" fill="none" stroke="#ef4444" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </div>
+      <h3 class="font-semibold text-sm text-gray-900 mb-1" id="deleteModalTitle">确认删除</h3>
+      <p class="text-xs text-gray-400 leading-relaxed" id="deleteModalDesc">删除后无法恢复，确认继续？</p>
+    </div>
+    <div class="flex gap-2 px-5 pb-5">
+      <button onclick="closeDeleteModal()" class="flex-1 py-2 text-sm rounded border border-gray-200 text-gray-600 hover:bg-gray-50">取消</button>
+      <button onclick="executeDelete()" class="flex-1 py-2 text-sm rounded bg-red-500 hover:bg-red-600 text-white font-medium transition-colors">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 视频预览弹层 -->
+<div id="videoModal" class="video-modal hidden" onclick="closeVideoModal()">
+  <div class="video-modal-content" onclick="event.stopPropagation()">
+    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+      <div class="text-center">
+        <svg class="mx-auto mb-2 opacity-60" width="48" height="48" fill="white" viewBox="0 0 24 24">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+        <p class="text-white/50 text-sm">视频预览播放中</p>
+      </div>
+    </div>
+    <button onclick="closeVideoModal()" class="absolute top-3 right-3 w-8 h-8 bg-black/50 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-black/70">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <span class="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-0.5 rounded" id="modalDuration">00:32</span>
+  </div>
+</div>
+
+<script>
+const materials = [
+  { id:'M001', name:'亮肤面霜-口播种草款_v3',        dur:'0:32', ratio:'9:16',  entryDate:'2026-01-15', type:'口播',     cat:'美妆',   prod:'亮肤面霜A',   source:'通用生成', cp:'CP-001', lang:'中文', tags:['种草','美妆'],
+    jyl:{ planCount:8,  cost:88000,  roi:3.12, threeS:64.2, fiveS:53.8, fullPlay:34.5, clickRate:5.21, rejectRate:1.8, dupeRate:7.2  },
+    tx: { planCount:3,  cost:28000,  roi:2.45, threeS:58.5, fiveS:48.2, fullPlay:29.1, clickRate:4.12, rejectRate:2.6, dupeRate:9.8  },
+    ks: { planCount:1,  cost:12500,  roi:2.18, threeS:54.8, fiveS:44.5, fullPlay:25.8, clickRate:3.82, rejectRate:3.2, dupeRate:12.1 },
+    histPlanCount:18, activePlanCount:12, exitRate:12.5, relatedMats:3, color:'#818cf8' },
+  { id:'M002', name:'蓝牙耳机Pro-开箱实拍',            dur:'0:45', ratio:'16:9', entryDate:'2025-12-20', type:'产品演示', cat:'3C数码', prod:'蓝牙耳机Pro', source:'自行上传', cp:'CP-002', lang:'中文', tags:['开箱','数码'],
+    jyl:{ planCount:6,  cost:65200,  roi:2.05, threeS:73.5, fiveS:62.8, fullPlay:40.2, clickRate:5.52, rejectRate:1.2, dupeRate:4.8  },
+    tx: { planCount:1,  cost:18000,  roi:1.78, threeS:67.8, fiveS:56.5, fullPlay:34.8, clickRate:4.82, rejectRate:1.8, dupeRate:6.2  },
+    ks: { planCount:1,  cost:12000,  roi:1.62, threeS:64.2, fiveS:52.1, fullPlay:31.5, clickRate:4.31, rejectRate:2.3, dupeRate:7.5  },
+    histPlanCount:11, activePlanCount:8,  exitRate:8.4,  relatedMats:2, color:'#34d399' },
+  { id:'M003', name:'益生菌-真人体验种草剧情',          dur:'1:12', ratio:'9:16',  entryDate:'2025-11-08', type:'真人剧情', cat:'保健品', prod:'益生菌X',     source:'工作流',   cp:'CP-001', lang:'中文', tags:['剧情','健康'],
+    jyl:{ planCount:0,  cost:22000,  roi:3.85, threeS:52.3, fiveS:42.8, fullPlay:23.1, clickRate:3.21, rejectRate:4.5, dupeRate:12.8 },
+    tx: { planCount:0,  cost:38500,  roi:3.25, threeS:57.2, fiveS:46.5, fullPlay:25.8, clickRate:3.72, rejectRate:3.8, dupeRate:10.5 },
+    ks: { planCount:0,  cost:7300,   roi:2.91, threeS:50.1, fiveS:40.2, fullPlay:21.2, clickRate:3.12, rejectRate:5.1, dupeRate:14.2 },
+    histPlanCount:14, activePlanCount:0,  exitRate:28.6, relatedMats:5, color:'#f97316' },
+  { id:'M004', name:'智能手表S-品牌TVC精剪版',          dur:'0:28', ratio:'16:9', entryDate:'2026-02-01', type:'产品演示', cat:'3C数码', prod:'智能手表S',   source:'自行上传', cp:'CP-002', lang:'中文', tags:['品牌','TVC'],
+    jyl:{ planCount:5,  cost:81000,  roi:2.25, threeS:80.1, fiveS:68.5, fullPlay:47.2, clickRate:6.52, rejectRate:0.8, dupeRate:3.1  },
+    tx: { planCount:4,  cost:62400,  roi:2.08, threeS:76.5, fiveS:64.2, fullPlay:43.8, clickRate:6.11, rejectRate:0.9, dupeRate:3.8  },
+    ks: { planCount:6,  cost:60000,  roi:2.01, threeS:74.8, fiveS:62.5, fullPlay:42.1, clickRate:5.91, rejectRate:1.1, dupeRate:4.2  },
+    histPlanCount:20, activePlanCount:15, exitRate:6.2,  relatedMats:4, color:'#6366f1' },
+  { id:'M005', name:'面霜-成分解析口播_0312',           dur:'0:38', ratio:'9:16',  entryDate:'2026-03-12', type:'口播',     cat:'美妆',   prod:'亮肤面霜A',   source:'通用生成', cp:'CP-001', lang:'中文', tags:['成分','护肤'],
+    jyl:{ planCount:0,  cost:24500,  roi:1.32, threeS:42.8, fiveS:32.5, fullPlay:19.2, clickRate:2.98, rejectRate:6.1, dupeRate:15.5 },
+    tx: { planCount:0,  cost:8000,   roi:1.15, threeS:38.5, fiveS:28.2, fullPlay:15.8, clickRate:2.75, rejectRate:6.8, dupeRate:17.2 },
+    ks: { planCount:0,  cost:2000,   roi:1.05, threeS:36.2, fiveS:25.8, fullPlay:14.1, clickRate:2.58, rejectRate:7.2, dupeRate:18.5 },
+    histPlanCount:8,  activePlanCount:0,  exitRate:35.8, relatedMats:1, color:'#ec4899' },
+  { id:'M006', name:'耳机-地铁通勤场景使用演示',        dur:'0:55', ratio:'16:9', entryDate:'2026-03-20', type:'产品演示', cat:'3C数码', prod:'蓝牙耳机Pro', source:'自行上传', cp:'CP-002', lang:'中文', tags:['场景','通勤'],
+    jyl:{ planCount:0,  cost:0,      roi:0,    threeS:0,    fiveS:0,    fullPlay:0,    clickRate:0,    rejectRate:0,   dupeRate:0    },
+    tx: { planCount:0,  cost:0,      roi:0,    threeS:0,    fiveS:0,    fullPlay:0,    clickRate:0,    rejectRate:0,   dupeRate:0    },
+    ks: { planCount:0,  cost:0,      roi:0,    threeS:0,    fiveS:0,    fullPlay:0,    clickRate:0,    rejectRate:0,   dupeRate:0    },
+    histPlanCount:0,  activePlanCount:0,  exitRate:0,    relatedMats:2, color:'#a78bfa' },
+  { id:'M007', name:'益生菌-专家背书口播_修改版',       dur:'0:41', ratio:'9:16',  entryDate:'2025-10-15', type:'口播',     cat:'保健品', prod:'益生菌X',     source:'工作流',   cp:'CP-001', lang:'中文', tags:['专家','健康'],
+    jyl:{ planCount:2,  cost:28000,  roi:3.35, threeS:60.2, fiveS:49.5, fullPlay:30.5, clickRate:4.52, rejectRate:3.2, dupeRate:9.2  },
+    tx: { planCount:3,  cost:41200,  roi:3.05, threeS:58.1, fiveS:47.2, fullPlay:28.2, clickRate:4.12, rejectRate:3.8, dupeRate:10.5 },
+    ks: { planCount:1,  cost:9700,   roi:2.85, threeS:54.8, fiveS:44.1, fullPlay:25.8, clickRate:3.82, rejectRate:4.1, dupeRate:11.8 },
+    histPlanCount:9,  activePlanCount:6,  exitRate:18.2, relatedMats:3, color:'#14b8a6' },
+  { id:'M008', name:'手表-运动跑步场景品牌片',          dur:'0:35', ratio:'16:9', entryDate:'2026-01-28', type:'产品演示', cat:'3C数码', prod:'智能手表S',   source:'自行上传', cp:'CP-002', lang:'中文', tags:['运动','品牌'],
+    jyl:{ planCount:3,  cost:52000,  roi:2.68, threeS:76.2, fiveS:64.8, fullPlay:43.8, clickRate:5.82, rejectRate:1.1, dupeRate:4.5  },
+    tx: { planCount:3,  cost:48000,  roi:2.45, threeS:72.5, fiveS:61.2, fullPlay:40.2, clickRate:5.42, rejectRate:1.4, dupeRate:5.1  },
+    ks: { planCount:4,  cost:56700,  roi:2.52, threeS:74.1, fiveS:62.8, fullPlay:41.5, clickRate:5.52, rejectRate:1.2, dupeRate:4.8  },
+    histPlanCount:14, activePlanCount:10, exitRate:9.3,  relatedMats:4, color:'#0ea5e9' },
+  { id:'M009', name:'面霜-闺蜜推荐真人剧情',            dur:'1:05', ratio:'9:16',  entryDate:'2025-09-30', type:'真人剧情', cat:'美妆',   prod:'亮肤面霜A',   source:'工作流',   cp:'CP-001', lang:'中文', tags:['剧情','美妆'],
+    jyl:{ planCount:0,  cost:28500,  roi:2.35, threeS:50.2, fiveS:39.8, fullPlay:23.8, clickRate:3.25, rejectRate:5.2, dupeRate:13.5 },
+    tx: { planCount:0,  cost:12100,  roi:2.08, threeS:45.8, fiveS:35.2, fullPlay:20.1, clickRate:2.98, rejectRate:5.8, dupeRate:15.2 },
+    ks: { planCount:0,  cost:5000,   roi:1.92, threeS:42.5, fiveS:32.1, fullPlay:18.5, clickRate:2.75, rejectRate:6.2, dupeRate:16.8 },
+    histPlanCount:10, activePlanCount:0,  exitRate:31.4, relatedMats:2, color:'#f472b6' },
+  { id:'M010', name:'耳机-降噪效果对比测评',            dur:'0:50', ratio:'16:9', entryDate:'2026-03-25', type:'产品演示', cat:'3C数码', prod:'蓝牙耳机Pro', source:'通用生成', cp:'CP-002', lang:'中文', tags:['测评','数码'],
+    jyl:{ planCount:0,  cost:0,      roi:0,    threeS:0,    fiveS:0,    fullPlay:0,    clickRate:0,    rejectRate:0,   dupeRate:0    },
+    tx: { planCount:0,  cost:0,      roi:0,    threeS:0,    fiveS:0,    fullPlay:0,    clickRate:0,    rejectRate:0,   dupeRate:0    },
+    ks: { planCount:0,  cost:0,      roi:0,    threeS:0,    fiveS:0,    fullPlay:0,    clickRate:0,    rejectRate:0,   dupeRate:0    },
+    histPlanCount:0,  activePlanCount:0,  exitRate:0,    relatedMats:1, color:'#84cc16' },
+  { id:'M011', name:'手表-户外极限运动挑战剧情',        dur:'1:08', ratio:'9:16',  entryDate:'2025-12-05', type:'真人剧情', cat:'3C数码', prod:'智能手表S',   source:'工作流',   cp:'CP-001', lang:'中文', tags:['剧情','户外'],
+    jyl:{ planCount:2,  cost:35000,  roi:4.12, threeS:67.5, fiveS:56.2, fullPlay:37.8, clickRate:5.92, rejectRate:2.5, dupeRate:6.8  },
+    tx: { planCount:3,  cost:42800,  roi:3.75, threeS:63.8, fiveS:52.5, fullPlay:34.2, clickRate:5.52, rejectRate:2.9, dupeRate:7.5  },
+    ks: { planCount:4,  cost:34500,  roi:3.82, threeS:65.2, fiveS:54.6, fullPlay:35.8, clickRate:5.67, rejectRate:2.8, dupeRate:7.2  },
+    histPlanCount:13, activePlanCount:9,  exitRate:14.6, relatedMats:5, color:'#f59e0b' },
+  { id:'M012', name:'益生菌-肠道健康科普口播',          dur:'0:44', ratio:'9:16',  entryDate:'2026-02-14', type:'口播',     cat:'保健品', prod:'益生菌X',     source:'通用生成', cp:'CP-002', lang:'中文', tags:['科普','健康'],
+    jyl:{ planCount:2,  cost:21500,  roi:2.52, threeS:55.2, fiveS:44.5, fullPlay:28.1, clickRate:4.12, rejectRate:2.8, dupeRate:8.2  },
+    tx: { planCount:4,  cost:32800,  roi:2.38, threeS:52.8, fiveS:42.2, fullPlay:25.8, clickRate:3.85, rejectRate:3.2, dupeRate:9.1  },
+    ks: { planCount:1,  cost:7800,   roi:2.28, threeS:50.5, fiveS:40.8, fullPlay:24.2, clickRate:3.68, rejectRate:3.5, dupeRate:10.2 },
+    histPlanCount:10, activePlanCount:7,  exitRate:16.8, relatedMats:3, color:'#10b981' },
+];
+
+const statusMap = {
+  running: { label:'投放中', cls:'bg-green-50 text-green-700', dot:'bg-green-500' },
+  ended:   { label:'已结束', cls:'bg-gray-100 text-gray-500',  dot:'bg-gray-400'  },
+  none:    { label:'未投放', cls:'bg-gray-50 text-gray-400',   dot:'bg-gray-300'  }
+};
+
+const typeMap = {
+  '口播':     'bg-violet-50 text-violet-600',
+  '产品演示': 'bg-emerald-50 text-emerald-600',
+  '真人剧情': 'bg-orange-50 text-orange-600',
+  '大字报':   'bg-rose-50 text-rose-600'
+};
+
+const ratioLabel = { '16:9':'横版', '9:16':'竖版', '1:1':'方形' };
+const ratioColor = { '16:9':'bg-sky-50 text-sky-600', '9:16':'bg-violet-50 text-violet-500', '1:1':'bg-teal-50 text-teal-600' };
+
+let selectedIds = new Set();
+let sortField = null, sortDir = null;
+let currentData = [...materials];
+
+function fmt(n)      { return n === 0 ? '--' : n.toLocaleString(); }
+function fmtP(n)     { return n === 0 ? '--' : n.toFixed(2) + '%'; }
+function fmtMoney(n) { return n === 0 ? '--' : '¥' + n.toLocaleString(); }
+
+function platCell(m, field, fmtFn, colorFn) {
+  const pls = [['巨量','jyl'],['腾讯','tx'],['快手','ks']];
+  const rows = pls.map(([label, pk]) => {
+    const p = m[pk];
+    const empty = p.cost === 0 && p.planCount === 0 && p.roi === 0;
+    if (empty) return `<div class="flex items-baseline justify-between gap-1.5 text-xs"><span class="text-gray-300 shrink-0">${label}</span><span class="text-gray-300">--</span></div>`;
+    const val = fmtFn(p[field]);
+    const cls = colorFn ? colorFn(p[field]) : 'text-gray-700';
+    return `<div class="flex items-baseline justify-between gap-1.5 text-xs"><span class="text-gray-400 shrink-0">${label}</span><span class="font-medium ${cls}">${val}</span></div>`;
+  }).join('');
+  return `<td class="px-2 py-2 align-top"><div class="space-y-0.5">${rows}</div></td>`;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = currentData.map(m => {
+    const nd = ['jyl','tx','ks'].every(pk => m[pk].cost === 0 && m[pk].planCount === 0);
+    return `
+    <tr class="cursor-pointer" ondblclick="openDrawer('${m.id}')">
+      <td class="pl-4 pr-1 py-2 text-center" onclick="event.stopPropagation()">
+        <input type="checkbox" class="checkbox-input row-check" data-id="${m.id}" onchange="toggleCheck(this)" ${selectedIds.has(m.id) ? 'checked' : ''}>
+      </td>
+      <td class="px-3 py-2">
+        <div class="flex items-center gap-2.5">
+          <div class="thumb-box" onclick="event.stopPropagation(); openVideoModal('${m.dur}')">
+            <div class="w-full h-full flex items-center justify-center" style="background:linear-gradient(135deg,${m.color}22,${m.color}44)">
+              <svg width="16" height="16" fill="${m.color}" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="thumb-play">
+              <svg width="14" height="14" fill="#fff" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <span class="absolute bottom-0.5 right-0.5 bg-black/60 text-white leading-none px-1 py-0.5 rounded" style="font-size:10px">${m.dur}</span>
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm text-gray-900 truncate hover:text-blue-600 cursor-pointer" style="max-width:168px" onclick="openDrawer('${m.id}')">${m.name}</p>
+            <p class="text-xs text-gray-400 mt-0.5">${m.id}</p>
+          </div>
+        </div>
+      </td>
+      <td class="px-3 py-2">
+        <span class="text-xs px-1.5 py-0.5 rounded ${ratioColor[m.ratio] || 'bg-gray-50 text-gray-500'}">${m.ratio}</span>
+        <span class="text-xs text-gray-400 ml-0.5">${ratioLabel[m.ratio] || ''}</span>
+      </td>
+      <td class="px-3 py-2 text-xs text-gray-500 whitespace-nowrap">${m.entryDate}</td>
+      <td class="px-3 py-2 text-sm">${m.cat}</td>
+      <td class="px-3 py-2 text-sm">${m.prod}</td>
+      <td class="px-3 py-2">
+        <span class="text-xs px-2 py-0.5 rounded ${typeMap[m.type] || 'bg-gray-50 text-gray-500'}">${m.type}</span>
+      </td>
+      <td class="px-3 py-2 text-xs text-gray-600">${m.lang}</td>
+      <td class="px-3 py-2 text-xs text-gray-600">${m.source}</td>
+      <td class="px-3 py-2 text-xs text-gray-600">${m.cp}</td>
+      <td class="px-3 py-2">
+        ${m.tags.map(t => `<span class="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded mr-0.5">${t}</span>`).join('')}
+      </td>
+      ${platCell(m, 'planCount', v => v, null)}
+      ${platCell(m, 'cost',      v => v === 0 ? '--' : '¥'+v.toLocaleString(), null)}
+      ${platCell(m, 'roi',       v => v.toFixed(2), v => v >= 3 ? 'text-green-600' : v >= 2 ? 'text-gray-700' : 'text-red-500')}
+      ${platCell(m, 'threeS',    v => v.toFixed(1)+'%', v => v >= 60 ? 'text-green-600' : v >= 45 ? 'text-gray-700' : 'text-red-500')}
+      ${platCell(m, 'fiveS',     v => v.toFixed(1)+'%', null)}
+      ${platCell(m, 'fullPlay',  v => v.toFixed(1)+'%', null)}
+      ${platCell(m, 'clickRate', v => v.toFixed(2)+'%', v => v >= 4 ? 'text-green-600' : v >= 3 ? 'text-gray-700' : 'text-red-500')}
+      ${platCell(m, 'rejectRate',v => v.toFixed(1)+'%', v => v >= 5 ? 'text-red-500' : 'text-gray-600')}
+      ${platCell(m, 'dupeRate',  v => v.toFixed(1)+'%', v => v >= 10 ? 'text-amber-600' : 'text-gray-600')}
+      <td class="px-3 py-2 text-right text-xs ${nd ? 'text-gray-300' : 'text-gray-600'}">${nd ? '--' : m.histPlanCount}</td>
+      <td class="px-3 py-2 text-right font-medium text-xs ${nd ? 'text-gray-300' : m.activePlanCount > 0 ? 'text-blue-600' : 'text-gray-400'}">${nd ? '--' : m.activePlanCount}</td>
+      <td class="px-3 py-2 text-right text-xs ${nd ? 'text-gray-300' : m.exitRate >= 25 ? 'text-red-500' : 'text-gray-600'}">${nd ? '--' : fmtP(m.exitRate)}</td>
+      <td class="px-3 py-2">
+        ${m.relatedMats > 0 ? `<span class="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded cursor-pointer hover:bg-blue-100">查看 ${m.relatedMats} 个</span>` : '<span class="text-xs text-gray-300">--</span>'}
+      </td>
+      <td class="px-3 py-2 text-center sticky right-0 bg-white" style="box-shadow:-2px 0 4px rgba(0,0,0,0.03);" onclick="event.stopPropagation()">
+        <div class="relative inline-block">
+          <button class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600" onclick="toggleMenu(this)">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/>
+            </svg>
+          </button>
+          <div class="action-menu hidden absolute right-0 top-full mt-1 bg-white rounded shadow-lg border border-gray-200 py-1 z-20 w-32">
+            <button class="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50" onclick="openDrawer('${m.id}')">查看详情</button>
+            <button class="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50">编辑属性</button>
+            <button class="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50" onclick="downloadMaterial('${m.id}')">下载</button>
+            <div class="border-t border-gray-100 my-0.5"></div>
+            <button class="w-full text-left px-3 py-1.5 text-xs text-amber-600 hover:bg-amber-50" onclick="migrateMaterial('${m.id}','optimize')">迁移至待优化库</button>
+            <button class="w-full text-left px-3 py-1.5 text-xs text-orange-500 hover:bg-orange-50" onclick="migrateMaterial('${m.id}','trash')">迁移至回收站</button>
+            <div class="border-t border-gray-100 my-0.5"></div>
+            <button class="w-full text-left px-3 py-1.5 text-xs text-red-500 hover:bg-red-50" onclick="confirmDelete('${m.id}')">删除</button>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleMenu(btn) {
+  const menu = btn.nextElementSibling;
+  document.querySelectorAll('.action-menu').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
+  menu.classList.toggle('hidden');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.action-menu') && !e.target.closest('[onclick*="toggleMenu"]'))
+    document.querySelectorAll('.action-menu').forEach(m => m.classList.add('hidden'));
+});
+
+function toggleAll(el) {
+  document.querySelectorAll('.row-check').forEach(cb => { cb.checked = el.checked; toggleCheck(cb); });
+}
+function toggleCheck(cb) {
+  if (cb.checked) selectedIds.add(cb.dataset.id); else selectedIds.delete(cb.dataset.id);
+  updateBatch();
+}
+function updateBatch() {
+  const bar = document.getElementById('batchBar');
+  if (selectedIds.size > 0) {
+    bar.classList.remove('hidden'); bar.classList.add('flex');
+    document.getElementById('selectedCount').textContent = `已选 ${selectedIds.size} 项`;
+  } else {
+    bar.classList.add('hidden'); bar.classList.remove('flex');
+  }
+}
+function clearSelection() {
+  selectedIds.clear();
+  document.querySelectorAll('.row-check').forEach(cb => cb.checked = false);
+  document.getElementById('selectAll').checked = false;
+  updateBatch();
+}
+
+function switchLib(btn) {
+  document.querySelectorAll('.lib-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const names = { formal:'正式库', optimize:'待优化库', trash:'回收站' };
+  document.getElementById('libLabel').textContent = names[btn.dataset.lib];
+}
+
+function doSort(field, dir) {
+  document.querySelectorAll('.sort-icon span').forEach(s => s.classList.remove('active'));
+  if (event && event.target) event.target.classList.add('active');
+  currentData = [...materials].sort((a, b) => {
+    const sum = obj => ['jyl','tx','ks'].reduce((s, pk) => s + (obj[pk]?.[field] || 0), 0);
+    return dir === 'asc' ? sum(a) - sum(b) : sum(b) - sum(a);
+  });
+  renderTable();
+}
+
+function resetFilters() {
+  document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+  document.querySelectorAll('input[type="text"], input[type="number"]').forEach(i => i.value = '');
+}
+
+/* ---- 导入 ---- */
+function openImportModal() {
+  document.getElementById('importModal').style.display = 'flex';
+  document.getElementById('importFileList').innerHTML = '';
+}
+function closeImportModal() {
+  document.getElementById('importModal').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('importFileList').innerHTML = '';
+}
+function handleFileSelect(input) {
+  renderImportFiles(Array.from(input.files));
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('border-blue-400','bg-blue-50/40');
+  renderImportFiles(Array.from(e.dataTransfer.files));
+}
+function renderImportFiles(files) {
+  const list = document.getElementById('importFileList');
+  list.innerHTML = files.map((f, i) => `
+    <div class="flex items-center gap-2 bg-gray-50 rounded px-3 py-2 text-xs">
+      <svg width="14" height="14" fill="none" stroke="#4e6ef2" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M8 5v14l11-7z"/></svg>
+      <span class="flex-1 truncate text-gray-700">${f.name}</span>
+      <span class="text-gray-400 shrink-0">${(f.size / 1024 / 1024).toFixed(1)} MB</span>
+    </div>`).join('');
+}
+function submitImport() {
+  const files = document.getElementById('fileInput').files;
+  if (!files.length) { alert('请先选择要上传的文件'); return; }
+  showToast(`已提交 ${files.length} 个文件，正在上传...`);
+  closeImportModal();
+}
+
+/* ---- 下载 ---- */
+function downloadMaterial(id) {
+  const m = materials.find(x => x.id === id);
+  if (!m) return;
+  showToast(`开始下载：${m.name}`);
+}
+function batchDownload() {
+  if (!selectedIds.size) return;
+  showToast(`开始批量下载 ${selectedIds.size} 个素材`);
+}
+
+/* ---- 迁移 ---- */
+function migrateMaterial(id, target) {
+  const m = materials.find(x => x.id === id);
+  if (!m) return;
+  const label = target === 'optimize' ? '待优化库' : '回收站';
+  showToast(`已将「${m.name}」迁移至${label}`);
+}
+function batchMigrate(target) {
+  if (!selectedIds.size) return;
+  const label = target === 'optimize' ? '待优化库' : '回收站';
+  showToast(`已将 ${selectedIds.size} 个素材迁移至${label}`);
+  clearSelection();
+}
+
+/* ---- 删除 ---- */
+let pendingDeleteIds = null;
+function confirmDelete(id) {
+  pendingDeleteIds = [id];
+  const m = materials.find(x => x.id === id);
+  document.getElementById('deleteModalTitle').textContent = '确认删除素材';
+  document.getElementById('deleteModalDesc').textContent = `将永久删除「${m ? m.name : id}」，此操作无法撤销。`;
+  document.getElementById('deleteModal').style.display = 'flex';
+}
+function batchDelete() {
+  if (!selectedIds.size) return;
+  pendingDeleteIds = [...selectedIds];
+  document.getElementById('deleteModalTitle').textContent = `确认删除 ${selectedIds.size} 个素材`;
+  document.getElementById('deleteModalDesc').textContent = '所选素材将被永久删除，此操作无法撤销。';
+  document.getElementById('deleteModal').style.display = 'flex';
+}
+function closeDeleteModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+  pendingDeleteIds = null;
+}
+function executeDelete() {
+  if (!pendingDeleteIds) return;
+  const count = pendingDeleteIds.length;
+  pendingDeleteIds.forEach(id => {
+    const idx = currentData.findIndex(x => x.id === id);
+    if (idx > -1) currentData.splice(idx, 1);
+  });
+  clearSelection();
+  renderTable();
+  closeDeleteModal();
+  showToast(`已删除 ${count} 个素材`);
+}
+
+/* ---- Toast 提示 ---- */
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1d2129;color:#fff;font-size:13px;padding:8px 18px;border-radius:6px;z-index:9999;pointer-events:none;transition:opacity 0.3s;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.style.opacity = '0', 2500);
+}
+
+function openVideoModal(dur) {
+  document.getElementById('modalDuration').textContent = dur;
+  document.getElementById('videoModal').classList.remove('hidden');
+}
+function closeVideoModal() {
+  document.getElementById('videoModal').classList.add('hidden');
+}
+
+function openDrawer(id) {
+  const m = materials.find(x => x.id === id);
+  if (!m) return;
+  const s = statusMap[m.status];
+  const nd = m.status === 'none';
+  document.getElementById('drawerTitle').textContent = m.name;
+  document.getElementById('drawerContent').innerHTML = `
+    <div class="space-y-5">
+      <div class="rounded-lg overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 aspect-video flex items-center justify-center relative cursor-pointer" onclick="openVideoModal('${m.dur}')">
+        <div class="text-center">
+          <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-2" style="background:${m.color}33">
+            <svg width="24" height="24" fill="${m.color}" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+          <span class="text-white/40 text-xs">点击播放</span>
+        </div>
+        <span class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">${m.dur}</span>
+      </div>
+
+      <div>
+        <h3 class="text-xs font-semibold text-gray-900 mb-2">基础信息</h3>
+        <div class="grid grid-cols-3 gap-2 text-xs">
+          ${[['素材ID',m.id],['类型',m.type],['品类',m.cat],['产品',m.prod],['来源',m.source],['供应商',m.supplier],['CP名称',m.cp],['推广平台',m.platform]].map(([l,v]) =>
+            `<div class="bg-gray-50 rounded p-2.5"><span class="text-gray-400 block mb-0.5">${l}</span><span class="text-gray-800 font-medium">${v}</span></div>`
+          ).join('')}
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-xs font-semibold text-gray-900 mb-2">投放信息</h3>
+        <div class="bg-gray-50 rounded p-3 space-y-2 text-xs">
+          <div class="flex justify-between">
+            <span class="text-gray-500">投放状态</span>
+            <span class="status-tag ${s.cls}"><span class="w-1.5 h-1.5 rounded-full ${s.dot} mr-1 inline-block"></span>${s.label}</span>
+          </div>
+          ${!nd ? `
+          <div class="flex justify-between"><span class="text-gray-500">在投素材数</span><span class="text-gray-800 font-medium">${m.matCount}</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">在投计划数</span><span class="text-blue-600 font-medium">${m.planCount}</span></div>
+          ` : '<div class="text-gray-400">暂无投放记录</div>'}
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-xs font-semibold text-gray-900 mb-2">效果数据</h3>
+        ${nd ? '<p class="text-xs text-gray-400 bg-gray-50 rounded p-3">暂无数据</p>' : `
+        <div class="grid grid-cols-2 gap-2">
+          ${[['媒体消耗',fmtMoney(m.cost)],['新增人数',fmt(m.newUser)],['封面点击率',fmtP(m.clickRate)],['媒体转化率',fmtP(m.cvr)],['3S播放率',fmtP(m.threeS)],['50%播放率',fmtP(m.fifty)],['75%播放率',fmtP(m.seventy5)]].map(([l,v]) =>
+            `<div class="border border-gray-200 rounded p-3 text-center"><span class="text-xs text-gray-400 block mb-1">${l}</span><span class="text-sm font-semibold text-gray-900">${v}</span></div>`
+          ).join('')}
+        </div>`}
+      </div>
+
+      <div class="flex gap-2 pt-1">
+        <button class="flex-1 py-2 rounded text-xs font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors">移至待优化库</button>
+        <button class="flex-1 py-2 rounded text-xs font-medium bg-red-50 text-red-500 hover:bg-red-100 transition-colors">移至回收站</button>
+      </div>
+    </div>`;
+
+  const mask = document.getElementById('drawerMask');
+  const panel = document.getElementById('drawerPanel');
+  mask.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    mask.style.opacity = '1';
+    panel.style.transform = 'translateX(0)';
+  });
+}
+
+function closeDrawer() {
+  const mask = document.getElementById('drawerMask');
+  const panel = document.getElementById('drawerPanel');
+  mask.style.opacity = '0';
+  panel.style.transform = 'translateX(100%)';
+  setTimeout(() => mask.classList.add('hidden'), 250);
+}
+
+renderTable();
+</script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页 - 量化投放系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background-color: #f5f7fa;
+            font-size: 14px;
+            color: #333;
+            padding: 20px;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            margin-bottom: 20px;
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .page-desc {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* 统计卡片区域 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .stat-trend.up {
+            color: #52c41a;
+        }
+
+        .stat-trend.down {
+            color: #ff4d4f;
+        }
+
+        /* 图表区域 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .dashboard-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-text {
+            padding: 4px 12px;
+            font-size: 13px;
+            color: #666;
+            background: #f5f7fa;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-text:hover {
+            color: #4a9eff;
+            background: #e6f7ff;
+        }
+
+        .btn-text.active {
+            color: #4a9eff;
+            background: #e6f7ff;
+        }
+
+        /* 图表占位 */
+        .chart-placeholder {
+            height: 280px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* 列表区域 */
+        .list-section {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .data-table th {
+            font-weight: 500;
+            color: #666;
+            background: #fafafa;
+            font-size: 13px;
+        }
+
+        .data-table td {
+            color: #333;
+            font-size: 13px;
+        }
+
+        .data-table tr:hover td {
+            background: #f5f7fa;
+        }
+
+        .status-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .status-tag.success {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .status-tag.warning {
+            background: #fff7e6;
+            color: #faad14;
+        }
+
+        .status-tag.error {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+
+        .link-text {
+            color: #4a9eff;
+            cursor: pointer;
+        }
+
+        .link-text:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面标题 -->
+    <div class="page-header">
+        <h1 class="page-title">数据概览</h1>
+        <p class="page-desc">欢迎使用量化投放系统，以下是今日核心数据指标</p>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">今日投放消耗</div>
+            <div class="stat-value">¥128,450</div>
+            <div class="stat-trend up">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                    <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                <span>+12.5% 较昨日</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">曝光量</div>
+            <div class="stat-value">2.4M</div>
+            <div class="stat-trend up">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                    <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                <span>+8.3% 较昨日</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">点击率</div>
+            <div class="stat-value">3.24%</div>
+            <div class="stat-trend down">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+                    <polyline points="17 18 23 18 23 12"></polyline>
+                </svg>
+                <span>-0.5% 较昨日</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">转化数</div>
+            <div class="stat-value">1,856</div>
+            <div class="stat-trend up">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                    <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                <span>+15.2% 较昨日</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图表区域 -->
+    <div class="dashboard-grid">
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h3 class="card-title">投放趋势</h3>
+                <div class="card-actions">
+                    <button class="btn-text active">今日</button>
+                    <button class="btn-text">本周</button>
+                    <button class="btn-text">本月</button>
+                </div>
+            </div>
+            <div class="chart-placeholder">📊 趋势图表区域（开发者A实现）</div>
+        </div>
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h3 class="card-title">投放渠道占比</h3>
+            </div>
+            <div class="chart-placeholder">🥧 饼图区域（开发者A实现）</div>
+        </div>
+    </div>
+
+    <!-- 数据列表 -->
+    <div class="list-section">
+        <div class="card-header">
+            <h3 class="card-title">热门投放计划</h3>
+            <button class="btn-text">查看全部</button>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>计划名称</th>
+                    <th>投放渠道</th>
+                    <th>消耗</th>
+                    <th>曝光</th>
+                    <th>点击</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>春季大促推广计划</td>
+                    <td>抖音信息流</td>
+                    <td>¥45,230</td>
+                    <td>856,420</td>
+                    <td>12,450</td>
+                    <td><span class="status-tag success">投放中</span></td>
+                    <td><span class="link-text">详情</span></td>
+                </tr>
+                <tr>
+                    <td>新品上市预热</td>
+                    <td>微信朋友圈</td>
+                    <td>¥32,100</td>
+                    <td>623,150</td>
+                    <td>9,820</td>
+                    <td><span class="status-tag success">投放中</span></td>
+                    <td><span class="link-text">详情</span></td>
+                </tr>
+                <tr>
+                    <td>品牌曝光活动</td>
+                    <td>快手短视频</td>
+                    <td>¥28,500</td>
+                    <td>1,205,600</td>
+                    <td>8,350</td>
+                    <td><span class="status-tag warning">审核中</span></td>
+                    <td><span class="link-text">详情</span></td>
+                </tr>
+                <tr>
+                    <td>618预热投放</td>
+                    <td>百度信息流</td>
+                    <td>¥15,600</td>
+                    <td>320,800</td>
+                    <td>4,200</td>
+                    <td><span class="status-tag error">已暂停</span></td>
+                    <td><span class="link-text">详情</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

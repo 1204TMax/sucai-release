@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>产品管理 - 量化投放系统</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                   'Helvetica Neue', Arial, 'Noto Sans', 'PingFang SC',
+                   'Microsoft YaHei', sans-serif;
+      font-size: 14px;
+      line-height: 1.5714;
+      color: rgba(0,0,0,0.88);
+      background-color: #f5f7fa;
+      padding: 20px;
+    }
+
+    :root {
+      --primary:        #1677ff;
+      --primary-hover:  #4096ff;
+      --primary-active: #0958d9;
+      --primary-bg:     #e6f4ff;
+      --primary-border: #91caff;
+      --text-primary:   rgba(0,0,0,0.88);
+      --text-secondary: rgba(0,0,0,0.45);
+      --text-label:     rgba(0,0,0,0.65);
+      --border:         #d9d9d9;
+      --border-light:   #f0f0f0;
+      --bg-card:        #ffffff;
+      --bg-layout:      #f5f7fa;
+      --success:        #52c41a;
+      --danger:         #ff4d4f;
+    }
+
+    /* ── 整体布局 ─────────────────────────────────────────── */
+    .page-layout {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    /* ══ 左侧：产品列表 ══════════════════════════════════════ */
+    .left-panel {
+      width: 240px;
+      flex-shrink: 0;
+      background: var(--bg-card);
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+    }
+
+    .left-panel-header {
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .left-panel-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+
+    .search-box { position: relative; }
+
+    .search-icon {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 32px;
+      padding: 4px 11px 4px 30px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: #fff;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
+    }
+
+    .search-input::placeholder { color: var(--text-secondary); }
+
+    .product-list { overflow: visible; }
+
+    .product-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .product-item:hover { background: #fafafa; }
+
+    .product-item.active {
+      background: var(--primary-bg);
+      border-left-color: var(--primary);
+    }
+
+    .product-item.active .prod-name { color: var(--primary); font-weight: 500; }
+
+    .prod-name {
+      font-size: 14px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .prod-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+    .list-empty {
+      padding: 32px 16px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    /* ══ 右侧：详情区 ════════════════════════════════════════ */
+    .right-panel { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+
+    /* 空状态 */
+    .placeholder-card {
+      background: var(--bg-card);
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      padding: 80px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-secondary);
+    }
+
+    .placeholder-card svg { color: #d9d9d9; }
+    .placeholder-title { font-size: 14px; color: rgba(0,0,0,0.45); }
+    .placeholder-sub { font-size: 12px; color: rgba(0,0,0,0.25); }
+
+    /* 卡片 */
+    .detail-card {
+      background: var(--bg-card);
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+    }
+
+    .card-header {
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .card-body { padding: 24px; }
+
+    .card-footer {
+      padding: 12px 24px;
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ── 基础信息：只读字段 ─────────────────────────────── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px 32px;
+      margin-bottom: 20px;
+    }
+
+    .info-item { display: flex; flex-direction: column; gap: 4px; }
+
+    .info-label { font-size: 12px; color: var(--text-secondary); }
+
+    .info-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .id-tag {
+      display: inline-block;
+      padding: 1px 8px;
+      background: var(--primary-bg);
+      border: 1px solid var(--primary-border);
+      border-radius: 4px;
+      color: var(--primary);
+      font-size: 13px;
+      font-family: monospace;
+    }
+
+    /* ── 可编辑字段 ─────────────────────────────────────── */
+    .field-group { margin-bottom: 16px; }
+    .field-group:last-of-type { margin-bottom: 0; }
+
+    .field-label {
+      font-size: 14px;
+      color: var(--text-label);
+      margin-bottom: 6px;
+    }
+
+    .field-textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.5714;
+      color: var(--text-primary);
+      background: #fff;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      display: block;
+    }
+
+    .field-textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
+    }
+
+    .field-textarea::placeholder { color: var(--text-secondary); }
+
+    /* ── 按钮 ───────────────────────────────────────────── */
+    .btn {
+      height: 32px;
+      padding: 0 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+    .btn-primary:active { background: var(--primary-active); border-color: var(--primary-active); }
+
+    .save-feedback {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      color: var(--success);
+    }
+
+    .save-feedback.show { display: inline-flex; }
+
+    /* ══ 产品物料 ═══════════════════════════════════════════ */
+    .material-section + .material-section {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .material-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .material-title-bar {
+      width: 3px;
+      height: 14px;
+      background: var(--primary);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .material-hint { margin-top: 8px; font-size: 12px; color: var(--text-secondary); }
+
+    /* picture-card upload grid */
+    .upload-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    /* 上传占位卡片 */
+    .upload-btn {
+      width: 104px;
+      height: 104px;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      background: var(--bg-layout);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .upload-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-bg);
+    }
+
+    .upload-btn.hidden { display: none; }
+
+    /* 已上传图片缩略图 */
+    .thumb-card {
+      width: 104px;
+      height: 104px;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+      position: relative;
+      background: #fafafa;
+    }
+
+    .thumb-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* hover overlay */
+    .thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .thumb-card:hover .thumb-overlay { opacity: 1; }
+
+    .thumb-action {
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .thumb-action:hover svg { stroke: #ccc; }
+
+    /* 视频文件列表 */
+    .video-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+
+    .video-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: var(--bg-layout);
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+    }
+
+    .video-item-name {
+      flex: 1;
+      font-size: 13px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .video-item-size { font-size: 12px; color: var(--text-secondary); flex-shrink: 0; }
+
+    .video-item-del {
+      font-size: 12px;
+      color: var(--danger);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .video-item-del:hover { color: #ff7875; }
+
+    /* 上传按钮（录屏用） */
+    .upload-file-btn {
+      height: 32px;
+      padding: 0 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .upload-file-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* 图片预览遮罩 */
+    .preview-mask {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preview-mask.show { display: flex; }
+
+    .preview-mask img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 4px;
+    }
+
+    .preview-close {
+      position: absolute;
+      top: 24px;
+      right: 32px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 28px;
+      line-height: 1;
+      opacity: 0.8;
+    }
+
+    .preview-close:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div class="page-layout">
+
+  <!-- ══ 左侧：产品列表 ══════════════════════════════════ -->
+  <div class="left-panel">
+    <div class="left-panel-header">
+      <div class="left-panel-title">产品列表</div>
+      <div class="search-box">
+        <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="search-input" id="searchInput"
+               placeholder="搜索产品名称"
+               oninput="filterProducts(this.value)">
+      </div>
+    </div>
+    <div class="product-list" id="productList"></div>
+  </div>
+
+  <!-- ══ 右侧：详情区 ══════════════════════════════════════ -->
+  <div class="right-panel" id="rightPanel">
+    <div class="placeholder-card">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      <div class="placeholder-title">请从左侧选择一个产品</div>
+      <div class="placeholder-sub">选中后可编辑基础信息和上传产品物料</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 图片预览遮罩 -->
+<div class="preview-mask" id="previewMask" onclick="closePreview(event)">
+  <span class="preview-close" onclick="hidePreview()">&times;</span>
+  <img id="previewImg" src="" alt="preview">
+</div>
+
+<script>
+// ── Mock 数据 ────────────────────────────────────────────────
+const PRODUCTS = [
+  {
+    id: 'P001', name: '抖音极速版', category: '短视频工具',
+    desc: '抖音极速版是面向三四线城市用户设计的短视频 App，通过简洁的界面和流量激励模式吸引用户长期留存。',
+    marketing: '看视频赚钱，每日最高领红包 10 元',
+    extra: '支持离线缓存，低网络环境友好，安装包体积仅 40MB',
+  },
+  {
+    id: 'P002', name: '剪映专业版', category: '视频剪辑',
+    desc: '剪映专业版为创作者提供专业的视频剪辑能力，包含 AI 特效、智能字幕、音频分离等核心功能。',
+    marketing: 'AI 智能剪辑，一键生成大片',
+    extra: '原生适配 M 系列芯片，剪辑速度提升 300%',
+  },
+  {
+    id: 'P003', name: '飞书', category: '企业协作',
+    desc: '飞书是字节跳动旗下的企业协作平台，集成即时通讯、文档协作、视频会议和项目管理等功能。',
+    marketing: '让每个人都能享受高效愉悦的工作',
+    extra: '与字节跳动内部工具链深度打通，支持超级 Tab',
+  },
+  {
+    id: 'P004', name: '番茄小说', category: '阅读工具',
+    desc: '番茄小说提供海量免费小说内容，通过广告变现的商业模式实现完全免费阅读体验。',
+    marketing: '海量正版小说，全部免费看',
+    extra: '每日签到领书币，兑换精品付费书籍',
+  },
+  {
+    id: 'P005', name: 'TikTok', category: '短视频工具',
+    desc: 'TikTok 是抖音的海外版本，面向全球用户提供短视频创作和浏览服务，支持多语言界面。',
+    marketing: 'Make Every Second Count',
+    extra: '已覆盖 150+ 国家和地区，MAU 超 10 亿',
+  },
+];
+
+let currentId = null;
+let filteredList = [...PRODUCTS];
+
+// 每个产品独立的物料状态（内存）
+const materialState = {};
+PRODUCTS.forEach(p => { materialState[p.id] = { icon: null, shots: [], videos: [] }; });
+
+// ── 列表渲染 ─────────────────────────────────────────────────
+function renderList(list) {
+  const el = document.getElementById('productList');
+  if (list.length === 0) {
+    el.innerHTML = '<div class="list-empty">未找到匹配产品</div>';
+    return;
+  }
+  el.innerHTML = list.map(p => `
+    <div class="product-item ${p.id === currentId ? 'active' : ''}"
+         onclick="selectProduct('${p.id}')" data-id="${p.id}">
+      <div class="prod-name">${esc(p.name)}</div>
+      <div class="prod-meta">${esc(p.id)} · ${esc(p.category)}</div>
+    </div>
+  `).join('');
+}
+
+function filterProducts(kw) {
+  const k = kw.trim().toLowerCase();
+  filteredList = k ? PRODUCTS.filter(p => p.name.toLowerCase().includes(k)) : [...PRODUCTS];
+  renderList(filteredList);
+}
+
+// ── 选中产品 ─────────────────────────────────────────────────
+function selectProduct(id) {
+  currentId = id;
+  renderList(filteredList);
+  const p = PRODUCTS.find(x => x.id === id);
+  if (p) renderDetail(p);
+}
+
+// ── 渲染详情 ─────────────────────────────────────────────────
+function renderDetail(p) {
+  const panel = document.getElementById('rightPanel');
+  panel.innerHTML = `
+    <!-- 基础信息 Card -->
+    <div class="detail-card">
+      <div class="card-header">基础信息</div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">产品名称</div>
+            <div class="info-value">${esc(p.name)}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">产品 ID</div>
+            <div class="info-value"><span class="id-tag">${esc(p.id)}</span></div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">品类</div>
+            <div class="info-value">${esc(p.category)}</div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">功能描述</div>
+          <textarea class="field-textarea" id="fieldDesc" rows="3"
+                    placeholder="请输入产品功能描述">${esc(p.desc)}</textarea>
+        </div>
+        <div class="field-group">
+          <div class="field-label">核心营销点</div>
+          <textarea class="field-textarea" id="fieldMarketing" rows="3"
+                    placeholder="请输入核心营销点，如：一键成片、AI 智能配音等">${esc(p.marketing)}</textarea>
+        </div>
+        <div class="field-group">
+          <div class="field-label">补充描述</div>
+          <textarea class="field-textarea" id="fieldExtra" rows="2"
+                    placeholder="请输入补充描述（可选）">${esc(p.extra)}</textarea>
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="save-feedback" id="saveFeedback">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>已保存
+        </span>
+        <button class="btn btn-primary" onclick="saveBasic('${p.id}')">保存</button>
+      </div>
+    </div>
+
+    <!-- 产品物料 Card -->
+    <div class="detail-card">
+      <div class="card-header">产品物料</div>
+      <div class="card-body">
+
+        <!-- 图标 -->
+        <div class="material-section">
+          <div class="material-title">
+            <div class="material-title-bar"></div>图标
+          </div>
+          <div class="upload-grid" id="iconGrid">
+            <!-- 由 JS 渲染 -->
+          </div>
+          <div class="material-hint">仅上传 1 张 · PNG / JPG · 建议尺寸 1024×1024</div>
+        </div>
+
+        <!-- 截屏 -->
+        <div class="material-section">
+          <div class="material-title">
+            <div class="material-title-bar"></div>截屏
+          </div>
+          <div class="upload-grid" id="shotGrid">
+            <!-- 由 JS 渲染 -->
+          </div>
+          <div class="material-hint">支持多张 · PNG / JPG</div>
+        </div>
+
+        <!-- 录屏 -->
+        <div class="material-section">
+          <div class="material-title">
+            <div class="material-title-bar"></div>录屏
+          </div>
+          <div class="video-list" id="videoList"></div>
+          <button class="upload-file-btn" onclick="triggerVideoUpload()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 16 12 12 8 16"/>
+              <line x1="12" y1="12" x2="12" y2="21"/>
+              <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+            </svg>
+            上传录屏
+          </button>
+          <div class="material-hint">支持多个 · MP4 / MOV / AVI</div>
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  // 渲染物料区
+  renderIconGrid(p.id);
+  renderShotGrid(p.id);
+  renderVideoList(p.id);
+
+  // 绑定隐藏 input
+  bindFileInputs(p.id);
+}
+
+// ── 保存基础信息 ─────────────────────────────────────────────
+function saveBasic(id) {
+  const p = PRODUCTS.find(x => x.id === id);
+  if (!p) return;
+  p.desc      = document.getElementById('fieldDesc').value;
+  p.marketing = document.getElementById('fieldMarketing').value;
+  p.extra     = document.getElementById('fieldExtra').value;
+  const fb = document.getElementById('saveFeedback');
+  fb.classList.add('show');
+  setTimeout(() => fb.classList.remove('show'), 2500);
+}
+
+// ── 图标 ─────────────────────────────────────────────────────
+function renderIconGrid(id) {
+  const grid = document.getElementById('iconGrid');
+  if (!grid) return;
+  const state = materialState[id];
+  grid.innerHTML = '';
+  if (state.icon) {
+    grid.appendChild(makeThumb(state.icon, () => {
+      state.icon = null;
+      renderIconGrid(id);
+    }));
+  } else {
+    const btn = makeUploadBtn(() => triggerIconUpload(id));
+    grid.appendChild(btn);
+  }
+}
+
+function triggerIconUpload(id) {
+  const inp = document.getElementById('iconInput');
+  inp.dataset.target = id;
+  inp.value = '';
+  inp.click();
+}
+
+// ── 截屏 ─────────────────────────────────────────────────────
+function renderShotGrid(id) {
+  const grid = document.getElementById('shotGrid');
+  if (!grid) return;
+  const state = materialState[id];
+  grid.innerHTML = '';
+  state.shots.forEach((dataUrl, idx) => {
+    grid.appendChild(makeThumb(dataUrl, () => {
+      state.shots.splice(idx, 1);
+      renderShotGrid(id);
+    }));
+  });
+  const btn = makeUploadBtn(() => triggerShotUpload(id));
+  grid.appendChild(btn);
+}
+
+function triggerShotUpload(id) {
+  const inp = document.getElementById('shotInput');
+  inp.dataset.target = id;
+  inp.value = '';
+  inp.click();
+}
+
+// ── 录屏 ─────────────────────────────────────────────────────
+function renderVideoList(id) {
+  const el = document.getElementById('videoList');
+  if (!el) return;
+  const state = materialState[id];
+  el.innerHTML = state.videos.map((v, idx) => `
+    <div class="video-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+           stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="23 7 16 12 23 17 23 7"/>
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+      </svg>
+      <span class="video-item-name" title="${esc(v.name)}">${esc(v.name)}</span>
+      <span class="video-item-size">${formatSize(v.size)}</span>
+      <span class="video-item-del" onclick="removeVideo('${id}', ${idx})">删除</span>
+    </div>
+  `).join('');
+}
+
+function triggerVideoUpload() {
+  const inp = document.getElementById('videoInput');
+  inp.dataset.target = currentId;
+  inp.value = '';
+  inp.click();
+}
+
+function removeVideo(id, idx) {
+  materialState[id].videos.splice(idx, 1);
+  renderVideoList(id);
+}
+
+// ── 绑定隐藏 input（渲染详情后调用）────────────────────────
+function bindFileInputs(id) {
+  // icon
+  const iconInp = document.getElementById('iconInput');
+  iconInp.onchange = function() {
+    const file = this.files[0];
+    if (!file) return;
+    readAsDataUrl(file, url => {
+      materialState[id].icon = url;
+      renderIconGrid(id);
+    });
+  };
+
+  // shots
+  const shotInp = document.getElementById('shotInput');
+  shotInp.onchange = function() {
+    Array.from(this.files).forEach(file => {
+      readAsDataUrl(file, url => {
+        materialState[id].shots.push(url);
+        renderShotGrid(id);
+      });
+    });
+  };
+
+  // videos
+  const videoInp = document.getElementById('videoInput');
+  videoInp.onchange = function() {
+    Array.from(this.files).forEach(file => {
+      materialState[id].videos.push({ name: file.name, size: file.size });
+      renderVideoList(id);
+    });
+  };
+}
+
+// ── 工具函数 ─────────────────────────────────────────────────
+function makeUploadBtn(onClick) {
+  const div = document.createElement('div');
+  div.className = 'upload-btn';
+  div.innerHTML = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    <span>上传</span>
+  `;
+  div.onclick = onClick;
+  return div;
+}
+
+function makeThumb(src, onRemove) {
+  const div = document.createElement('div');
+  div.className = 'thumb-card';
+  div.innerHTML = `
+    <img src="${src}" alt="">
+    <div class="thumb-overlay">
+      <span class="thumb-action" title="预览" onclick="showPreview('${src}')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </span>
+      <span class="thumb-action" title="删除">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/>
+        </svg>
+      </span>
+    </div>
+  `;
+  // 删除按钮
+  div.querySelectorAll('.thumb-action')[1].onclick = onRemove;
+  return div;
+}
+
+function readAsDataUrl(file, cb) {
+  const reader = new FileReader();
+  reader.onload = e => cb(e.target.result);
+  reader.readAsDataURL(file);
+}
+
+function formatSize(bytes) {
+  if (!bytes) return '';
+  return bytes > 1048576
+    ? `${(bytes / 1048576).toFixed(1)} MB`
+    : `${Math.round(bytes / 1024)} KB`;
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── 图片预览 ─────────────────────────────────────────────────
+function showPreview(src) {
+  document.getElementById('previewImg').src = src;
+  document.getElementById('previewMask').classList.add('show');
+}
+
+function hidePreview() {
+  document.getElementById('previewMask').classList.remove('show');
+}
+
+function closePreview(e) {
+  if (e.target === document.getElementById('previewMask')) hidePreview();
+}
+
+// ── 初始化 ───────────────────────────────────────────────────
+renderList(PRODUCTS);
+</script>
+
+<!-- 隐藏的 file input（全局复用，渲染详情后绑定 onchange）-->
+<input type="file" id="iconInput"  accept="image/*"                style="display:none">
+<input type="file" id="shotInput"  accept="image/*"  multiple      style="display:none">
+<input type="file" id="videoInput" accept="video/*"  multiple      style="display:none">
+
+</body>
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的任务 - 量化投放系统</title>
+  <link rel="stylesheet" href="https://unpkg.com/antd@5/dist/antd.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background-color: #f5f7fa;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+      color: #333;
+      padding: 20px;
+    }
+    /* 缩略图 hover 效果 */
+    .media-thumb {
+      width: 40px; height: 40px;
+      border-radius: 4px; overflow: hidden;
+      cursor: pointer; flex-shrink: 0;
+      border: 1.5px solid #e8e8e8;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .media-thumb:hover {
+      border-color: #1677ff;
+      box-shadow: 0 0 0 2px rgba(22,119,255,0.15);
+    }
+    .media-thumb-more {
+      width: 40px; height: 40px;
+      border-radius: 4px; flex-shrink: 0;
+      background: #f0f0f0; border: 1.5px solid #e8e8e8;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #666; font-size: 11px; font-weight: 600;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .media-thumb-more:hover { background: #e6f4ff; border-color: #1677ff; color: #1677ff; }
+    /* 预览模态框内 导航条 */
+    .preview-strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+    .preview-strip-item {
+      width: 54px; height: 42px; flex-shrink: 0;
+      border-radius: 4px; overflow: hidden; cursor: pointer;
+      outline: 2px solid transparent; opacity: 0.6;
+      transition: all 0.15s;
+    }
+    .preview-strip-item.active { outline-color: #1677ff; opacity: 1; }
+    .preview-strip-item:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/dayjs@1/dayjs.min.js"></script>
+<script src="https://unpkg.com/antd@5/dist/antd.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const {
+  Table, Tag, Button, Select, Input, Space, Card,
+  Popconfirm, message, Row, Col, DatePicker, Modal,
+} = antd;
+const { RangePicker } = DatePicker;
+
+// ─── 色彩规范 ──────────────────────────────────
+// [Ant Design spec/colors.zh-CN.md] 功能色语义
+const STATUS_CONFIG = {
+  '未开始': { color: 'default',    label: '未开始' },
+  '进行中': { color: 'processing', label: '进行中' },
+  '已完成': { color: 'success',    label: '已完成' },
+  '已暂停': { color: 'warning',    label: '已暂停' },
+  '已终止': { color: 'volcano',    label: '已终止' },
+  '已失败': { color: 'error',      label: '已失败' },
+};
+const TYPE_COLORS = {
+  '工作流':       'blue',
+  '图像通用生成': 'purple',
+  '视频通用生成': 'cyan',
+};
+
+// 视频缩略图渐变色（按索引区分）
+const VIDEO_GRADIENTS = [
+  ['#1e3c72', '#2a5298'],
+  ['#6a3093', '#a044ff'],
+  ['#134e5e', '#71b280'],
+  ['#cc2b5e', '#753a88'],
+  ['#b06ab3', '#4568dc'],
+];
+
+// 公开测试视频（Google Storage 样本）
+const SAMPLE_VIDEOS = [
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+];
+
+// 构造图片 / 视频素材对象
+const img = (seed) => ({
+  type: 'image',
+  thumb: `https://picsum.photos/seed/${seed}/80/80`,
+  url:   `https://picsum.photos/seed/${seed}/900/640`,
+});
+const vid = (i) => ({
+  type: 'video',
+  thumb: null,
+  url: SAMPLE_VIDEOS[i % SAMPLE_VIDEOS.length],
+  gradientIdx: i,
+});
+
+// ─── 模拟数据（按创建时间倒序）───────────────
+const INITIAL_DATA = [
+  {
+    key: '1', name: '夏季促销主视觉批量生成', type: '图像通用生成',
+    status: '已完成', creator: '张三', createdTime: '2026-03-30 14:32', count: 120,
+    inputs:  [img('promo1a'), img('promo1b')],
+    outputs: [img('gen1a'), img('gen1b'), img('gen1c'), img('gen1d'), img('gen1e')],
+  },
+  {
+    key: '2', name: '品牌视频素材 Q1 第二批', type: '视频通用生成',
+    status: '进行中', creator: '李四', createdTime: '2026-03-30 11:15', count: 48,
+    inputs:  [img('brand2a'), img('brand2b'), vid(0)],
+    outputs: [vid(1)],
+  },
+  {
+    key: '3', name: '社媒投放图组合工作流', type: '工作流',
+    status: '已暂停', creator: '王五', createdTime: '2026-03-29 17:44', count: 200,
+    inputs:  [img('social3a'), img('social3b'), img('social3c')],
+    outputs: [img('sout3a'), img('sout3b')],
+  },
+  {
+    key: '4', name: '3C 产品详情页视频素材', type: '视频通用生成',
+    status: '已失败', creator: '张三', createdTime: '2026-03-29 09:22', count: 30,
+    inputs:  [img('product4a'), vid(1)],
+    outputs: [],
+  },
+  {
+    key: '5', name: '节日主题图 — 清明节专题', type: '图像通用生成',
+    status: '已完成', creator: '赵六', createdTime: '2026-03-28 16:05', count: 85,
+    inputs:  [img('festival5a')],
+    outputs: [img('fest5a'), img('fest5b'), img('fest5c'), img('fest5d'), img('fest5e'), img('fest5f')],
+  },
+  {
+    key: '6', name: '电商大促落地页素材工作流', type: '工作流',
+    status: '已终止', creator: '李四', createdTime: '2026-03-27 10:30', count: 150,
+    inputs:  [img('ecom6a'), img('ecom6b'), img('ecom6c'), img('ecom6d')],
+    outputs: [img('eout6a'), img('eout6b'), img('eout6c')],
+  },
+  {
+    key: '7', name: '服装秋冬系列主图生成', type: '图像通用生成',
+    status: '未开始', creator: '王五', createdTime: '2026-03-26 14:18', count: 60,
+    inputs:  [img('fashion7a'), img('fashion7b'), img('fashion7c')],
+    outputs: [],
+  },
+  {
+    key: '8', name: '品牌宣传短视频第二批', type: '视频通用生成',
+    status: '已完成', creator: '张三', createdTime: '2026-03-25 09:55', count: 25,
+    inputs:  [img('ad8a'), img('ad8b'), vid(2)],
+    outputs: [vid(0), vid(1), vid(3)],
+  },
+  {
+    key: '9', name: '跨境电商多语言图文组合', type: '工作流',
+    status: '进行中', creator: '赵六', createdTime: '2026-03-24 15:40', count: 320,
+    inputs:  [img('cross9a'), img('cross9b'), img('cross9c'), img('cross9d'), img('cross9e')],
+    outputs: [img('cout9a'), img('cout9b')],
+  },
+  {
+    key: '10', name: '美妆类目视频广告素材', type: '视频通用生成',
+    status: '已失败', creator: '李四', createdTime: '2026-03-23 11:20', count: 40,
+    inputs:  [vid(3), img('beauty10')],
+    outputs: [],
+  },
+  {
+    key: '11', name: '首页 Banner 图像批量', type: '图像通用生成',
+    status: '已完成', creator: '王五', createdTime: '2026-03-22 16:33', count: 18,
+    inputs:  [img('banner11a'), img('banner11b')],
+    outputs: [img('bout11a'), img('bout11b'), img('bout11c'), img('bout11d')],
+  },
+];
+
+// ─── 视频渐变缩略图 ─────────────────────────────
+function VideoThumb({ gradientIdx = 0, width = 40, height = 40 }) {
+  const [c1, c2] = VIDEO_GRADIENTS[gradientIdx % VIDEO_GRADIENTS.length];
+  const iconSize = Math.round(Math.min(width, height) * 0.36);
+  return (
+    <div style={{
+      width, height,
+      background: `linear-gradient(135deg, ${c1}, ${c2})`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="rgba(255,255,255,0.92)">
+        <polygon points="5 3 19 12 5 21 5 3" />
+      </svg>
+    </div>
+  );
+}
+
+// ─── 单个缩略图渲染 ──────────────────────────────
+function Thumb({ item, index, size = 40, onClick }) {
+  return (
+    <div className="media-thumb" style={{ width: size, height: size }} onClick={onClick}>
+      {item.type === 'image'
+        ? <img src={item.thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        : <VideoThumb gradientIdx={item.gradientIdx ?? index} width={size} height={size} />
+      }
+    </div>
+  );
+}
+
+// ─── 表格单元格：缩略图条 + 预览 Modal ──────────
+const MAX_THUMB = 3;
+
+function MediaCell({ items }) {
+  const [open, setOpen] = React.useState(false);
+  const [idx, setIdx]   = React.useState(0);
+
+  if (!items || items.length === 0) {
+    return <span style={{ color: '#bbb', fontSize: 13 }}>—</span>;
+  }
+
+  const shown  = items.slice(0, MAX_THUMB);
+  const extra  = items.length - MAX_THUMB;
+  const current = items[idx] ?? items[0];
+
+  const openAt = (i) => { setIdx(i); setOpen(true); };
+
+  return (
+    <>
+      {/* 缩略图条 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        {shown.map((item, i) => (
+          <Thumb key={i} item={item} index={i} onClick={() => openAt(i)} />
+        ))}
+        {extra > 0 && (
+          <div className="media-thumb-more" onClick={() => openAt(MAX_THUMB)}>
+            +{extra}
+          </div>
+        )}
+      </div>
+
+      {/* 预览 Modal */}
+      <Modal
+        open={open}
+        onCancel={() => setOpen(false)}
+        footer={null}
+        width={700}
+        centered
+        destroyOnClose
+        title={
+          <span style={{ fontSize: 14, fontWeight: 500 }}>
+            {current.type === 'video' ? '视频预览' : '图片预览'}
+            <span style={{ color: '#aaa', fontWeight: 400, fontSize: 13, marginLeft: 8 }}>
+              {idx + 1} / {items.length}
+            </span>
+          </span>
+        }
+      >
+        {/* 主预览区 */}
+        <div style={{
+          background: '#0d0d0d', borderRadius: 8, overflow: 'hidden',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          minHeight: 280, maxHeight: 440,
+        }}>
+          {current.type === 'video' ? (
+            <video
+              key={current.url + idx}
+              src={current.url}
+              controls
+              autoPlay
+              style={{ maxWidth: '100%', maxHeight: 440, display: 'block' }}
+            />
+          ) : (
+            <img
+              src={current.url}
+              alt=""
+              style={{ maxWidth: '100%', maxHeight: 440, objectFit: 'contain', display: 'block' }}
+            />
+          )}
+        </div>
+
+        {/* 底部导航（多张时显示）*/}
+        {items.length > 1 && (
+          <div style={{ marginTop: 12 }}>
+            {/* 缩略图导航条 */}
+            <div className="preview-strip">
+              {items.map((item, i) => (
+                <div
+                  key={i}
+                  className={`preview-strip-item${i === idx ? ' active' : ''}`}
+                  onClick={() => setIdx(i)}
+                >
+                  {item.type === 'image'
+                    ? <img src={item.thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    : <VideoThumb gradientIdx={item.gradientIdx ?? i} width={54} height={42} />
+                  }
+                </div>
+              ))}
+            </div>
+            {/* 上一个 / 下一个 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+              <Button
+                size="small"
+                onClick={() => setIdx(i => Math.max(0, i - 1))}
+                disabled={idx === 0}
+              >‹ 上一个</Button>
+              <span style={{ color: '#999', fontSize: 12 }}>{idx + 1} / {items.length}</span>
+              <Button
+                size="small"
+                onClick={() => setIdx(i => Math.min(items.length - 1, i + 1))}
+                disabled={idx === items.length - 1}
+              >下一个 ›</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </>
+  );
+}
+
+// ─── 主页面 ─────────────────────────────────────
+function MyTasksPage() {
+  const [data, setData]                       = React.useState(INITIAL_DATA);
+  const [filterStatus, setFilterStatus]       = React.useState(undefined);
+  const [filterType, setFilterType]           = React.useState(undefined);
+  const [filterCreator, setFilterCreator]     = React.useState('');
+  const [filterDateRange, setFilterDateRange] = React.useState(null);
+  const [messageApi, contextHolder]           = message.useMessage();
+
+  const filteredData = React.useMemo(() => {
+    return data.filter(item => {
+      if (filterStatus && item.status !== filterStatus) return false;
+      if (filterType   && item.type   !== filterType)   return false;
+      if (filterCreator && !item.creator.includes(filterCreator)) return false;
+      if (filterDateRange?.[0] && filterDateRange?.[1]) {
+        const ts    = new Date(item.createdTime).getTime();
+        const start = filterDateRange[0].startOf('day').valueOf();
+        const end   = filterDateRange[1].endOf('day').valueOf();
+        if (ts < start || ts > end) return false;
+      }
+      return true;
+    });
+  }, [data, filterStatus, filterType, filterCreator, filterDateRange]);
+
+  const handleDelete = (key, name) => {
+    setData(prev => prev.filter(item => item.key !== key));
+    messageApi.success(`已删除任务「${name}」`);
+  };
+
+  // [Ant Design 数据展示规范 spec/data-display.zh-CN.md]
+  // 时间、状态、操作栏保持完整不过行
+  const columns = [
+    {
+      title: '任务名称',
+      dataIndex: 'name',
+      key: 'name',
+      ellipsis: true,
+      width: 180,
+    },
+    {
+      title: '任务类型',
+      dataIndex: 'type',
+      key: 'type',
+      width: 130,
+      render: (type) => <Tag color={TYPE_COLORS[type]}>{type}</Tag>,
+    },
+    {
+      title: '输入',
+      dataIndex: 'inputs',
+      key: 'inputs',
+      width: 170,
+      render: (inputs) => <MediaCell items={inputs} />,
+    },
+    {
+      title: '输出',
+      dataIndex: 'outputs',
+      key: 'outputs',
+      width: 170,
+      render: (outputs) => <MediaCell items={outputs} />,
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 88,
+      render: (status) => {
+        const cfg = STATUS_CONFIG[status];
+        return <Tag color={cfg.color}>{cfg.label}</Tag>;
+      },
+    },
+    {
+      title: '创建人',
+      dataIndex: 'creator',
+      key: 'creator',
+      width: 80,
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'createdTime',
+      key: 'createdTime',
+      width: 155,
+      defaultSortOrder: 'descend',
+      sorter: (a, b) => new Date(a.createdTime) - new Date(b.createdTime),
+    },
+    {
+      title: '生成数量',
+      dataIndex: 'count',
+      key: 'count',
+      width: 88,
+      align: 'right',
+      sorter: (a, b) => a.count - b.count,
+      render: (count) => `${count} 个`,
+    },
+    {
+      title: '操作',
+      key: 'action',
+      width: 128,
+      fixed: 'right',
+      // [Ant Design 按钮规范 spec/buttons.zh-CN.md]
+      // 表格操作列用文字按钮（最轻量）；危险操作置后
+      render: (_, record) => (
+        <Space size={0}>
+          <Button
+            type="link" size="small"
+            onClick={() => parent.postMessage(
+              { action: 'openTab', title: record.name, url: 'AI 创作/生成结果.html' },
+              '*'
+            )}
+          >查看详情</Button>
+          <Popconfirm
+            title="确认删除"
+            description="删除后不可恢复，是否继续？"
+            onConfirm={() => handleDelete(record.key, record.name)}
+            okText="删除" cancelText="取消"
+            okButtonProps={{ danger: true }}
+          >
+            <Button type="link" size="small" danger>删除</Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      {contextHolder}
+
+      {/* 页面标题 */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 20, fontWeight: 600, color: '#1a1a1a', marginBottom: 4 }}>我的任务</div>
+        <div style={{ fontSize: 13, color: '#666' }}>查看和管理您创建的图像、视频批量生成任务</div>
+      </div>
+
+      {/* 筛选区 */}
+      {/* [Ant Design 列表页规范 spec/research-list.zh-CN.md] 筛选区置顶，单列布局 */}
+      <Card style={{ marginBottom: 16 }}>
+        <Row gutter={[16, 12]} align="middle" wrap>
+          <Col>
+            <Space>
+              <span style={{ color: '#666', fontSize: 13, whiteSpace: 'nowrap' }}>任务状态</span>
+              <Select placeholder="全部" style={{ width: 120 }} allowClear value={filterStatus} onChange={setFilterStatus}>
+                <Select.Option value="未开始">未开始</Select.Option>
+                <Select.Option value="进行中">进行中</Select.Option>
+                <Select.Option value="已完成">已完成</Select.Option>
+                <Select.Option value="已暂停">已暂停</Select.Option>
+                <Select.Option value="已终止">已终止</Select.Option>
+                <Select.Option value="已失败">已失败</Select.Option>
+              </Select>
+            </Space>
+          </Col>
+          <Col>
+            <Space>
+              <span style={{ color: '#666', fontSize: 13, whiteSpace: 'nowrap' }}>任务类型</span>
+              <Select placeholder="全部" style={{ width: 148 }} allowClear value={filterType} onChange={setFilterType}>
+                <Select.Option value="工作流">工作流</Select.Option>
+                <Select.Option value="图像通用生成">图像通用生成</Select.Option>
+                <Select.Option value="视频通用生成">视频通用生成</Select.Option>
+              </Select>
+            </Space>
+          </Col>
+          <Col>
+            <Space>
+              <span style={{ color: '#666', fontSize: 13, whiteSpace: 'nowrap' }}>创建人</span>
+              <Input
+                placeholder="输入姓名搜索" style={{ width: 140 }} allowClear
+                value={filterCreator} onChange={e => setFilterCreator(e.target.value)}
+              />
+            </Space>
+          </Col>
+          <Col>
+            <Space>
+              <span style={{ color: '#666', fontSize: 13, whiteSpace: 'nowrap' }}>创建时间</span>
+              <RangePicker style={{ width: 224 }} value={filterDateRange} onChange={setFilterDateRange} />
+            </Space>
+          </Col>
+          <Col>
+            <Button onClick={() => {
+              setFilterStatus(undefined); setFilterType(undefined);
+              setFilterCreator(''); setFilterDateRange(null);
+            }}>重置</Button>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 任务列表 */}
+      <Card>
+        <div style={{ marginBottom: 12, color: '#666', fontSize: 13 }}>
+          共 <span style={{ color: '#1677ff', fontWeight: 500 }}>{filteredData.length}</span> 条任务
+        </div>
+        {/* [Ant Design 数据展示规范 spec/data-display.zh-CN.md] */}
+        <Table
+          columns={columns}
+          dataSource={filteredData}
+          size="middle"
+          scroll={{ x: 1220 }}
+          pagination={{
+            defaultPageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) => `第 ${range[0]}–${range[1]} 条，共 ${total} 条`,
+            pageSizeOptions: ['10', '20', '50'],
+          }}
+        />
+      </Card>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<MyTasksPage />);
+</script>
+</body>
+</html>

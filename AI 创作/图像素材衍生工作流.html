@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图像素材衍生工作流 - 量化投放系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* [Ant Design 字体规范 spec/font.zh-CN.md] 主字体14px，行高1.5715 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+                         "Noto Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+            font-size: 14px;
+            line-height: 1.5715;
+            color: rgba(0, 0, 0, 0.88);
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        /* [Ant Design 色彩规范 spec/colors.zh-CN.md] 品牌色 #1677ff */
+        :root {
+            --primary: #1677ff;
+            --primary-hover: #4096ff;
+            --primary-active: #0958d9;
+            --primary-bg: #e6f4ff;
+            --primary-border: #91caff;
+            --success: #52c41a;
+            --success-bg: #f6ffed;
+            --text-primary: rgba(0, 0, 0, 0.88);
+            --text-secondary: rgba(0, 0, 0, 0.65);
+            --text-tertiary: rgba(0, 0, 0, 0.45);
+            --text-quaternary: rgba(0, 0, 0, 0.25);
+            --border: #d9d9d9;
+            --border-secondary: #f0f0f0;
+            --fill-secondary: #f5f5f5;
+            --bg-container: #fff;
+            --error: #ff4d4f;
+        }
+
+        .page-container {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        /* ── 步骤条 [Ant Design 导航规范 spec/navigation.zh-CN.md] ── */
+        /* 横向流程步骤条，步骤多于2步时使用，建议不超过5步 */
+        .steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 32px;
+            padding: 0 40px;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: default;
+        }
+        .step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+            flex-shrink: 0;
+            transition: all 0.25s;
+        }
+        .step.active .step-num {
+            background: var(--primary);
+            color: #fff;
+        }
+        .step.done .step-num {
+            background: var(--primary);
+            color: #fff;
+        }
+        .step.wait .step-num {
+            background: transparent;
+            border: 1px solid var(--text-quaternary);
+            color: var(--text-quaternary);
+        }
+        .step-title {
+            font-size: 15px;
+            font-weight: 500;
+            transition: color 0.25s;
+        }
+        .step.active .step-title { color: var(--text-primary); }
+        .step.done .step-title   { color: var(--text-primary); }
+        .step.wait .step-title   { color: var(--text-quaternary); }
+
+        .step-connector {
+            width: 120px;
+            height: 1px;
+            background: var(--border-secondary);
+            margin: 0 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .step-connector::after {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 0;
+            background: var(--primary);
+            transition: width 0.35s ease;
+        }
+        .step-connector.filled::after {
+            width: 100%;
+        }
+
+        /* ── 白色卡片容器 [Ant Design 数据展示规范 spec/data-display.zh-CN.md] ── */
+        .form-card {
+            background: var(--bg-container);
+            border-radius: 8px;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+            padding: 32px;
+        }
+
+        /* ── 表单项 [Ant Design 数据录入规范 spec/data-entry.zh-CN.md] ── */
+        .form-item { margin-bottom: 24px; }
+        .form-item:last-child { margin-bottom: 0; }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .form-label .required {
+            color: var(--error);
+            margin-right: 4px;
+        }
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+            line-height: 1.6;
+        }
+
+        /* ── 上传区 [Ant Design 数据录入规范 - 拖拽上传] ── */
+        .upload-area {
+            border: 1.5px dashed var(--border);
+            border-radius: 8px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            background: #fafafa;
+        }
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: var(--primary-bg);
+        }
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: var(--primary-bg);
+        }
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            color: var(--primary);
+        }
+        .upload-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .upload-text strong {
+            color: var(--primary);
+        }
+        .upload-sub {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+        #fileInput { display: none; }
+
+        /* 缩略图预览 */
+        .preview-zone {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .preview-zone:empty { display: none; }
+        .preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border-secondary);
+        }
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .preview-del {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.55);
+            border-radius: 50%;
+            color: #fff;
+            font-size: 11px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .preview-item:hover .preview-del { display: flex; }
+
+        /* ── Textarea [Ant Design 数据录入规范 - 文本域] ── */
+        textarea.form-textarea {
+            width: 100%;
+            min-height: 88px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--text-primary);
+            line-height: 1.5715;
+            resize: vertical;
+            outline: none;
+            background: #fff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        textarea.form-textarea::placeholder { color: var(--text-quaternary); }
+        textarea.form-textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+        }
+
+        /* ── 数量按钮组 [Ant Design 按钮规范 spec/buttons.zh-CN.md] ── */
+        .count-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .count-btn {
+            min-width: 48px;
+            height: 36px;
+            padding: 0 16px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #fff;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .count-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .count-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        .count-custom {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .count-custom input {
+            width: 72px;
+            height: 36px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            text-align: center;
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -moz-appearance: textfield;
+        }
+        .count-custom input::-webkit-inner-spin-button,
+        .count-custom input::-webkit-outer-spin-button { -webkit-appearance: none; }
+        .count-custom input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+        }
+
+        /* ── 生图接口 单选卡片 [Ant Design 数据录入规范 - 单选框] ── */
+        .api-card-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .api-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            border: 1px solid var(--border-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff;
+        }
+        .api-card:hover { border-color: var(--primary-border); }
+        .api-card.active {
+            border-color: var(--primary);
+            background: var(--primary-bg);
+        }
+        .api-radio {
+            width: 18px;
+            height: 18px;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .api-card.active .api-radio {
+            border-color: var(--primary);
+            border-width: 1px;
+        }
+        .api-radio-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        .api-card.active .api-radio-dot {
+            background: var(--primary);
+        }
+        .api-info { flex: 1; }
+        .api-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .api-badge {
+            font-size: 11px;
+            padding: 0 6px;
+            height: 18px;
+            line-height: 18px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .badge-recommend {
+            background: var(--primary-bg);
+            color: var(--primary);
+            border: 1px solid var(--primary-border);
+        }
+        .api-desc {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+        }
+
+        /* ── 底部操作区 [Ant Design 按钮规范 - 按钮区] ── */
+        .form-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 24px;
+        }
+        .form-footer.space-between {
+            justify-content: space-between;
+        }
+
+        /* [Ant Design 按钮规范] 主按钮突出完成/推荐操作，一个按钮区最多一个主按钮 */
+        .btn {
+            height: 36px;
+            padding: 0 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+        .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+        .btn-primary:active { background: var(--primary-active); border-color: var(--primary-active); }
+        .btn-default {
+            background: #fff;
+            color: var(--text-primary);
+            border-color: var(--border);
+        }
+        .btn-default:hover { color: var(--primary); border-color: var(--primary); }
+
+        /* ── Step 2 确认页 ── */
+        .confirm-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .confirm-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            color: var(--primary);
+        }
+        .confirm-title {
+            /* [Ant Design 字体规范] 标题字阶 16px，font-weight 500 */
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* 汇总信息表 */
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .summary-table tr {
+            border-bottom: 1px solid var(--border-secondary);
+        }
+        .summary-table tr:last-child { border-bottom: none; }
+        .summary-table td {
+            padding: 12px 0;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+        .summary-table .label-cell {
+            color: var(--text-secondary);
+            width: 100px;
+        }
+        .summary-table .value-cell {
+            color: var(--text-primary);
+            text-align: right;
+            font-weight: 500;
+        }
+        .summary-thumb {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            object-fit: cover;
+            border: 1px solid var(--border-secondary);
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        /* [Ant Design 反馈规范 spec/feedback.zh-CN.md] 警告提示 Alert */
+        .info-banner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 16px;
+            background: var(--primary-bg);
+            border: 1px solid var(--primary-border);
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--primary);
+            margin-top: 20px;
+        }
+        .info-banner svg { flex-shrink: 0; }
+
+        /* ── Toast 全局反馈 [Ant Design 反馈规范 - 顶部全局提示 Message] ── */
+        .toast {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-12px);
+            background: #fff;
+            padding: 9px 16px;
+            border-radius: 8px;
+            box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+            font-size: 14px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast-icon { color: var(--success); flex-shrink: 0; }
+
+        /* ── 校验错误 [Ant Design 反馈规范 - 录入反馈] ── */
+        .form-error {
+            font-size: 12px;
+            color: var(--error);
+            margin-top: 4px;
+            display: none;
+        }
+        .form-error.show { display: block; }
+        .upload-area.has-error { border-color: var(--error); }
+
+        /* ── 隐藏/显示 ── */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="toast" id="toast">
+    <svg class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+    </svg>
+    <span id="toastText"></span>
+</div>
+
+<div class="page-container">
+
+    <!-- 步骤条 -->
+    <div class="steps" id="steps">
+        <div class="step active" data-step="1">
+            <div class="step-num">1</div>
+            <span class="step-title">填写信息</span>
+        </div>
+        <div class="step-connector" id="connector1"></div>
+        <div class="step wait" data-step="2">
+            <div class="step-num">2</div>
+            <span class="step-title">确认提交</span>
+        </div>
+    </div>
+
+    <!-- Step 1: 填写信息 -->
+    <div id="step1" class="form-card">
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
+
+        <!-- 参考图 -->
+        <div class="form-item">
+            <label class="form-label"><span class="required">*</span>参考图</label>
+            <div class="upload-area" id="uploadArea"
+                 onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">
+                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M24 32V16"/><path d="M16 22l8-8 8 8"/>
+                        <rect x="6" y="6" width="36" height="36" rx="4"/>
+                    </svg>
+                </div>
+                <div class="upload-text">点击或拖拽上传图片</div>
+                <div class="upload-sub">支持 jpg/png/webp，单个文件 ≤10MB</div>
+            </div>
+            <div class="form-error" id="uploadError">请上传至少一张参考图</div>
+            <div class="preview-zone" id="previewZone"></div>
+        </div>
+
+        <!-- 改图方向 -->
+        <div class="form-item">
+            <label class="form-label">改图方向<span style="font-weight:400;color:var(--text-tertiary);margin-left:4px">（选填）</span></label>
+            <textarea class="form-textarea" id="direction"
+                placeholder="例如：希望调整为暖色调、增加科技感、突出产品细节..."></textarea>
+            <div class="form-hint">填写后 AI 将根据您的思路进行针对性改图</div>
+        </div>
+
+        <!-- 生成数量 -->
+        <div class="form-item">
+            <label class="form-label"><span class="required">*</span>生成数量</label>
+            <div class="count-group" id="countGroup">
+                <button class="count-btn" data-val="3" onclick="pickCount(this)">3</button>
+                <button class="count-btn active" data-val="6" onclick="pickCount(this)">6</button>
+                <button class="count-btn" data-val="9" onclick="pickCount(this)">9</button>
+                <button class="count-btn" data-val="12" onclick="pickCount(this)">12</button>
+                <div class="count-custom">
+                    自定义:
+                    <input type="number" id="customCount" min="1" max="50" placeholder="1-50"
+                           onfocus="onCustomFocus()" oninput="onCustomInput(this)">
+                </div>
+            </div>
+        </div>
+
+        <!-- 生图接口 -->
+        <div class="form-item">
+            <label class="form-label"><span class="required">*</span>生图接口</label>
+            <div class="api-card-group" id="apiGroup">
+                <div class="api-card active" data-api="jimeng_wanxiang" onclick="pickApi(this)">
+                    <div class="api-radio"><div class="api-radio-dot"></div></div>
+                    <div class="api-info">
+                        <div class="api-name">即梦+万相 <span class="api-badge badge-recommend">推荐</span></div>
+                        <div class="api-desc">并行生成，速度最快</div>
+                    </div>
+                </div>
+                <div class="api-card" data-api="jimeng" onclick="pickApi(this)">
+                    <div class="api-radio"><div class="api-radio-dot"></div></div>
+                    <div class="api-info">
+                        <div class="api-name">仅即梦</div>
+                        <div class="api-desc">质量略优，排队约 3 分钟</div>
+                    </div>
+                </div>
+                <div class="api-card" data-api="wanxiang" onclick="pickApi(this)">
+                    <div class="api-radio"><div class="api-radio-dot"></div></div>
+                    <div class="api-info">
+                        <div class="api-name">仅万相</div>
+                        <div class="api-desc">风格独特，排队约 2 分钟</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- [Ant Design 按钮规范] 推荐操作是阅读起点，主按钮右对齐 -->
+        <div class="form-footer">
+            <button class="btn btn-primary" onclick="goStep2()">
+                下一步
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Step 2: 确认提交 -->
+    <div id="step2" class="form-card hidden">
+        <div class="confirm-header">
+            <div class="confirm-icon">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="8" y="4" width="32" height="40" rx="3"/>
+                    <line x1="16" y1="16" x2="32" y2="16"/>
+                    <line x1="16" y1="24" x2="32" y2="24"/>
+                    <line x1="16" y1="32" x2="24" y2="32"/>
+                </svg>
+            </div>
+            <div class="confirm-title">确认任务信息</div>
+        </div>
+
+        <table class="summary-table" id="summaryTable">
+            <tr>
+                <td class="label-cell">参考图</td>
+                <td class="value-cell" id="sumRef"></td>
+            </tr>
+            <tr>
+                <td class="label-cell">生成数量</td>
+                <td class="value-cell" id="sumCount"></td>
+            </tr>
+            <tr>
+                <td class="label-cell">生图接口</td>
+                <td class="value-cell" id="sumApi"></td>
+            </tr>
+            <tr id="sumDirRow">
+                <td class="label-cell">改图方向</td>
+                <td class="value-cell" id="sumDir"></td>
+            </tr>
+        </table>
+
+        <div class="info-banner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+            <span>当前队列 3 个任务，预计等待约 8 分钟</span>
+        </div>
+
+        <!-- [Ant Design 按钮规范] 返回意义按钮放左侧，暗示方向回到之前 -->
+        <div class="form-footer space-between">
+            <button class="btn btn-default" onclick="goStep1()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+                上一步
+            </button>
+            <button class="btn btn-primary" onclick="doSubmit()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                提交任务
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// ── State ──
+let uploadedFiles = [];       // { file, url }
+let selectedCount = 6;
+let isCustomCount = false;
+let selectedApi = 'jimeng_wanxiang';
+
+const API_NAMES = {
+    jimeng_wanxiang: '即梦+万相',
+    jimeng: '仅即梦',
+    wanxiang: '仅万相',
+};
+
+// ── 上传 ──
+const fileInput = document.getElementById('fileInput');
+const uploadArea = document.getElementById('uploadArea');
+const previewZone = document.getElementById('previewZone');
+
+fileInput.addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+    e.target.value = '';
+});
+
+// 拖拽
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+});
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+});
+
+function handleFiles(files) {
+    Array.from(files).forEach(f => {
+        if (!f.type.match(/^image\/(jpeg|png|webp)$/)) return;
+        if (f.size > 10 * 1024 * 1024) {
+            showToast('文件 ' + f.name + ' 超过 10MB 限制');
+            return;
+        }
+        const url = URL.createObjectURL(f);
+        uploadedFiles.push({ file: f, url });
+    });
+    renderPreviews();
+    document.getElementById('uploadError').classList.remove('show');
+    uploadArea.classList.remove('has-error');
+}
+
+function renderPreviews() {
+    previewZone.innerHTML = uploadedFiles.map((item, i) =>
+        `<div class="preview-item">
+            <img src="${item.url}" alt="">
+            <div class="preview-del" onclick="removeFile(${i})">✕</div>
+        </div>`
+    ).join('');
+}
+
+function removeFile(i) {
+    URL.revokeObjectURL(uploadedFiles[i].url);
+    uploadedFiles.splice(i, 1);
+    renderPreviews();
+}
+
+// ── 生成数量 ──
+function pickCount(btn) {
+    document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedCount = parseInt(btn.dataset.val);
+    isCustomCount = false;
+    document.getElementById('customCount').value = '';
+}
+
+function onCustomFocus() {
+    document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+    isCustomCount = true;
+}
+
+function onCustomInput(input) {
+    let v = parseInt(input.value);
+    if (v > 50) { input.value = 50; v = 50; }
+    if (v < 1 && input.value !== '') { input.value = 1; v = 1; }
+    selectedCount = v || 0;
+    isCustomCount = true;
+}
+
+// ── 生图接口 ──
+function pickApi(card) {
+    document.querySelectorAll('.api-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    selectedApi = card.dataset.api;
+}
+
+// ── 步骤切换 ──
+function goStep2() {
+    // 校验
+    let valid = true;
+    if (uploadedFiles.length === 0) {
+        document.getElementById('uploadError').classList.add('show');
+        uploadArea.classList.add('has-error');
+        valid = false;
+    }
+    if (!selectedCount || selectedCount < 1) {
+        showToast('请选择或输入生成数量');
+        valid = false;
+    }
+    if (!valid) return;
+
+    // 填充确认信息
+    const thumbs = uploadedFiles.slice(0, 3).map(f =>
+        `<img class="summary-thumb" src="${f.url}" alt="">`
+    ).join('');
+    const extra = uploadedFiles.length > 3 ? ` +${uploadedFiles.length - 3}` : '';
+    document.getElementById('sumRef').innerHTML = thumbs + `<span style="vertical-align:middle">${uploadedFiles.length} 张已上传${extra}</span>`;
+    document.getElementById('sumCount').textContent = selectedCount + ' 张';
+    document.getElementById('sumApi').textContent = API_NAMES[selectedApi];
+
+    const dir = document.getElementById('direction').value.trim();
+    const dirRow = document.getElementById('sumDirRow');
+    if (dir) {
+        dirRow.classList.remove('hidden');
+        document.getElementById('sumDir').textContent = dir.length > 40 ? dir.slice(0, 40) + '...' : dir;
+    } else {
+        dirRow.classList.add('hidden');
+    }
+
+    setStep(2);
+}
+
+function goStep1() {
+    setStep(1);
+}
+
+function setStep(n) {
+    const steps = document.querySelectorAll('.step');
+    const connector = document.getElementById('connector1');
+
+    steps.forEach(s => {
+        const sn = parseInt(s.dataset.step);
+        s.className = 'step ' + (sn < n ? 'done' : sn === n ? 'active' : 'wait');
+    });
+
+    connector.className = 'step-connector' + (n >= 2 ? ' filled' : '');
+
+    document.getElementById('step1').classList.toggle('hidden', n !== 1);
+    document.getElementById('step2').classList.toggle('hidden', n !== 2);
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── 提交 ──
+function doSubmit() {
+    showToast('任务提交成功，已进入队列');
+    // 此处可对接后端 API
+}
+
+// ── Toast [Ant Design 反馈规范 - 顶部全局提示 Message] ──
+let _toastTimer;
+function showToast(msg) {
+    const el = document.getElementById('toast');
+    document.getElementById('toastText').textContent = msg;
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
