@@ -73,7 +73,7 @@
             transition: border-color 0.15s, color 0.15s, background-color 0.15s;
         }
         .upload-block:hover { border-color: #1677ff; color: #1677ff; background-color: #f0f7ff; }
-        #uploadInput { display: none; }
+        #uploadInput, #uploadFirst, #uploadLast { display: none; }
 
         textarea.prompt {
             flex: 1; min-height: 135px; border: none; outline: none;
@@ -116,6 +116,41 @@
             cursor: pointer; line-height: 1; z-index: 1;
         }
         .ref-item:hover .ref-del { display: flex; }
+
+        /* ── 首尾帧区域 ── */
+        .keyframe-strip {
+            display: none; align-items: flex-start; gap: 0;
+            padding: 10px 18px 12px;
+            border-top: 1px solid rgba(0,0,0,0.06);
+        }
+        .keyframe-strip.show { display: flex; }
+        .keyframe-slot { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .keyframe-slot-box { position: relative; width: 60px; height: 60px; }
+        .keyframe-add {
+            width: 60px; height: 60px; border-radius: 8px;
+            background: #f7f7f7; border: 1.5px dashed rgba(0,0,0,0.14);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #c8c8c8;
+            transition: border-color 0.15s, color 0.15s, background 0.15s;
+        }
+        .keyframe-add:hover { border-color: #1677ff; color: #1677ff; background: #f0f7ff; }
+        .keyframe-thumb {
+            width: 60px; height: 60px; border-radius: 8px;
+            overflow: hidden; border: 1px solid rgba(0,0,0,0.08); background: #f0f0f0;
+            cursor: pointer;
+        }
+        .keyframe-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .keyframe-del {
+            position: absolute; top: 3px; right: 3px;
+            width: 18px; height: 18px;
+            background: rgba(0,0,0,0.62); border-radius: 50%;
+            color: #fff; font-size: 10px; display: none;
+            align-items: center; justify-content: center;
+            cursor: pointer; line-height: 1; z-index: 1;
+        }
+        .keyframe-slot-box:hover .keyframe-del { display: flex; }
+        .keyframe-lbl { font-size: 12px; color: #999; }
+        .keyframe-arrow { padding: 0 10px; color: #d0d0d0; font-size: 18px; line-height: 60px; }
 
         /* ── 工具栏 ── */
         .toolbar {
@@ -161,6 +196,8 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.04), 0 20px 48px rgba(0,0,0,0.1);
             padding: 16px 18px; z-index: 400; display: none;
         }
+        #optArea[data-type="video"] .opt-dd { min-width: 380px; }
+        #optArea[data-type="video"] .dd-chips { flex-wrap: nowrap; }
         .opt-dd.show { display: block; }
         .dd-section-title {
             font-size: 10px; color: #aaa; font-weight: 600;
@@ -189,6 +226,58 @@
         }
         .model-opt:hover::after { opacity: 1; }
 
+        /* 模型多选行 */
+        .model-opt-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 10px; border-radius: 8px;
+            cursor: pointer; transition: background 0.12s;
+            position: relative; white-space: nowrap;
+        }
+        .model-opt-row:hover { background: rgba(0,0,0,0.04); }
+        .model-check {
+            width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0;
+            border: 1.5px solid rgba(0,0,0,0.25);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+        }
+        .model-check:hover { border-color: rgba(0,0,0,0.5); }
+        .model-check.active {
+            background: #1a1a1a; border-color: #1a1a1a;
+        }
+        .model-check.active::after {
+            content: '✓'; color: #fff; font-size: 10px; font-weight: bold;
+        }
+        .model-opt-name {
+            flex: 1; font-size: 13px; color: #333;
+        }
+        .model-check.active ~ .model-opt-name { font-weight: 500; }
+        .model-opt-row::after {
+            content: attr(data-desc);
+            position: absolute; left: calc(100% + 10px); top: 50%;
+            transform: translateY(-50%);
+            background: rgba(20,20,20,0.88); color: #fff;
+            font-size: 12px; font-weight: normal;
+            padding: 7px 11px; border-radius: 8px;
+            white-space: nowrap; pointer-events: none;
+            opacity: 0; transition: opacity 0.15s; z-index: 600;
+        }
+        .model-opt-row:hover::after { opacity: 1; }
+        .model-count-wrap {
+            display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+        }
+        .model-count-input {
+            width: 40px; height: 24px; padding: 0 4px;
+            border: 1px solid rgba(0,0,0,0.12); border-radius: 6px;
+            font-size: 12px; font-family: inherit; color: #555;
+            text-align: center; outline: none; background: rgba(0,0,0,0.03);
+            transition: border-color 0.15s;
+            -moz-appearance: textfield;
+        }
+        .model-count-input::-webkit-inner-spin-button,
+        .model-count-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+        .model-count-input:focus { border-color: #1a1a1a; background: #fff; }
+        .model-count-unit { font-size: 12px; color: #999; }
+
         /* 比例 chips */
         .ratio-row { display: flex; flex-wrap: nowrap; gap: 3px; }
         .ratio-chip {
@@ -204,6 +293,33 @@
         .ratio-chip.active .ratio-lbl { color: #fff; font-weight: 600; }
         .ratio-box { background: transparent; border: 1.5px solid rgba(0,0,0,0.22); border-radius: 2px; flex-shrink: 0; }
         .ratio-lbl { font-size: 11px; color: #777; white-space: nowrap; }
+        .ratio-sub { font-size: 10px; color: #aaa; margin-top: 1px; white-space: nowrap; }
+        .ratio-chip.active .ratio-sub { color: rgba(255,255,255,0.6); }
+        .ratio-chip.platform { height: 68px; padding: 6px 8px; justify-content: center; gap: 3px; }
+        .platform-chip-icon {
+            height: 20px; width: 100%;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* 平台分组 Tab */
+        .ratio-platform-tabs {
+            display: flex; gap: 2px; margin-top: 8px; margin-bottom: 10px;
+            background: rgba(0,0,0,0.04); border-radius: 8px; padding: 3px;
+        }
+        .ratio-platform-tab {
+            flex: 1; padding: 4px 6px; border-radius: 6px; text-align: center;
+            font-size: 12px; font-weight: 500; color: #888;
+            cursor: pointer; transition: all 0.15s; white-space: nowrap;
+        }
+        .ratio-platform-tab.active {
+            background: #fff; color: #1a1a1a;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        .ratio-platform-tab:hover:not(.active) { color: #333; }
+        .platform-empty {
+            padding: 16px; text-align: center; font-size: 13px;
+            color: #bbb; font-style: italic;
+        }
 
         /* 自定义比例 hover 操作按钮 */
         .chip-actions {
@@ -333,6 +449,7 @@
 
         /* 解析按钮 */
         .parse-btn {
+            position: absolute; top: 12px; right: 14px; z-index: 10;
             display: inline-flex; align-items: center; gap: 5px;
             height: 28px; padding: 0 10px; border-radius: 20px;
             border: 1px solid rgba(0,0,0,0.15); background: rgba(0,0,0,0.02);
@@ -342,6 +459,67 @@
         }
         .parse-btn:hover { border-color: rgba(0,0,0,0.3); color: #1a1a1a; background: rgba(0,0,0,0.04); }
         .parse-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        /* 对话工具按钮 */
+        .chat-tool-btn {
+            width: 30px; height: 30px; border-radius: 8px;
+            border: none; background: transparent;
+            color: #c0c0c0; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.14s, color 0.14s; flex-shrink: 0;
+        }
+        .chat-tool-btn:hover { background: rgba(0,0,0,0.05); color: #666; }
+
+        /* 发送按钮（对话模式下的 gen-btn） */
+        .gen-btn.send-mode {
+            width: 34px; height: 34px; padding: 0;
+            border-radius: 50%; min-width: unset; flex-shrink: 0;
+        }
+
+        /* 项目选择器 */
+        .project-group + .project-group { margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(0,0,0,0.06); }
+        #dd-project { min-width: 180px; }
+        .project-cat-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 10px; border-radius: 8px; cursor: pointer;
+            transition: background 0.12s;
+        }
+        .project-cat-row:hover { background: rgba(0,0,0,0.04); }
+        .project-check {
+            width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+            border: 1.5px solid rgba(0,0,0,0.25);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s; cursor: pointer;
+        }
+        .project-check:hover { border-color: rgba(0,0,0,0.5); }
+        .project-check.active {
+            background: #1a1a1a; border-color: #1a1a1a;
+        }
+        .project-check.active::after {
+            content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fff;
+        }
+        .project-cat-name { flex: 1; font-size: 13px; font-weight: 600; color: #333; }
+        .project-expand-arr {
+            font-size: 9px; color: #bbb; transition: transform 0.18s;
+        }
+        .project-expand-arr.open { transform: rotate(180deg); }
+        .project-children { display: none; }
+        .project-children.open { display: block; }
+        .project-item {
+            padding: 6px 10px 6px 34px; border-radius: 8px; cursor: pointer;
+            font-size: 13px; color: #555; transition: background 0.12s;
+        }
+        .project-item:hover { background: rgba(0,0,0,0.04); }
+        .project-item.active { background: #1a1a1a; color: #fff; font-weight: 500; }
+        .pill-clear {
+            width: 16px; height: 16px; border-radius: 50%;
+            border: none; background: rgba(0,0,0,0.12); color: #888;
+            font-size: 10px; line-height: 1; cursor: pointer;
+            display: none; align-items: center; justify-content: center;
+            margin-left: 2px; flex-shrink: 0; transition: background 0.12s, color 0.12s;
+        }
+        .pill-clear:hover { background: rgba(0,0,0,0.25); color: #fff; }
+        .opt-pill:hover .pill-clear { display: flex; }
 
         /* ── 上传来源下拉菜单 ── */
         .upload-dropdown {
@@ -453,13 +631,53 @@
             padding: 6px 8px; font-size: 12px; color: #555;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .asset-card-check {
-            position: absolute; top: 6px; right: 6px;
-            width: 20px; height: 20px; border-radius: 50%;
-            background: #1677ff; color: #fff; font-size: 12px;
-            display: none; align-items: center; justify-content: center;
+        /* hover 预览按钮 */
+        .asset-card-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.15s, background 0.15s;
+            pointer-events: none;
         }
-        .asset-card.selected .asset-card-check { display: flex; }
+        .asset-card:hover .asset-card-overlay { background: rgba(0,0,0,0.28); opacity: 1; pointer-events: auto; }
+        .asset-card-preview-btn {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(255,255,255,0.88); color: #333;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: background 0.12s;
+        }
+        .asset-card-preview-btn:hover { background: #fff; }
+        /* 已选面板 */
+        .asset-modal { transition: width 0.2s ease; }
+        .asset-modal.has-selection { width: 1100px; }
+        .asset-selected-panel {
+            width: 0; overflow: hidden; flex-shrink: 0;
+            background: #fff; border-left: 1px solid #f0f0f0;
+            display: flex; flex-direction: column;
+            transition: width 0.2s ease;
+        }
+        .asset-selected-panel.show { width: 200px; }
+        .sel-panel-header {
+            padding: 12px 14px 8px; font-size: 13px; font-weight: 500; color: #555;
+            flex-shrink: 0; white-space: nowrap;
+        }
+        .sel-panel-grid {
+            flex: 1; overflow-y: auto; padding: 0 10px 10px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+        }
+        .sel-panel-item {
+            position: relative; aspect-ratio: 1; border-radius: 6px;
+            overflow: hidden; cursor: pointer; background: #f0f0f0;
+        }
+        .sel-panel-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .sel-panel-del {
+            position: absolute; top: 4px; right: 4px;
+            width: 18px; height: 18px; border-radius: 50%;
+            background: rgba(0,0,0,0.6); color: #fff; font-size: 9px;
+            display: none; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 1;
+        }
+        .sel-panel-item:hover .sel-panel-del { display: flex; }
         /* 底部操作栏 */
         .asset-modal-footer {
             display: flex; align-items: center; justify-content: space-between;
@@ -610,6 +828,11 @@
 
     <div class="toggle-row">
         <div class="type-toggle">
+            <button class="type-btn" data-type="chat" onclick="switchType(this)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>对话
+            </button>
             <button class="type-btn active" data-type="image" onclick="switchType(this)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
@@ -631,6 +854,12 @@
 
     <div class="input-box" id="inputBox">
         <input type="file" id="uploadInput" accept="image/*" multiple onchange="onUpload(event)">
+        <input type="file" id="uploadFirst" accept="image/*" onchange="onUploadFrame(event,'frameFirst')">
+        <input type="file" id="uploadLast"  accept="image/*" onchange="onUploadFrame(event,'frameLast')">
+        <button id="parseBtn" class="parse-btn" onclick="parseRefImage()" style="display:none">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+            解析提示词
+        </button>
 
         <div class="input-top">
             <div class="upload-block" id="uploadBlock" onclick="showUploadMenu(event, this)">
@@ -646,12 +875,22 @@
         <!-- 参考图缩略图 -->
         <div class="ref-strip" id="refStrip"></div>
 
+        <!-- 首尾帧区域（视频模式 首尾帧 时显示） -->
+        <div class="keyframe-strip" id="keyframeStrip"></div>
+
         <div class="toolbar" id="toolbar">
             <div id="optArea" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"></div>
-            <button id="parseBtn" class="parse-btn" onclick="parseRefImage()" style="display:none">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275 1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-                解析参考图提示词
-            </button>
+            <div id="chatExtra" style="display:none;flex:1;align-items:center;gap:2px;">
+                <button class="chat-tool-btn" title="表情">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                </button>
+                <button class="chat-tool-btn" title="上传图片">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                </button>
+                <button class="chat-tool-btn" title="语音输入">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                </button>
+            </div>
             <button class="gen-btn" id="genBtn" onclick="doGenerate()">
                 <span id="genText">生成</span>
                 <div class="spin" id="genSpin"></div>
@@ -681,21 +920,9 @@
     </div>
     <div class="upload-dropdown-item" onclick="openAssetModal('素材库')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        素材库
+        系统资源
     </div>
-    <div class="upload-dropdown-item" onclick="openAssetModal('物料库')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-        物料库
-    </div>
-    <div class="upload-dropdown-item" onclick="openAssetModal('原料库')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-        原料库
-    </div>
-    <div class="upload-dropdown-item" onclick="openAssetModal('产品物料')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-        产品物料
-    </div>
-    <div class="upload-dropdown-item" onclick="openAssetModal('我的任务')">
+    <div class="upload-dropdown-item" onclick="openAssetModal('我的任务')" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
         我的任务
     </div>
@@ -751,6 +978,10 @@
                     </div>
                 </div>
             </div>
+            <div class="asset-selected-panel" id="assetSelectedPanel">
+                <div class="sel-panel-header">已选 <span id="selPanelCount">0</span> 项</div>
+                <div class="sel-panel-grid" id="selPanelGrid"></div>
+            </div>
         </div>
         <div class="asset-modal-footer">
             <div class="asset-selected-count">已选择 <strong id="assetSelCount">0</strong> 项</div>
@@ -780,6 +1011,37 @@ const MODELS = [
     { id: 'banana2',   name: 'banana2',     desc: '谷歌的图像模型，对提示词的理解能力很强大' },
 ];
 
+const PROJECTS = [
+    { category: '休闲游戏', products: ['消消乐', '跑酷大冒险', '解谜达人', '塔防英雄'] },
+    { category: '工具应用', products: ['清理大师', 'WiFi管家', '天气预报Pro', '超级省电'] },
+    { category: '网赚激励', products: ['走路赚钱', '答题领红包', '视频刷宝', '阅读赚金币'] },
+    { category: '内容阅读', products: ['小说畅读', '漫画星球', '壁纸精选', '短剧热播'] },
+];
+
+const PLATFORM_TABS = ['全部', '巨量', '腾讯', '快手'];
+const PLATFORM_PRESETS = {
+    '巨量': [
+        { w: 1080, h: 1920, ratio: '9:16' },
+        { w: 720,  h: 1280, ratio: '9:16' },
+        { w: 1080, h: 1080, ratio: '1:1'  },
+        { w: 1280, h: 720,  ratio: '16:9' },
+    ],
+    '腾讯': [
+        { w: 800,  h: 800,  ratio: '1:1'  },
+        { w: 1280, h: 720,  ratio: '16:9' },
+        { w: 1080, h: 1920, ratio: '9:16' },
+        { w: 480,  h: 320,  ratio: '3:2'  },
+        { w: 960,  h: 334,  ratio: '横幅' },
+    ],
+    '快手': [
+        { w: 1080, h: 1920, ratio: '9:16' },
+        { w: 720,  h: 1280, ratio: '9:16' },
+        { w: 1080, h: 1080, ratio: '1:1'  },
+        { w: 1280, h: 720,  ratio: '16:9' },
+    ],
+    '更多': [],
+};
+
 const OPTS = {
     image: [
         { key: 'model',     type: 'model' },
@@ -787,23 +1049,25 @@ const OPTS = {
           ratioValues: ['1:1','2:3','3:2','3:4','4:3','9:16','16:9','21:9'] },
         { key: 'count',     type: 'count',
           values: ['1','2','3','4','5','6','7','8','9','10'] },
+        { key: 'project',  type: 'project' },
     ],
     video: [
-        { key: 'ratio', label: '屏幕比', type: 'ratio',
-          values: ['16:9','9:16','1:1','4:3','3:4'], def: '16:9' },
-        { key: 'dur',   label: '时长',   type: 'chips',
-          values: ['5秒','10秒','15秒','30秒'], def: '5秒' },
-        { key: 'style', label: '风格',   type: 'chips',
-          values: ['写实','动漫','电影感'], def: '写实' },
-        { key: 'res',   label: '分辨率', type: 'res',
-          values: ['720P','1080P','4K'], def: '1080P' },
+        { key: 'model',      type: 'model' },
+        { key: 'count',      type: 'count', unit: '个',
+          values: ['1','2','3','4','5','6','7','8','9','10'] },
+        { key: 'mode',       type: 'chips', label: '生成模式',
+          values: ['参考图','首尾帧','文本生成'], def: '参考图' },
+        { key: 'ratio-dur',  type: 'ratio-dur',
+          ratioValues: ['16:9','9:16','1:1','4:3','3:4'],
+          durValues: ['5秒','10秒','15秒','30秒'] },
+        { key: 'project',    type: 'project' },
     ],
 };
 
 let curType = 'image';
 const sel = {
-    image: { model: 'seedream5', ratio: '1:1', res: '2K', sizeW: 2048, sizeH: 2048, count: '1', customRatios: [] },
-    video: { ratio: '16:9', dur: '5秒', style: '写实', res: '1080P' },
+    image: { models: ['seedream5'], modelCounts: {}, ratio: '1:1', res: '2K', sizeW: 2048, sizeH: 2048, count: '1', project: '', ratioTab: '全部', platformSize: null, customRatios: [] },
+    video: { models: ['seedream5'], modelCounts: {}, count: '1', mode: '参考图', ratio: '16:9', ratioTab: '全部', platformSize: null, dur: '5秒', project: '', frameFirst: null, frameLast: null },
 };
 
 function onInput() {
@@ -850,7 +1114,7 @@ function onUpload(e) {
         const url = URL.createObjectURL(f);
         const item = document.createElement('div');
         item.className = 'ref-item';
-        item.innerHTML = `<img src="${url}" alt=""><div class="ref-del" onclick="removeRef(this)">✕</div>`;
+        item.innerHTML = `<img src="${url}" alt="" style="cursor:pointer" onclick="previewImage('${url}')"><div class="ref-del" onclick="removeRef(this)">✕</div>`;
         strip.appendChild(item);
     });
     e.target.value = '';
@@ -874,7 +1138,7 @@ function addRefFromUrl(url) {
     }
     const item = document.createElement('div');
     item.className = 'ref-item';
-    item.innerHTML = `<img src="${url}" alt=""><div class="ref-del" onclick="removeRef(this)">✕</div>`;
+    item.innerHTML = `<img src="${url}" alt="" style="cursor:pointer" onclick="previewImage('${url}')"><div class="ref-del" onclick="removeRef(this)">✕</div>`;
     strip.appendChild(item);
 }
 
@@ -887,6 +1151,62 @@ function removeRef(btn) {
         document.getElementById('uploadBlock').style.display = '';
         document.getElementById('parseBtn').style.display = 'none';
     }
+}
+
+// ── 首尾帧 ──
+function renderKeyframeStrip() {
+    const strip = document.getElementById('keyframeStrip');
+    const isKeyframe = curType === 'video' && sel.video.mode === '首尾帧';
+    if (!isKeyframe) {
+        strip.classList.remove('show');
+        // 恢复上传块（如果没有普通参考图则显示）
+        if (!document.getElementById('refAddBtn')) {
+            document.getElementById('uploadBlock').style.display = '';
+        }
+        return;
+    }
+    strip.classList.add('show');
+    // 首尾帧模式隐藏左侧大上传按钮
+    document.getElementById('uploadBlock').style.display = 'none';
+
+    function slotHTML(frameKey, label, inputId) {
+        const url = sel.video[frameKey];
+        const boxHTML = url
+            ? `<div class="keyframe-slot-box">
+                   <div class="keyframe-thumb" onclick="previewImage('${url}')">
+                       <img src="${url}" alt="">
+                   </div>
+                   <div class="keyframe-del" onclick="removeKeyframe('${frameKey}')">✕</div>
+               </div>`
+            : `<div class="keyframe-add" onclick="document.getElementById('${inputId}').click()">
+                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+               </div>`;
+        return `<div class="keyframe-slot">${boxHTML}<span class="keyframe-lbl">${label}</span></div>`;
+    }
+
+    strip.innerHTML = slotHTML('frameFirst', '首帧', 'uploadFirst')
+        + `<div class="keyframe-arrow">→</div>`
+        + slotHTML('frameLast', '尾帧', 'uploadLast');
+}
+
+function onUploadFrame(e, frameKey) {
+    const f = e.target.files[0];
+    if (!f) return;
+    if (sel.video[frameKey]) URL.revokeObjectURL(sel.video[frameKey]);
+    sel.video[frameKey] = URL.createObjectURL(f);
+    e.target.value = '';
+    renderKeyframeStrip();
+}
+
+function removeKeyframe(frameKey) {
+    if (sel.video[frameKey]) URL.revokeObjectURL(sel.video[frameKey]);
+    sel.video[frameKey] = null;
+    renderKeyframeStrip();
+}
+
+function previewImage(url) {
+    document.getElementById('assetPreviewImg').src = url;
+    document.getElementById('assetPreviewMask').classList.add('show');
 }
 
 // ── 素材库弹窗 ──
@@ -991,19 +1311,22 @@ const FILTER_PRODUCT = `
     <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部产品</option><option value="prod1">水光精华露</option><option value="prod2">玻尿酸面膜</option><option value="prod3">持久哑光唇釉</option><option value="prod4">坚果能量棒</option></select>`;
 
 let assetSelected = new Set();
+let assetSelectedMap = new Map(); // id → { thumb, name }
 let assetCurrentCat = '素材库';
 
 function renderFilterBar() {
     const bar = document.getElementById('assetFilterBar');
-    if (assetCurrentCat === '我的任务') bar.innerHTML = FILTER_TASK;
-    else if (assetCurrentCat === '产品物料') bar.innerHTML = FILTER_PRODUCT;
-    else bar.innerHTML = FILTER_DEFAULT;
+    const searchBox = `<input class="asset-search" id="assetSearchInput" placeholder="搜索名称…" oninput="filterAssets()" style="flex:0 0 180px">`;
+    if (assetCurrentCat === '我的任务') bar.innerHTML = searchBox + FILTER_TASK;
+    else if (assetCurrentCat === '产品物料') bar.innerHTML = searchBox + FILTER_PRODUCT;
+    else bar.innerHTML = searchBox + FILTER_DEFAULT;
 }
 
 function openAssetModal(cat) {
     document.getElementById('uploadDropdown').classList.remove('show');
     assetCurrentCat = cat;
     assetSelected.clear();
+    assetSelectedMap.clear();
     document.getElementById('assetModalTitle').textContent = cat === '我的任务' ? '我的任务' : '选择' + cat.replace('库', '');
     document.querySelectorAll('.asset-sidebar-item').forEach(el => {
         el.classList.toggle('active', el.dataset.cat === cat);
@@ -1011,6 +1334,7 @@ function openAssetModal(cat) {
     renderFilterBar();
     renderAssetContent();
     updateAssetFooter();
+    updateSelectionPanel();
     document.getElementById('assetModalMask').classList.add('show');
 }
 
@@ -1024,11 +1348,13 @@ function switchAssetCat(el) {
     el.classList.add('active');
     assetCurrentCat = el.dataset.cat;
     assetSelected.clear();
+    assetSelectedMap.clear();
     document.getElementById('assetModalTitle').textContent = assetCurrentCat === '我的任务' ? '我的任务' : '选择' + assetCurrentCat.replace('库', '');
     renderFilterBar();
     backToTaskList();
     renderAssetContent();
     updateAssetFooter();
+    updateSelectionPanel();
 }
 
 function renderAssetContent() {
@@ -1101,21 +1427,18 @@ function openProductDetail(prodId) {
     document.getElementById('taskDetailName').textContent = prod.name;
     const grid = document.getElementById('taskDetailGrid');
     grid.innerHTML = prod.materials.map(a => `
-        <div class="asset-card${assetSelected.has(a.id) ? ' selected' : ''}" data-id="${a.id}" onclick="toggleAssetCard(this, '${a.id}')">
+        <div class="asset-card${assetSelected.has(a.id) ? ' selected' : ''}" data-id="${a.id}" onclick="toggleAssetCard(event,'${a.id}','${a.thumb}','${a.name}')">
             <div class="asset-card-thumb">
                 <img src="${a.thumb}" alt="${a.name}" loading="lazy">
-                <div class="asset-card-check">✓</div>
+                <div class="asset-card-overlay">
+                    <div class="asset-card-preview-btn" onclick="event.stopPropagation();showAssetPreview('${a.thumb}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    </div>
+                </div>
             </div>
             <div class="asset-card-name" title="${a.name}"><span style="color:#1677ff;font-size:11px;margin-right:3px">${a.tag}</span>${a.name}</div>
         </div>
     `).join('');
-    grid.querySelectorAll('.asset-card').forEach(card => {
-        card.addEventListener('dblclick', function(e) {
-            e.stopPropagation();
-            const img = this.querySelector('img');
-            if (img) showAssetPreview(img.src);
-        });
-    });
     document.getElementById('taskDetail').classList.add('show');
 }
 
@@ -1127,21 +1450,18 @@ function openTaskDetail(taskId) {
     document.getElementById('taskDetailName').textContent = task.name;
     const grid = document.getElementById('taskDetailGrid');
     grid.innerHTML = task.thumbs.map(a => `
-        <div class="asset-card${assetSelected.has(a.id) ? ' selected' : ''}" data-id="${a.id}" onclick="toggleAssetCard(this, '${a.id}')">
+        <div class="asset-card${assetSelected.has(a.id) ? ' selected' : ''}" data-id="${a.id}" onclick="toggleAssetCard(event,'${a.id}','${a.thumb}','${a.name}')">
             <div class="asset-card-thumb">
                 <img src="${a.thumb}" alt="${a.name}" loading="lazy">
-                <div class="asset-card-check">✓</div>
+                <div class="asset-card-overlay">
+                    <div class="asset-card-preview-btn" onclick="event.stopPropagation();showAssetPreview('${a.thumb}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    </div>
+                </div>
             </div>
             <div class="asset-card-name" title="${a.name}">${a.name}</div>
         </div>
     `).join('');
-    grid.querySelectorAll('.asset-card').forEach(card => {
-        card.addEventListener('dblclick', function(e) {
-            e.stopPropagation();
-            const img = this.querySelector('img');
-            if (img) showAssetPreview(img.src);
-        });
-    });
     document.getElementById('taskDetail').classList.add('show');
 }
 
@@ -1157,37 +1477,67 @@ function renderAssetGrid() {
     const grid = document.getElementById('assetGrid');
     const items = MOCK_ASSETS[assetCurrentCat] || [];
     grid.innerHTML = items.map(a => `
-        <div class="asset-card${assetSelected.has(a.id) ? ' selected' : ''}" data-id="${a.id}" onclick="toggleAssetCard(this, '${a.id}')">
+        <div class="asset-card${assetSelected.has(a.id) ? ' selected' : ''}" data-id="${a.id}" onclick="toggleAssetCard(event,'${a.id}','${a.thumb}','${a.name}')">
             <div class="asset-card-thumb">
                 <img src="${a.thumb}" alt="${a.name}" loading="lazy">
-                <div class="asset-card-check">✓</div>
+                <div class="asset-card-overlay">
+                    <div class="asset-card-preview-btn" onclick="event.stopPropagation();showAssetPreview('${a.thumb}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    </div>
+                </div>
             </div>
             <div class="asset-card-name" title="${a.name}">${a.name}</div>
         </div>
     `).join('');
-    grid.querySelectorAll('.asset-card').forEach(card => {
-        card.addEventListener('dblclick', function(e) {
-            e.stopPropagation();
-            const img = this.querySelector('img');
-            if (img) showAssetPreview(img.src);
-        });
-    });
 }
 
-function toggleAssetCard(card, id) {
+function toggleAssetCard(e, id, thumb, name) {
+    const card = e.currentTarget;
     if (assetSelected.has(id)) {
         assetSelected.delete(id);
+        assetSelectedMap.delete(id);
         card.classList.remove('selected');
     } else {
         assetSelected.add(id);
+        assetSelectedMap.set(id, { thumb, name });
         card.classList.add('selected');
     }
     updateAssetFooter();
+    updateSelectionPanel();
 }
 
 function updateAssetFooter() {
     document.getElementById('assetSelCount').textContent = assetSelected.size;
     document.getElementById('assetConfirmBtn').disabled = assetSelected.size === 0;
+}
+
+function updateSelectionPanel() {
+    const panel = document.getElementById('assetSelectedPanel');
+    const grid  = document.getElementById('selPanelGrid');
+    const modal = document.querySelector('.asset-modal');
+    const items = [...assetSelectedMap.entries()];
+    if (items.length === 0) {
+        panel.classList.remove('show');
+        modal.classList.remove('has-selection');
+        return;
+    }
+    panel.classList.add('show');
+    modal.classList.add('has-selection');
+    document.getElementById('selPanelCount').textContent = items.length;
+    grid.innerHTML = items.map(([id, a]) => `
+        <div class="sel-panel-item" onclick="showAssetPreview('${a.thumb}')">
+            <img src="${a.thumb}" alt="${a.name}">
+            <div class="sel-panel-del" onclick="event.stopPropagation();removeSelItem('${id}')">✕</div>
+        </div>
+    `).join('');
+}
+
+function removeSelItem(id) {
+    assetSelected.delete(id);
+    assetSelectedMap.delete(id);
+    document.querySelectorAll(`.asset-card[data-id="${id}"]`).forEach(c => c.classList.remove('selected'));
+    updateAssetFooter();
+    updateSelectionPanel();
 }
 
 function confirmAssetSelect() {
@@ -1248,9 +1598,36 @@ function updateSize(ratio, res) {
 // ── 渲染选项 ──
 function renderOpts() {
     const area = document.getElementById('optArea');
+    area.dataset.type = curType;
     area.innerHTML = '';
 
-    OPTS[curType].forEach(opt => {
+    // 动态计算图像模式下选项顺序
+    let opts;
+    if (curType === 'image') {
+        const isMulti = sel.image.models.length > 1;
+        const base = OPTS.image;
+        if (isMulti) {
+            // 多模型：模型(含张数), 比例, 项目
+            opts = [base[0], base[1], base[3]];
+        } else {
+            // 单模型：模型, 张数, 比例, 项目
+            opts = [base[0], base[2], base[1], base[3]];
+        }
+    } else if (curType === 'video') {
+        const isMulti = sel.video.models.length > 1;
+        const base = OPTS.video;
+        if (isMulti) {
+            // 多模型：模型(含张数), 模式, 比例+时长, 项目
+            opts = [base[0], base[2], base[3], base[4]];
+        } else {
+            // 单模型：模型, 数量, 模式, 比例+时长, 项目
+            opts = [base[0], base[1], base[2], base[3], base[4]];
+        }
+    } else {
+        opts = OPTS[curType];
+    }
+
+    opts.forEach(opt => {
         const pill = document.createElement('div');
         pill.className = 'opt-pill';
         pill.id = 'pill-' + opt.key;
@@ -1258,38 +1635,127 @@ function renderOpts() {
         let pillVal = '', ddInner = '';
 
         if (opt.type === 'model') {
-            const m = MODELS.find(x => x.id === sel[curType].model) || MODELS[0];
-            pillVal = m.name;
-            ddInner = `<div class="dd-section">
-                <div class="dd-section-title">模型</div>
-                <div class="model-list">
-                    ${MODELS.map(mx => `
-                        <div class="model-opt${mx.id === sel[curType].model ? ' active' : ''}"
-                             data-desc="${mx.desc}"
-                             onclick="pickOpt(event,'model','${mx.id}')">${mx.name}</div>
-                    `).join('')}
-                </div>
-            </div>`;
+            const models = sel[curType].models || [MODELS[0].id];
+            const isMulti = models.length > 1;
+
+            if (isMulti) {
+                const firstName = (MODELS.find(x => x.id === models[0]) || MODELS[0]).name;
+                pillVal = `${firstName} 等 ${models.length} 个模型`;
+                ddInner = `<div class="dd-section">
+                    <div class="dd-section-title">模型与张数</div>
+                    <div class="model-list">
+                        ${MODELS.map(mx => {
+                            const checked = models.includes(mx.id);
+                            const cnt = sel[curType].modelCounts[mx.id] || '1';
+                            return `<div class="model-opt-row" data-desc="${mx.desc}"
+                                         onclick="toggleModel(event,'${mx.id}')">
+                                <div class="model-check${checked ? ' active' : ''}"></div>
+                                <span class="model-opt-name">${mx.name}</span>
+                                ${checked ? `<div class="model-count-wrap" onclick="event.stopPropagation()">
+                                    <input class="model-count-input" type="number" min="1" max="99"
+                                           value="${cnt}"
+                                           onchange="setModelCount(event,'${mx.id}')"
+                                           onkeydown="if(event.key==='Enter'){event.target.blur()}">
+                                    <span class="model-count-unit">张</span>
+                                </div>` : ''}
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+            } else {
+                const m = MODELS.find(x => x.id === models[0]) || MODELS[0];
+                pillVal = m.name;
+                ddInner = `<div class="dd-section">
+                    <div class="dd-section-title">模型</div>
+                    <div class="model-list">
+                        ${MODELS.map(mx => {
+                            const checked = models.includes(mx.id);
+                            return `<div class="model-opt-row" data-desc="${mx.desc}"
+                                         onclick="toggleModel(event,'${mx.id}')">
+                                <div class="model-check${checked ? ' active' : ''}"></div>
+                                <span class="model-opt-name">${mx.name}</span>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+            }
 
         } else if (opt.type === 'ratio-res') {
             const ratio = sel[curType].ratio;
             const res   = sel[curType].res;
             const resLabel = res === '4K' ? '超清 4K' : res === '1K' ? '1K' : '高清 2K';
             const customRatios = sel[curType].customRatios || [];
+            const ratioTab = sel[curType].ratioTab || '全部';
+            const ps = sel[curType].platformSize;
 
-            // Compute ratio icon for pill
-            const ratioNums = ratio.split(':').map(Number);
+            // Compute pill ratio icon
             let rw = 14, rh = 14;
-            if (RATIO_SIZES[ratio]) { [rw, rh] = RATIO_SIZES[ratio]; }
-            else if (ratioNums.length === 2 && ratioNums[1]) {
-                const mx = 16;
-                if (ratioNums[0] >= ratioNums[1]) { rw = mx; rh = Math.round(mx * ratioNums[1] / ratioNums[0]); }
-                else { rh = mx; rw = Math.round(mx * ratioNums[0] / ratioNums[1]); }
+            if (ratioTab !== '全部' && ps) {
+                rw = ps.w; rh = ps.h;
+            } else if (RATIO_SIZES[ratio]) {
+                [rw, rh] = RATIO_SIZES[ratio];
+            } else {
+                const ratioNums = ratio.split(':').map(Number);
+                if (ratioNums.length === 2 && ratioNums[1]) {
+                    const mx = 16;
+                    if (ratioNums[0] >= ratioNums[1]) { rw = mx; rh = Math.round(mx * ratioNums[1] / ratioNums[0]); }
+                    else { rh = mx; rw = Math.round(mx * ratioNums[0] / ratioNums[1]); }
+                }
             }
             const sc = 11 / Math.max(rw, rh);
             const iw = Math.round(rw * sc), ih = Math.round(rh * sc);
 
-            pillVal = `<span class="pill-ratio-box" style="width:${iw}px;height:${ih}px;"></span>${ratio} · ${resLabel}`;
+            if (ratioTab !== '全部' && ps) {
+                pillVal = `<span class="pill-ratio-box" style="width:${iw}px;height:${ih}px;"></span>${ps.w}×${ps.h} · ${resLabel}`;
+            } else {
+                pillVal = `<span class="pill-ratio-box" style="width:${iw}px;height:${ih}px;"></span>${ratio} · ${resLabel}`;
+            }
+
+            // Platform tab bar
+            const tabBar = `<div class="ratio-platform-tabs">
+                ${PLATFORM_TABS.map(t =>
+                    `<div class="ratio-platform-tab${t === ratioTab ? ' active' : ''}"
+                          onclick="switchRatioTab(event,'${t}')">${t}</div>`
+                ).join('')}
+            </div>`;
+
+            // Preset ratio content (swaps based on active tab)
+            let presetContent;
+            if (ratioTab === '全部') {
+                presetContent = `<div class="ratio-row">
+                    ${opt.ratioValues.map(v => {
+                        const [w, h] = RATIO_SIZES[v] || [14, 14];
+                        return `<div class="ratio-chip${v === ratio ? ' active' : ''}"
+                                     onclick="pickRatioRes(event,'ratio','${v}')">
+                            <div class="ratio-box" style="width:${w}px;height:${h}px;"></div>
+                            <span class="ratio-lbl">${v}</span>
+                        </div>`;
+                    }).join('')}
+                </div>`;
+            } else {
+                const presets = PLATFORM_PRESETS[ratioTab] || [];
+                if (presets.length === 0) {
+                    presetContent = `<div class="platform-empty">暂未配置，敬请期待</div>`;
+                } else {
+                    presetContent = `<div class="ratio-row" style="flex-wrap:nowrap;">
+                        ${presets.map(p => {
+                            const isActive = ps && ps.w === p.w && ps.h === p.h;
+                            const mx = 16;
+                            let cw = mx, ch = mx;
+                            if (p.w >= p.h) { cw = mx; ch = Math.round(mx * p.h / p.w); }
+                            else { ch = mx; cw = Math.round(mx * p.w / p.h); }
+                            return `<div class="ratio-chip platform${isActive ? ' active' : ''}"
+                                         onclick="pickPlatformPreset(event,${p.w},${p.h},'${p.ratio || ''}')">
+                                <div class="platform-chip-icon">
+                                    <div class="ratio-box" style="width:${cw}px;height:${ch}px;"></div>
+                                </div>
+                                <span class="ratio-lbl">${p.w}×${p.h}</span>
+                                <span class="ratio-sub">${p.ratio || ''}</span>
+                            </div>`;
+                        }).join('')}
+                    </div>`;
+                }
+            }
 
             // Build custom ratio chips
             const customChips = customRatios.map((cr, i) => {
@@ -1317,16 +1783,8 @@ function renderOpts() {
 
             ddInner = `<div class="dd-section">
                 <div class="dd-section-title">预设比例</div>
-                <div class="ratio-row">
-                    ${opt.ratioValues.map(v => {
-                        const [w,h] = RATIO_SIZES[v] || [14,14];
-                        return `<div class="ratio-chip${v===ratio?' active':''}"
-                                     onclick="pickRatioRes(event,'ratio','${v}')">
-                            <div class="ratio-box" style="width:${w}px;height:${h}px;"></div>
-                            <span class="ratio-lbl">${v}</span>
-                        </div>`;
-                    }).join('')}
-                </div>
+                ${tabBar}
+                ${presetContent}
             </div>
             <div class="dd-section">
                 <div class="dd-section-title">自定义比例</div>
@@ -1342,17 +1800,96 @@ function renderOpts() {
                     <button class="custom-cancel" onclick="cancelCustomInput(event)">✕</button>
                 </div>
             </div>
-            <div class="dd-section">
+            ${opt.showRes !== false ? `<div class="dd-section">
                 <div class="res-toggle">
                     <div class="res-large${res==='1K'?' active':''}" onclick="pickRatioRes(event,'res','1K')">1K</div>
                     <div class="res-large${res==='2K'?' active':''}" onclick="pickRatioRes(event,'res','2K')">高清 2K</div>
                     <div class="res-large${res==='4K'?' active':''}" onclick="pickRatioRes(event,'res','4K')">超清 4K <span class="res-star">✦</span></div>
                 </div>
+            </div>` : ''}`;
+
+        } else if (opt.type === 'ratio-dur') {
+            const ratio = sel[curType].ratio || '16:9';
+            const ratioTab = sel[curType].ratioTab || '全部';
+            const ps = sel[curType].platformSize;
+
+            // pill 图标
+            let rw = 14, rh = 14;
+            if (ratioTab !== '全部' && ps) { rw = ps.w; rh = ps.h; }
+            else if (RATIO_SIZES[ratio]) { [rw, rh] = RATIO_SIZES[ratio]; }
+            const sc = 11 / Math.max(rw, rh);
+            const iw = Math.round(rw * sc), ih = Math.round(rh * sc);
+            const ratioDisplay = (ratioTab !== '全部' && ps) ? `${ps.w}×${ps.h}` : ratio;
+            const dur = sel[curType].dur || '5秒';
+            pillVal = `<span class="pill-ratio-box" style="width:${iw}px;height:${ih}px;"></span>${ratioDisplay} · ${dur}`;
+
+            // 平台 tab bar
+            const tabBar = `<div class="ratio-platform-tabs">
+                ${PLATFORM_TABS.map(t =>
+                    `<div class="ratio-platform-tab${t === ratioTab ? ' active' : ''}"
+                          onclick="switchRatioTab(event,'${t}')">${t}</div>`
+                ).join('')}
+            </div>`;
+
+            // 预设比例内容
+            let presetContent;
+            if (ratioTab === '全部') {
+                presetContent = `<div class="ratio-row">
+                    ${opt.ratioValues.map(v => {
+                        const [w, h] = RATIO_SIZES[v] || [14, 14];
+                        return `<div class="ratio-chip${v === ratio ? ' active' : ''}"
+                                     onclick="pickRatioRes(event,'ratio','${v}')">
+                            <div class="ratio-box" style="width:${w}px;height:${h}px;"></div>
+                            <span class="ratio-lbl">${v}</span>
+                        </div>`;
+                    }).join('')}
+                </div>`;
+            } else {
+                const presets = PLATFORM_PRESETS[ratioTab] || [];
+                if (presets.length === 0) {
+                    presetContent = `<div class="platform-empty">暂未配置，敬请期待</div>`;
+                } else {
+                    presetContent = `<div class="ratio-row" style="flex-wrap:nowrap;">
+                        ${presets.map(p => {
+                            const isActive = ps && ps.w === p.w && ps.h === p.h;
+                            const mx = 16;
+                            let cw = mx, ch = mx;
+                            if (p.w >= p.h) { cw = mx; ch = Math.round(mx * p.h / p.w); }
+                            else { ch = mx; cw = Math.round(mx * p.w / p.h); }
+                            return `<div class="ratio-chip platform${isActive ? ' active' : ''}"
+                                         onclick="pickPlatformPreset(event,${p.w},${p.h},'${p.ratio || ''}')">
+                                <div class="platform-chip-icon">
+                                    <div class="ratio-box" style="width:${cw}px;height:${ch}px;"></div>
+                                </div>
+                                <span class="ratio-lbl">${p.w}×${p.h}</span>
+                                <span class="ratio-sub">${p.ratio || ''}</span>
+                            </div>`;
+                        }).join('')}
+                    </div>`;
+                }
+            }
+
+            ddInner = `<div class="dd-section">
+                <div class="dd-section-title">比例</div>
+                ${tabBar}
+                ${presetContent}
+            </div>
+            <div class="dd-section">
+                <div class="dd-section-title">时长</div>
+                <div class="dd-chips">
+                    ${(opt.durValues || ['5秒','10秒','15秒','30秒']).map(v =>
+                        `<span class="dd-chip${v===dur?' active':''}"
+                               onclick="pickOpt(event,'dur','${v}')">${v}</span>`
+                    ).join('')}
+                </div>
             </div>`;
 
         } else if (opt.type === 'ratio') {
-            const val = sel[curType][opt.key];
-            pillVal = val;
+            const val = sel[curType][opt.key] || opt.def;
+            const [rw, rh] = RATIO_SIZES[val] || [14, 14];
+            const sc = 11 / Math.max(rw, rh);
+            const iw = Math.round(rw * sc), ih = Math.round(rh * sc);
+            pillVal = `<span class="pill-ratio-box" style="width:${iw}px;height:${ih}px;"></span>${val}`;
             ddInner = `<div class="dd-section">
                 <div class="dd-section-title">${opt.label}</div>
                 <div class="ratio-row">
@@ -1367,8 +1904,21 @@ function renderOpts() {
                 </div>
             </div>`;
 
+        } else if (opt.type === 'chips') {
+            const val = sel[curType][opt.key] || opt.def;
+            pillVal = val;
+            ddInner = `<div class="dd-section">
+                <div class="dd-section-title">${opt.label}</div>
+                <div class="dd-chips">
+                    ${opt.values.map(v =>
+                        `<span class="dd-chip${v===val?' active':''}"
+                               onclick="pickOpt(event,'${opt.key}','${v}')">${v}</span>`
+                    ).join('')}
+                </div>
+            </div>`;
+
         } else if (opt.type === 'res') {
-            const val = sel[curType][opt.key];
+            const val = sel[curType][opt.key] || opt.def;
             pillVal = val;
             ddInner = `<div class="dd-section">
                 <div class="dd-section-title">${opt.label}</div>
@@ -1382,8 +1932,9 @@ function renderOpts() {
 
         } else if (opt.type === 'count') {
             const val = sel[curType].count || '1';
+            const unit = opt.unit || '张';
             const isCustom = !opt.values.includes(val);
-            pillVal = val;
+            pillVal = val + ' ' + unit;
             ddInner = `<div class="dd-section">
                 <div class="dd-section-title">生成数量</div>
                 <div class="dd-chips" style="flex-wrap:nowrap;">
@@ -1404,6 +1955,32 @@ function renderOpts() {
                 </div>
             </div>`;
 
+        } else if (opt.type === 'project') {
+            const val = sel[curType].project || '';
+            pillVal = val || '项目';
+            ddInner = `<div class="dd-section">
+                <div class="dd-section-title">选择目标项目</div>
+                ${PROJECTS.map((g, gi) => {
+                    const catActive = val === g.category;
+                    const hasActiveProd = g.products.includes(val);
+                    return `
+                    <div class="project-group">
+                        <div class="project-cat-row" onclick="toggleProjectGroup(event,${gi})">
+                            <div class="project-check${catActive ? ' active' : ''}"
+                                 onclick="pickProject(event,'cat','${g.category}')"></div>
+                            <span class="project-cat-name">${g.category}</span>
+                            <span class="project-expand-arr${_projectOpen.has(gi) ? ' open' : ''}">▾</span>
+                        </div>
+                        <div class="project-children${_projectOpen.has(gi) ? ' open' : ''}">
+                            ${g.products.map(p => `
+                                <div class="project-item${val === p ? ' active' : ''}"
+                                     onclick="pickProject(event,'prod','${p}')">${p}</div>
+                            `).join('')}
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>`;
+
         } else {
             const val = sel[curType][opt.key];
             pillVal = val;
@@ -1418,8 +1995,15 @@ function renderOpts() {
             </div>`;
         }
 
+        if (opt.type === 'project') {
+            pill.title = '选择您的目标产品或品类（单选），生成内容将结合该产品特点与目标人群进行优化';
+        }
+
+        const clearBtn = (opt.type === 'project' && sel[curType].project)
+            ? `<button class="pill-clear" onclick="clearProject(event)">✕</button>` : '';
+
         pill.innerHTML = `
-            <span class="opt-pill-val">${pillVal}</span>
+            <span class="opt-pill-val">${pillVal}</span>${clearBtn}
             <span class="arr">▾</span>
             <div class="opt-dd" id="dd-${opt.key}">${ddInner}</div>`;
 
@@ -1454,7 +2038,8 @@ function onCountInput(e) {
     if (!v || v < 1) return;
     sel[curType].count = String(Math.min(99, v));
     const pill = document.getElementById('pill-count');
-    if (pill) pill.querySelector('.opt-pill-val').textContent = `${sel[curType].count} 张`;
+    const unit = curType === 'video' ? '个' : '张';
+    if (pill) pill.querySelector('.opt-pill-val').textContent = `${sel[curType].count} ${unit}`;
 }
 
 function pickOpt(e, key, val) {
@@ -1462,13 +2047,106 @@ function pickOpt(e, key, val) {
     sel[curType][key] = val;
     closeAll();
     renderOpts();
+    if (curType === 'video' && key === 'mode') renderKeyframeStrip();
+}
+
+function toggleModel(e, modelId) {
+    e.stopPropagation();
+    const ms = sel[curType].models;
+    const idx = ms.indexOf(modelId);
+    if (idx >= 0) {
+        if (ms.length <= 1) return; // 至少保留一个
+        ms.splice(idx, 1);
+        if (ms.length === 1) {
+            // 回到单选模式：同步 count
+            sel[curType].count = sel[curType].modelCounts[ms[0]] || sel[curType].count || '1';
+            sel[curType].modelCounts = {};
+        } else {
+            delete sel[curType].modelCounts[modelId];
+        }
+    } else {
+        ms.push(modelId);
+        if (ms.length === 2) {
+            // 首次进入多选：为所有已选模型初始化张数
+            ms.forEach(id => {
+                if (!sel[curType].modelCounts[id])
+                    sel[curType].modelCounts[id] = sel[curType].count || '1';
+            });
+        } else {
+            sel[curType].modelCounts[modelId] = sel[curType].count || '1';
+        }
+    }
+    reopenModelPanel();
+}
+
+function setModelCount(e, modelId) {
+    e.stopPropagation();
+    const v = parseInt(e.target.value);
+    if (v && v >= 1) {
+        sel[curType].modelCounts[modelId] = String(Math.min(99, v));
+    }
+}
+
+function reopenModelPanel() {
+    renderOpts();
+    const pill = document.getElementById('pill-model');
+    const dd = document.getElementById('dd-model');
+    if (pill && dd) { pill.classList.add('open'); dd.classList.add('show'); }
+}
+
+const _projectOpen = new Set();
+
+function pickProject(e, type, value) {
+    e.stopPropagation();
+    sel[curType].project = sel[curType].project === value ? '' : value;
+    // 选中品类后自动收起该组
+    if (type === 'cat') {
+        const gi = PROJECTS.findIndex(g => g.category === value);
+        if (gi >= 0) _projectOpen.delete(gi);
+    }
+    closeAll();
+    renderOpts();
+}
+
+function toggleProjectGroup(e, gi) {
+    e.stopPropagation();
+    if (_projectOpen.has(gi)) _projectOpen.delete(gi);
+    else _projectOpen.add(gi);
+    // 只刷新展开状态，不关闭面板
+    const children = document.querySelectorAll('.project-children')[gi];
+    const arr = document.querySelectorAll('.project-expand-arr')[gi];
+    if (children) children.classList.toggle('open');
+    if (arr) arr.classList.toggle('open');
+}
+
+function clearProject(e) {
+    e.stopPropagation();
+    sel[curType].project = '';
+    closeAll();
+    renderOpts();
 }
 
 function pickRatioRes(e, type, val) {
     e.stopPropagation();
-    if (type === 'ratio') sel[curType].ratio = val;
+    if (type === 'ratio') { sel[curType].ratio = val; sel[curType].platformSize = null; }
     else sel[curType].res = val;
     updateSize(sel[curType].ratio, sel[curType].res);
+    reopenRatioPanel();
+}
+
+function switchRatioTab(e, tab) {
+    e.stopPropagation();
+    sel[curType].ratioTab = tab;
+    sel[curType].platformSize = null; // 切换平台时清空当前选中尺寸
+    reopenRatioPanel();
+}
+
+function pickPlatformPreset(e, w, h, ratio) {
+    e.stopPropagation();
+    sel[curType].platformSize = { w, h, ratio: ratio || null };
+    sel[curType].sizeW = w;
+    sel[curType].sizeH = h;
+    if (ratio) sel[curType].ratio = ratio;
     reopenRatioPanel();
 }
 
@@ -1546,8 +2224,8 @@ function onCustomKey(e) {
 
 function reopenRatioPanel() {
     renderOpts();
-    const pill = document.getElementById('pill-ratio-res');
-    const dd   = document.getElementById('dd-ratio-res');
+    const pill = document.getElementById('pill-ratio-dur') || document.getElementById('pill-ratio-res');
+    const dd   = document.getElementById('dd-ratio-dur')   || document.getElementById('dd-ratio-res');
     if (pill && dd) { pill.classList.add('open'); dd.classList.add('show'); }
 }
 
@@ -1559,10 +2237,39 @@ function switchType(btn) {
     document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     curType = btn.dataset.type;
-    document.getElementById('prompt').placeholder =
-        curType === 'image' ? '尝试描述您想要创建的图像' : '尝试描述您想要创建的视频';
+    const isChat = curType === 'chat';
+
+    // 上传区 & 参考图条
+    if (!document.getElementById('refAddBtn')) {
+        document.getElementById('uploadBlock').style.display = isChat ? 'none' : '';
+    }
+    document.getElementById('refStrip').style.display = isChat ? 'none' : '';
+    renderKeyframeStrip();
+
+    // 选项区 vs 对话工具
+    document.getElementById('optArea').style.display = isChat ? 'none' : 'flex';
+    document.getElementById('chatExtra').style.display = isChat ? 'flex' : 'none';
+    if (!isChat) document.getElementById('parseBtn').style.display =
+        document.querySelector('.ref-item') ? '' : 'none';
+    else document.getElementById('parseBtn').style.display = 'none';
+
+    // 发送/生成按钮外观
+    const genBtn = document.getElementById('genBtn');
+    const genText = document.getElementById('genText');
+    if (isChat) {
+        genBtn.classList.add('send-mode');
+        genText.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>`;
+    } else {
+        genBtn.classList.remove('send-mode');
+        genText.innerHTML = '生成';
+    }
+
+    // placeholder
+    const ph = { chat: '发送消息给 AI...', image: '尝试描述您想要创建的图像', video: '尝试描述您想要创建的视频' };
+    document.getElementById('prompt').placeholder = ph[curType] || '';
+
     closeAll();
-    renderOpts();
+    if (!isChat) renderOpts();
 }
 
 function useWorkflow(type) {
@@ -1582,7 +2289,7 @@ function doGenerate() {
     localStorage.setItem('pendingGen', JSON.stringify({
         type: curType,
         prompt: txt,
-        opts: JSON.parse(JSON.stringify(sel[curType]))
+        opts: sel[curType] ? JSON.parse(JSON.stringify(sel[curType])) : {}
     }));
     parent.postMessage({ action: 'openTab', title: '生成详情', url: 'AI 创作/生成详情.html' }, '*');
 }

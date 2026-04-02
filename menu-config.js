@@ -47,19 +47,14 @@ const MENU_CONFIG = [
       },
       {
         name: '我的任务',
-        page: 'AI 创作/我的任务.html',
+        page: 'AI 创作/生成详情.html',
         icon: '<path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>',
         badge: { generating: 3, unviewed: 5 }
       },
       {
-        name: '品类管理',
-        page: 'AI 创作/品类管理.html',
-        icon: '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path>'
-      },
-      {
-        name: '产品管理',
-        page: 'AI 创作/产品管理.html',
-        icon: '<path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>'
+        name: '项目管理',
+        page: 'AI 创作/项目管理.html',
+        icon: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>'
       }
     ]
   },
