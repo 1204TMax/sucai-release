@@ -9,637 +9,349 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; overflow: hidden; }
     body {
-      background-color: #f5f7fa;
+      background: #ffffff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      font-size: 14px; color: #333;
+      font-size: 14px; color: #1a1a1a;
       display: flex; flex-direction: column;
-      padding: 0;
     }
 
-    /* ── 筛选栏 ── */
-    .filter-bar {
-      background: #fff; border-radius: 8px; margin-bottom: 0;
-      border: 1px solid rgba(0,0,0,0.06);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-      flex-shrink: 0;
-    }
-    .filter-bar-compact {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 16px; height: 44px;
-    }
-    .filter-bar-expanded { padding: 16px; }
-    .filter-bar-expanded .filter-row {
-      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    }
-    .filter-label { font-size: 13px; color: #666; white-space: nowrap; }
+    /* ═══ 整体布局 ═══ */
+    #root { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 20px 20px 0; }
+    .task-scroll-area { flex: 1; overflow-y: auto; padding: 16px 0 16px; position: relative; }
+    .task-scroll-area::-webkit-scrollbar { width: 4px; }
+    .task-scroll-area::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 2px; }
+    #input-box-root { flex-shrink: 0; }
+
+    /* ═══ 筛选栏 ═══ */
+    .filter-bar { background: #fff; border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .filter-search { flex: 0 0 200px; height: 32px; border: 1px solid #e5e5e5; border-radius: 8px; padding: 0 10px; font-size: 13px; outline: none; background: #fafafa; transition: border-color .15s; }
+    .filter-search:focus { border-color: #1677ff; background: #fff; }
     .filter-spacer { flex: 1; }
 
-    /* ── 视图切换 ── */
-    .view-toggle {
-      display: inline-flex; background: rgba(0,0,0,0.04); border-radius: 6px;
-      padding: 2px; gap: 2px; flex-shrink: 0;
-    }
-    .vt-btn {
-      width: 28px; height: 28px; border-radius: 4px; border: none;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; background: transparent; color: #999;
-      transition: all 0.15s;
-    }
+    /* 一级内容切换 Tab */
+    .content-tabs { display: inline-flex; background: #f0f0f0; border-radius: 8px; padding: 3px; gap: 2px; flex-shrink: 0; margin-right: 8px; }
+    .ct-btn { padding: 4px 14px; border-radius: 6px; border: none; font-size: 13px; color: #666; cursor: pointer; background: transparent; transition: all .15s; white-space: nowrap; }
+    .ct-btn:hover { color: #333; }
+    .ct-btn.active { background: #fff; color: #1677ff; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+
+    /* 对话侧边栏 */
+    .main-with-sidebar { display: flex; flex: 1; overflow: hidden; }
+    .chat-sidebar { width: 240px; border-right: 1px solid #f0f0f0; display: flex; flex-direction: column; flex-shrink: 0; background: #fafafa; }
+    .chat-sidebar-header { padding: 12px 14px; flex-shrink: 0; }
+    .chat-new-btn { width: 100%; padding: 8px 0; border: 1px dashed #d0d0d0; border-radius: 8px; background: #fff; font-size: 13px; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all .15s; }
+    .chat-new-btn:hover { border-color: #1677ff; color: #1677ff; }
+    .chat-list { flex: 1; overflow-y: auto; padding: 0 8px 12px; }
+    .chat-list-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 2px; transition: background .12s; }
+    .chat-list-item:hover { background: #f0f0f0; }
+    .chat-list-item.active { background: #e6f4ff; }
+    .chat-list-title { font-size: 13px; color: #1a1a1a; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-list-meta { font-size: 11px; color: #999; margin-top: 3px; }
+    /* 项目筛选面板 */
+    .project-filter { position: relative; flex-shrink: 0; }
+    .project-trigger { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border: 1px solid #e5e5e5; border-radius: 20px; font-size: 13px; color: #555; cursor: pointer; background: #fff; transition: border-color .15s; white-space: nowrap; }
+    .project-trigger:hover, .project-trigger.open { border-color: #1a1a1a; }
+    .project-trigger .arr { font-size: 8px; color: #999; margin-left: 2px; }
+    .project-panel { position: absolute; top: calc(100% + 6px); left: 0; width: 220px; background: #fff; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.04), 0 12px 36px rgba(0,0,0,0.1); padding: 16px; z-index: 400; display: none; }
+    .project-panel.show { display: block; }
+    .project-panel-title { font-size: 13px; color: #999; margin-bottom: 12px; }
+    .project-group { margin-bottom: 8px; }
+    .project-group-head { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; font-size: 14px; color: #1a1a1a; }
+    .project-radio { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #d0d0d0; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: border-color .15s; }
+    .project-radio.selected { border-color: #1677ff; }
+    .project-radio.selected::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #1677ff; }
+    .project-child { padding: 5px 0 5px 24px; font-size: 13px; color: #666; cursor: pointer; transition: color .12s; }
+    .project-child:hover { color: #1a1a1a; }
+    .project-child.selected { color: #1677ff; font-weight: 500; }
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ═══ 视图切换 ═══ */
+    .view-toggle { display: inline-flex; background: #f0f0f0; border-radius: 8px; padding: 3px; gap: 2px; flex-shrink: 0; }
+    .vt-btn { width: 30px; height: 28px; border-radius: 6px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; background: transparent; color: #999; transition: all .15s; }
     .vt-btn:hover { color: #666; }
-    .vt-btn.active { background: #1677ff; color: #fff; }
+    .vt-btn.active { background: #fff; color: #1677ff; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
 
-    /* ── 展开模式卡片 ── */
-    .task-feed { max-width: 860px; margin: 0 auto; }
-    .task-card {
-      background: #fff; border-radius: 8px;
-      border: 1px solid rgba(0,0,0,0.06);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-      margin-bottom: 12px; overflow: hidden;
-      transition: box-shadow 0.15s, border-color 0.15s;
-    }
-    .task-card:hover {
-      border-color: rgba(0,0,0,0.1);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-    .card-header {
-      padding: 14px 20px 10px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .card-time { font-size: 12px; color: #999; margin-left: auto; }
-    .card-input {
-      padding: 0 20px 12px;
-      border-bottom: 1px solid rgba(0,0,0,0.04);
-    }
-    .prompt-text {
-      font-size: 13px; color: #333; line-height: 1.6;
-      display: -webkit-box; -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical; overflow: hidden;
-      word-break: break-all;
-    }
-    .ref-thumbs {
-      display: flex; gap: 6px; margin-top: 8px; align-items: center;
-    }
-    .ref-thumb-img {
-      width: 40px; height: 40px; border-radius: 4px;
-      object-fit: cover; border: 1px solid #e8e8e8; cursor: pointer;
-    }
-    .ref-more { font-size: 11px; color: #999; white-space: nowrap; }
+    /* ═══ 任务 Feed ═══ */
+    .task-feed { max-width: 900px; margin: 0 auto; width: 100%; }
+
+    /* ═══ 任务卡片 ═══ */
+    .task-card { background: #fff; border-radius: 12px; margin-bottom: 16px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: box-shadow .2s, border-color .2s; overflow: hidden; }
+    .task-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); border-color: rgba(0,0,0,0.09); }
+
+    /* 卡片头 */
+    .card-header { padding: 16px 20px 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .card-prompt { font-size: 14px; font-weight: 500; color: #1a1a1a; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-meta { font-size: 12px; color: #999; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .card-meta-item { padding: 2px 8px; background: #f5f5f5; border-radius: 4px; font-size: 11px; color: #666; }
+
+    /* 卡片参考图 */
+    .card-ref-thumbs { display: flex; gap: 4px; flex-shrink: 0; margin-right: 4px; }
+    .card-ref-thumb { width: 28px; height: 28px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 1px solid #e8e8e8; flex-shrink: 0; }
+    .card-ref-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* 自定义 Tag */
+    .c-tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; line-height: 18px; white-space: nowrap; }
+    .c-tag-image { background: #f3e8ff; color: #7c3aed; }
+    .c-tag-video { background: #e0f7fa; color: #0097a7; }
+    .c-tag-model { background: #f5f5f5; color: #666; }
+    .c-tag-pending { background: transparent; color: #999; padding: 0; }
+    .c-tag-generating { background: transparent; color: #1677ff; padding: 0; }
+    .c-tag-completed { background: transparent; color: #16a34a; padding: 0; }
+    .c-tag-failed { background: transparent; color: #dc2626; padding: 0; }
+    .c-tag-aborted { background: transparent; color: #d97706; padding: 0; }
+
+    /* 模型 Tabs */
+    .model-tabs { padding: 0 20px; display: flex; gap: 0; border-bottom: 1px solid #f0f0f0; }
+    .model-tab { padding: 8px 16px; font-size: 13px; color: #666; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; transition: all .15s; white-space: nowrap; }
+    .model-tab:hover { color: #1a1a1a; }
+    .model-tab.active { color: #1677ff; border-bottom-color: #1677ff; font-weight: 500; }
+    .model-tab-count { font-size: 11px; color: #999; margin-left: 4px; }
+    .model-tab.active .model-tab-count { color: #1677ff; }
+
+    /* 输出行 */
     .card-output { padding: 12px 20px 16px; }
-    .output-grid {
-      display: flex; flex-wrap: wrap; gap: 4px;
-    }
-    .output-thumb-wrap {
-      flex: 1 1 calc(25% - 3px); min-width: 140px; max-width: calc(50% - 2px);
-      aspect-ratio: 1; border-radius: 4px;
-      overflow: hidden; position: relative; cursor: pointer;
-    }
-    .output-thumb-wrap img {
-      width: 100%; height: 100%; object-fit: cover; display: block;
-    }
-    .output-thumb-wrap:hover .img-overlay { opacity: 1; }
-    .img-overlay {
-      position: absolute; inset: 0;
-      background: rgba(0,0,0,0.38); opacity: 0;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-      transition: opacity 0.15s;
-    }
-    .img-action-btn {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: rgba(255,255,255,0.2); border: none;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: #fff; backdrop-filter: blur(4px);
-      transition: background 0.15s;
-    }
-    .img-action-btn:hover { background: rgba(255,255,255,0.4); }
-    .output-summary {
-      margin-top: 10px; font-size: 12px; color: #999;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .view-all-link {
-      color: #1677ff; cursor: pointer; font-size: 12px;
-      text-decoration: none;
-    }
-    .view-all-link:hover { text-decoration: underline; }
+    .output-row { display: flex; gap: 4px; }
+    .output-row.expanded .o-thumb { flex: 1 1 0; min-width: 0; aspect-ratio: 1; }
+    .output-row.collapsed .o-thumb { flex: 0 0 52px; width: 52px; height: 52px; }
+    .o-thumb { border-radius: 6px; overflow: hidden; position: relative; cursor: pointer; background: #f5f5f5; }
+    .o-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    /* ── 图片 AI 生成角标 ── */
-    .ai-badge {
-      position: absolute; top: 6px; left: 6px;
-      background: rgba(0,0,0,0.35); color: #fff;
-      font-size: 10px; padding: 1px 6px; border-radius: 3px;
-      pointer-events: none; backdrop-filter: blur(2px);
-    }
+    /* AI 生成角标 */
+    .ai-badge { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.4); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 3px; pointer-events: none; backdrop-filter: blur(2px); }
 
-    /* ── 卡片底部操作按钮 ── */
-    .card-actions {
-      padding: 8px 20px 14px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .card-act-btn {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 5px 14px; border-radius: 18px;
-      border: 1px solid #e8e8e8; background: #fff;
-      font-size: 13px; color: #333; cursor: pointer;
-      transition: all 0.15s;
-    }
+    /* 视频缩略图 */
+    .vid-thumb-inner { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
+    .vid-play { width: 32px; height: 32px; background: rgba(255,255,255,0.85); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+    .output-row.collapsed .vid-play { width: 20px; height: 20px; }
+    .vid-play svg { margin-left: 2px; }
+    .vid-dur { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.5); color: #fff; font-size: 10px; padding: 1px 5px; border-radius: 3px; backdrop-filter: blur(2px); }
+
+    /* hover 操作层 */
+    .thumb-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); opacity: 0; display: flex; align-items: center; justify-content: center; gap: 4px; transition: opacity .15s; pointer-events: none; }
+    .o-thumb:hover .thumb-overlay { opacity: 1; }
+    .thumb-act { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.2); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; backdrop-filter: blur(4px); transition: background .12s; pointer-events: auto; }
+    .thumb-act:hover { background: rgba(255,255,255,0.4); }
+
+    /* "查看全部" 卡片 */
+    .view-all-card { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f8f8; color: #666; font-size: 12px; gap: 4px; transition: background .15s; }
+    .view-all-card:hover { background: #f0f0f0; }
+    .view-all-num { font-size: 16px; font-weight: 600; color: #1677ff; }
+
+    /* 骨架屏 */
+    @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+    .skel-thumb { border-radius: 6px; background: linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite; }
+    .output-row.expanded .skel-thumb { flex: 1 1 0; min-width: 0; aspect-ratio: 1; }
+    .output-row.collapsed .skel-thumb { flex: 0 0 52px; width: 52px; height: 52px; }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #1677ff; display: inline-block; animation: pulse-dot 1.5s ease-in-out infinite; margin-left: 4px; }
+
+    /* 失败/等待 */
+    .status-placeholder { padding: 20px 0; text-align: center; }
+    .status-placeholder-icon { margin-bottom: 6px; }
+    .status-placeholder-text { font-size: 13px; color: #999; margin-bottom: 10px; }
+
+    /* 卡片底部操作 */
+    .card-actions { display: flex; align-items: center; gap: 8px; }
+    .card-bottom { padding: 4px 20px 14px; display: flex; align-items: center; }
+    .card-bottom .card-actions { padding: 0; }
+    .card-bottom-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #999; margin-left: auto; }
+    .card-bottom-meta .c-tag { margin: 0; }
+    .card-act-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 20px; border: 1px solid #e5e5e5; background: #fff; font-size: 13px; color: #555; cursor: pointer; transition: all .15s; position: relative; }
     .card-act-btn:hover { border-color: #1677ff; color: #1677ff; }
     .card-act-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
-    .card-act-more {
-      width: 32px; height: 32px; border-radius: 50%;
-      border: 1px solid #e8e8e8; background: #fff;
-      display: inline-flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 16px; color: #999;
-      transition: all 0.15s; line-height: 1;
-    }
+    .card-act-more { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 20px; border: 1px solid #e5e5e5; background: #fff; font-size: 13px; color: #555; cursor: pointer; transition: all .15s; }
     .card-act-more:hover { border-color: #1677ff; color: #1677ff; }
+    .card-act-stop { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 20px; border: 1px solid #fecaca; background: #fff; font-size: 13px; color: #dc2626; cursor: pointer; transition: all .15s; }
+    .card-act-stop:hover { border-color: #dc2626; background: #fef2f2; }
+    .card-act-stop svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-    /* ── 回到底部按钮 ── */
-    .scroll-bottom-btn {
-      position: sticky; bottom: 12px;
-      float: right; margin-right: 4px;
-      display: flex; align-items: center; gap: 4px;
-      padding: 6px 14px; border-radius: 18px;
-      background: #fff; border: 1px solid #e8e8e8;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      font-size: 13px; color: #333; cursor: pointer;
-      z-index: 50; opacity: 0; pointer-events: none;
-      transition: opacity 0.2s, transform 0.2s;
-      transform: translateY(8px);
-    }
-    .scroll-bottom-btn.visible {
-      opacity: 1; pointer-events: auto; transform: translateY(0);
-    }
+    /* 入库下拉菜单 */
+    .storage-dropdown { position: absolute; bottom: calc(100% + 6px); left: 0; background: #fff; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); padding: 4px; min-width: 140px; z-index: 200; }
+    .storage-dd-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #333; transition: background .1s; }
+    .storage-dd-item:hover { background: #f5f5f5; }
+
+    /* 图片编辑下拉菜单 */
+    .edit-menu { position: absolute; bottom: calc(100% + 4px); right: 0; background: #fff; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); padding: 4px; min-width: 140px; z-index: 300; }
+    .edit-menu-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #333; transition: background .1s; position: relative; }
+    .edit-menu-item:hover { background: #f5f5f5; }
+    .edit-menu-item .sub-arrow { margin-left: auto; font-size: 10px; color: #999; }
+    .edit-submenu { position: absolute; left: calc(100% + 4px); top: 0; background: #fff; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); padding: 4px; min-width: 160px; display: none; }
+    .edit-menu-item:hover .edit-submenu { display: block; }
+    .edit-submenu-item { padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #333; transition: background .1s; white-space: nowrap; }
+    .edit-submenu-item:hover { background: #f5f5f5; }
+
+    /* 大图预览 */
+    .img-preview-mask { position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; cursor: pointer; }
+    .img-preview-mask.show { display: flex; }
+    .img-preview-img { max-width: 90vw; max-height: 90vh; border-radius: 8px; object-fit: contain; }
+    .img-preview-dl { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); z-index: 3001; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.2); border: none; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); transition: background .15s; }
+    .img-preview-dl:hover { background: rgba(255,255,255,0.4); }
+
+    /* 重新编辑下拉菜单 */
+
+    /* 回到底部 */
+    .scroll-bottom-btn { position: absolute; top: -36px; right: 20px; display: flex; align-items: center; gap: 4px; padding: 6px 14px; border-radius: 20px; background: #fff; border: 1px solid #e5e5e5; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-size: 13px; color: #555; cursor: pointer; z-index: 150; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; transform: translateY(8px); }
+    .scroll-bottom-btn.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
     .scroll-bottom-btn:hover { border-color: #1677ff; color: #1677ff; }
     .scroll-bottom-btn svg { width: 14px; height: 14px; }
-    .failed-output {
-      padding: 24px 0; text-align: center; color: #ff4d4f;
-    }
-    .failed-icon { font-size: 32px; margin-bottom: 8px; }
-    .failed-text { font-size: 13px; color: #999; margin-bottom: 12px; }
-    .pending-output {
-      padding: 24px 0; text-align: center;
-      font-size: 13px; color: #999;
-    }
 
-    /* ── 骨架屏 ── */
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-    .skeleton-thumb {
-      flex: 1 1 calc(25% - 3px); min-width: 140px; max-width: calc(50% - 2px);
-      aspect-ratio: 1; border-radius: 4px;
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse-dot {
-      0%,100% { opacity: 1; } 50% { opacity: 0.4; }
-    }
-    .pulse-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: #1677ff; display: inline-block;
-      animation: pulse-dot 1.5s ease-in-out infinite;
-      margin-left: 4px;
-    }
+    /* 空状态 */
+    .empty-state { text-align: center; padding: 80px 20px; }
 
-    /* ── 列表模式行卡片 ── */
-    .list-feed { }
-    .row-card {
-      background: #fff; border-radius: 6px;
-      border: 1px solid rgba(0,0,0,0.06);
-      height: 60px; padding: 0 16px; margin-bottom: 4px;
-      display: flex; align-items: center; gap: 10px;
-      cursor: pointer;
-      transition: box-shadow 0.15s, border-color 0.15s;
-    }
-    .row-card:hover {
-      border-color: rgba(0,0,0,0.12);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
-    .row-prompt {
-      flex: 1; min-width: 0; font-size: 13px; color: #333;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .row-media {
-      display: flex; align-items: center; gap: 4px; flex-shrink: 0;
-    }
-    .row-thumb {
-      width: 36px; height: 36px; border-radius: 4px;
-      object-fit: cover; border: 1px solid #e8e8e8;
-    }
-    .row-arrow {
-      color: #ccc; margin: 0 2px; font-size: 12px; flex-shrink: 0;
-    }
-    .row-count-badge {
-      font-size: 10px; color: #666; background: #f0f0f0;
-      padding: 1px 5px; border-radius: 8px; white-space: nowrap;
-    }
-    .row-time { font-size: 12px; color: #999; white-space: nowrap; flex-shrink: 0; }
-    .row-detail-btn {
-      font-size: 12px; color: #1677ff; cursor: pointer;
-      white-space: nowrap; flex-shrink: 0; border: none;
-      background: none; padding: 4px 8px; border-radius: 4px;
-    }
-    .row-detail-btn:hover { background: #e6f4ff; }
-    .video-thumb-mini {
-      width: 36px; height: 36px; border-radius: 4px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .video-thumb-large {
-      flex: 1 1 calc(25% - 3px); min-width: 140px; max-width: calc(50% - 2px);
-      aspect-ratio: 1; border-radius: 4px;
-      display: flex; align-items: center; justify-content: center;
-    }
-
-    /* ── 底部输入框 ── */
-    .input-box-wrapper {
-      z-index: 100; padding: 12px 20px 16px;
-      background: linear-gradient(to top, #f5f7fa 60%, transparent);
-    }
-    .input-box {
-      background: #fff; border-radius: 12px;
-      border: 1px solid rgba(0,0,0,0.08);
-      box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
-      transition: all 0.3s ease;
-      max-width: 860px; margin: 0 auto;
-    }
-    .input-collapsed {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 16px; cursor: pointer; min-height: 44px;
-    }
-    .input-plus-icon {
-      width: 28px; height: 28px; border-radius: 6px;
-      border: 1.5px dashed #d0d0d0; display: flex;
-      align-items: center; justify-content: center;
-      font-size: 16px; color: #999; flex-shrink: 0;
-    }
+    /* ═══ 底部输入框 ═══ */
+    .input-box-wrapper { z-index: 100; padding: 12px 20px 16px; background: linear-gradient(to top, #f5f7fa 60%, transparent); }
+    .input-box { background: #fff; border-radius: 14px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 -2px 12px rgba(0,0,0,0.03); transition: all .3s ease; max-width: 900px; margin: 0 auto; }
+    .input-collapsed { display: flex; align-items: center; gap: 10px; padding: 10px 16px; cursor: pointer; min-height: 44px; }
+    .input-plus-icon { width: 28px; height: 28px; border-radius: 8px; border: 1.5px dashed #d0d0d0; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #999; flex-shrink: 0; }
     .input-placeholder { flex: 1; color: #bbb; font-size: 13px; }
-    .input-gen-mini {
-      background: #d8d8d8; color: #fff; border: none;
-      padding: 5px 14px; border-radius: 6px; font-size: 12px;
-      cursor: not-allowed; flex-shrink: 0;
-    }
-    .input-gen-mini.active {
-      background: #1677ff; cursor: pointer;
-    }
+    .input-gen-mini { background: #e0e0e0; color: #fff; border: none; padding: 5px 14px; border-radius: 8px; font-size: 12px; cursor: not-allowed; flex-shrink: 0; }
+    .input-gen-mini.active { background: #1677ff; cursor: pointer; }
     .input-expanded { display: none; padding: 16px; }
     .input-box.expanded .input-collapsed { display: none; }
     .input-box.expanded .input-expanded { display: block; }
     .input-top { display: flex; gap: 12px; }
-    .upload-block {
-      width: 56px; height: 80px; border-radius: 8px;
-      border: 1.5px dashed #d0d0d0; display: flex;
-      align-items: center; justify-content: center;
-      cursor: pointer; flex-shrink: 0; color: #999;
-      transition: border-color 0.15s, color 0.15s;
-    }
+    .upload-block { width: 56px; height: 80px; border-radius: 8px; border: 1.5px dashed #d0d0d0; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; color: #999; transition: border-color .15s, color .15s; }
     .upload-block:hover { border-color: #1677ff; color: #1677ff; }
-    .input-textarea {
-      flex: 1; border: none; outline: none; resize: none;
-      font-size: 13px; line-height: 1.6; color: #333;
-      font-family: inherit; min-height: 80px;
-    }
+    .input-textarea { flex: 1; border: none; outline: none; resize: none; font-size: 13px; line-height: 1.6; color: #333; font-family: inherit; min-height: 80px; }
     .input-textarea::placeholder { color: #c0c0c0; }
-    .input-ref-strip {
-      display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;
-    }
-    .input-ref-item {
-      width: 60px; height: 60px; border-radius: 6px;
-      overflow: hidden; position: relative; border: 1px solid #e8e8e8;
-    }
+    .input-ref-strip { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .input-ref-item { width: 60px; height: 60px; border-radius: 6px; overflow: hidden; position: relative; border: 1px solid #e8e8e8; }
     .input-ref-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .input-ref-del {
-      position: absolute; top: 2px; right: 2px;
-      width: 16px; height: 16px; border-radius: 50%;
-      background: rgba(0,0,0,0.5); color: #fff; font-size: 10px;
-      display: none; align-items: center; justify-content: center;
-      cursor: pointer; line-height: 1;
-    }
+    .input-ref-del { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff; font-size: 10px; display: none; align-items: center; justify-content: center; cursor: pointer; line-height: 1; }
     .input-ref-item:hover .input-ref-del { display: flex; }
-    .input-ref-add {
-      width: 60px; height: 60px; border-radius: 6px;
-      border: 1.5px dashed #d0d0d0; display: flex;
-      align-items: center; justify-content: center;
-      cursor: pointer; color: #999;
-    }
+    .input-ref-add { width: 60px; height: 60px; border-radius: 6px; border: 1.5px dashed #d0d0d0; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #999; }
     .input-ref-add:hover { border-color: #1677ff; color: #1677ff; }
-    .input-toolbar {
-      display: flex; align-items: center; gap: 6px;
-      margin-top: 10px; flex-wrap: wrap;
-    }
+    .input-toolbar { display: flex; align-items: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
     .input-toolbar-spacer { flex: 1; }
 
-    /* ── Option pills ── */
-    .opt-pill {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 4px 10px; border: 1px solid rgba(0,0,0,0.13);
-      border-radius: 20px; font-size: 12px; color: #555;
-      cursor: pointer; position: relative; white-space: nowrap;
-      transition: border-color 0.15s, background 0.15s;
-      user-select: none;
-    }
+    /* ═══ Option pills ═══ */
+    .opt-pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid #e5e5e5; border-radius: 20px; font-size: 12px; color: #555; cursor: pointer; position: relative; white-space: nowrap; transition: border-color .15s, background .15s; user-select: none; }
     .opt-pill:hover { border-color: #1a1a1a; background: rgba(0,0,0,0.02); }
     .opt-pill.open { border-color: #1a1a1a; background: rgba(0,0,0,0.03); color: #1a1a1a; }
     .opt-pill .arr { font-size: 8px; color: #999; }
-    .pill-ratio-box {
-      display: inline-block; border: 1.2px solid currentColor;
-      border-radius: 1.5px; vertical-align: middle; margin-right: 2px;
-    }
-    .opt-dd {
-      position: absolute; top: calc(100% + 6px); left: 0;
-      min-width: 200px; background: #fff; border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.04), 0 12px 36px rgba(0,0,0,0.1);
-      padding: 12px 14px; z-index: 400;
-      display: none;
-    }
+    .pill-ratio-box { display: inline-block; border: 1.2px solid currentColor; border-radius: 1.5px; vertical-align: middle; margin-right: 2px; }
+    .opt-dd { position: absolute; top: calc(100% + 6px); left: 0; min-width: 200px; background: #fff; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.04), 0 12px 36px rgba(0,0,0,0.1); padding: 12px 14px; z-index: 400; display: none; }
     .opt-dd.show { display: block; }
     .dd-section-title { font-size: 11px; color: #999; margin-bottom: 6px; }
-    .model-opt {
-      padding: 6px 10px; border-radius: 6px; cursor: pointer;
-      font-size: 12px; color: #333; transition: background 0.12s;
-    }
+    .model-opt { padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; color: #333; transition: background .12s; }
     .model-opt:hover { background: #f5f5f5; }
     .model-opt.active { background: #e6f4ff; color: #1677ff; font-weight: 500; }
     .ratio-row { display: flex; flex-wrap: wrap; gap: 6px; }
-    .ratio-chip {
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-      padding: 6px 10px; border-radius: 6px; cursor: pointer;
-      border: 1px solid transparent; transition: all 0.12s;
-    }
+    .ratio-chip { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 10px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: all .12s; }
     .ratio-chip:hover { background: #f5f5f5; }
     .ratio-chip.active { border-color: #1677ff; background: #e6f4ff; }
-    .ratio-box {
-      border: 1.2px solid currentColor; border-radius: 1.5px;
-    }
+    .ratio-box { border: 1.2px solid currentColor; border-radius: 1.5px; }
     .ratio-lbl { font-size: 10px; color: #666; }
     .ratio-chip.active .ratio-lbl { color: #1677ff; }
     .dd-res-row { display: flex; gap: 4px; margin-top: 8px; }
-    .dd-res-chip {
-      padding: 4px 10px; border-radius: 4px; font-size: 11px;
-      color: #666; cursor: pointer; border: 1px solid transparent;
-      transition: all 0.12s;
-    }
+    .dd-res-chip { padding: 4px 10px; border-radius: 4px; font-size: 11px; color: #666; cursor: pointer; border: 1px solid transparent; transition: all .12s; }
     .dd-res-chip:hover { background: #f5f5f5; }
     .dd-res-chip.active { border-color: #1677ff; background: #e6f4ff; color: #1677ff; }
     .dd-count-row { display: flex; flex-wrap: wrap; gap: 4px; }
-    .dd-count-chip {
-      width: 32px; height: 28px; border-radius: 4px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px; color: #555; cursor: pointer;
-      border: 1px solid transparent; transition: all 0.12s;
-    }
+    .dd-count-chip { width: 32px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #555; cursor: pointer; border: 1px solid transparent; transition: all .12s; }
     .dd-count-chip:hover { background: #f5f5f5; }
     .dd-count-chip.active { border-color: #1677ff; background: #e6f4ff; color: #1677ff; }
 
-    /* ── 生成按钮 ── */
-    .gen-btn {
-      background: #d8d8d8; color: #fff; border: none;
-      padding: 6px 18px; border-radius: 6px; font-size: 13px;
-      cursor: not-allowed; display: flex; align-items: center; gap: 4px;
-      transition: background 0.15s;
-    }
+    /* ═══ 生成按钮 ═══ */
+    .gen-btn { background: #e0e0e0; color: #fff; border: none; padding: 6px 18px; border-radius: 8px; font-size: 13px; cursor: not-allowed; display: flex; align-items: center; gap: 4px; transition: background .15s; }
     .gen-btn.has-text { background: #1677ff; cursor: pointer; }
     .gen-btn.has-text:hover { background: #4096ff; }
 
-    /* ── 上传菜单 ── */
-    .upload-dropdown {
-      position: fixed; z-index: 500; background: #fff;
-      border-radius: 10px; padding: 4px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 36px rgba(0,0,0,0.1);
-      display: none; min-width: 160px;
-    }
+    /* ═══ 上传菜单 ═══ */
+    .upload-dropdown { position: fixed; z-index: 500; background: #fff; border-radius: 10px; padding: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 12px 36px rgba(0,0,0,0.1); display: none; min-width: 160px; }
     .upload-dropdown.show { display: block; }
-    .upload-dropdown-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 12px; border-radius: 6px; cursor: pointer;
-      font-size: 13px; color: #333; transition: background 0.12s;
-    }
+    .upload-dropdown-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; color: #333; transition: background .12s; }
     .upload-dropdown-item:hover { background: #f5f5f5; }
     .upload-dropdown-item svg { width: 16px; height: 16px; flex-shrink: 0; }
 
-    /* ── 素材弹窗 ── */
-    .asset-modal-mask {
-      position: fixed; inset: 0; z-index: 2000;
-      background: rgba(0,0,0,0.45);
-      display: none; align-items: center; justify-content: center;
-    }
+    /* ═══ 素材弹窗 ═══ */
+    .asset-modal-mask { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; }
     .asset-modal-mask.show { display: flex; }
-    .asset-modal {
-      width: 900px; max-width: 92vw; height: 600px; max-height: 80vh;
-      background: #fff; border-radius: 12px;
-      display: flex; flex-direction: column; overflow: hidden;
-      box-shadow: 0 6px 16px -8px rgba(0,0,0,0.08), 0 9px 28px rgba(0,0,0,0.05), 0 12px 48px 16px rgba(0,0,0,0.03);
-    }
-    .asset-modal-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 20px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
-    }
+    .asset-modal { width: 900px; max-width: 92vw; height: 600px; max-height: 80vh; background: #fff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 6px 16px -8px rgba(0,0,0,0.08), 0 9px 28px rgba(0,0,0,0.05), 0 12px 48px 16px rgba(0,0,0,0.03); }
+    .asset-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
     .asset-modal-title { font-size: 15px; font-weight: 600; color: #1a1a1a; }
-    .asset-modal-close {
-      width: 28px; height: 28px; border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: #999; transition: all 0.15s;
-    }
+    .asset-modal-close { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #999; transition: all .15s; }
     .asset-modal-close:hover { background: #f5f5f5; color: #333; }
-    .asset-modal-body {
-      flex: 1; display: flex; overflow: hidden;
-    }
-    .asset-sidebar {
-      width: 140px; border-right: 1px solid #f0f0f0;
-      padding: 8px; flex-shrink: 0; overflow-y: auto;
-    }
-    .asset-sidebar-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 10px; border-radius: 6px; cursor: pointer;
-      font-size: 13px; color: #555; transition: all 0.12s;
-    }
+    .asset-modal-body { flex: 1; display: flex; overflow: hidden; }
+    .asset-sidebar { width: 140px; border-right: 1px solid #f0f0f0; padding: 8px; flex-shrink: 0; overflow-y: auto; }
+    .asset-sidebar-item { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 6px; font-size: 13px; color: #666; cursor: pointer; transition: all .12s; margin-bottom: 2px; }
     .asset-sidebar-item:hover { background: #f5f5f5; }
     .asset-sidebar-item.active { background: #e6f4ff; color: #1677ff; font-weight: 500; }
     .asset-sidebar-item svg { width: 16px; height: 16px; flex-shrink: 0; }
     .asset-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .asset-filter-bar {
-      padding: 10px 16px; display: flex; gap: 8px; flex-wrap: wrap;
-      border-bottom: 1px solid #f5f5f5; flex-shrink: 0;
-    }
-    .asset-filter-select {
-      padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 4px;
-      font-size: 12px; color: #333; background: #fff; outline: none;
-    }
+    .asset-filter-bar { padding: 10px 16px; border-bottom: 1px solid #f0f0f0; display: flex; gap: 8px; flex-shrink: 0; }
+    .asset-filter-select { padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 12px; outline: none; background: #fff; }
     .asset-grid-wrap { flex: 1; overflow-y: auto; padding: 12px 16px; }
-    .asset-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 10px;
-    }
-    .asset-card {
-      border: 2px solid transparent; border-radius: 8px;
-      overflow: hidden; cursor: pointer; transition: all 0.15s;
-    }
-    .asset-card:hover { border-color: #d9d9d9; }
+    .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+    .asset-card { border: 2px solid transparent; border-radius: 8px; cursor: pointer; overflow: hidden; transition: border-color .15s, box-shadow .15s; }
+    .asset-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
     .asset-card.selected { border-color: #1677ff; }
-    .asset-card-thumb {
-      position: relative; padding-top: 100%; background: #f5f5f5;
-    }
-    .asset-card-thumb img {
-      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-    }
-    .asset-card-check {
-      position: absolute; top: 6px; right: 6px;
-      width: 20px; height: 20px; border-radius: 50%;
-      background: #1677ff; color: #fff; font-size: 11px;
-      display: none; align-items: center; justify-content: center;
-    }
+    .asset-card-thumb { position: relative; padding-top: 100%; background: #f5f5f5; overflow: hidden; }
+    .asset-card-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .asset-card-check { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%; background: #1677ff; color: #fff; font-size: 12px; display: none; align-items: center; justify-content: center; }
     .asset-card.selected .asset-card-check { display: flex; }
-    .asset-card-name {
-      padding: 6px 8px; font-size: 11px; color: #666;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
+    .asset-card-name { font-size: 11px; padding: 6px 8px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .task-list { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; }
-    .task-row-asset {
-      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-      border-radius: 8px; cursor: pointer; transition: background 0.12s;
-    }
+    .task-row-asset { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background .12s; }
     .task-row-asset:hover { background: #f5f5f5; }
-    .task-row-icon {
-      width: 32px; height: 32px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; flex-shrink: 0;
-    }
-    .task-row-icon.done { background: #f6ffed; color: #52c41a; }
-    .task-row-icon.running { background: #e6f7ff; color: #1677ff; }
-    .task-row-icon.failed { background: #fff2f0; color: #ff4d4f; }
     .task-row-body { flex: 1; min-width: 0; }
-    .task-row-title-asset {
-      font-size: 13px; font-weight: 500; color: #1a1a1a;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .task-row-meta { font-size: 12px; color: #999; margin-top: 2px; display: flex; gap: 12px; }
+    .task-row-title-asset { font-size: 13px; font-weight: 500; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .task-row-meta { font-size: 11px; color: #999; display: flex; gap: 8px; margin-top: 2px; }
     .task-row-arrow { color: #ccc; flex-shrink: 0; }
-    .task-row-status { font-size: 12px; padding: 2px 8px; border-radius: 4px; flex-shrink: 0; }
-    .task-row-status.done { background: #f6ffed; color: #52c41a; }
-    .task-row-status.running { background: #e6f7ff; color: #1677ff; }
-    .task-row-status.failed { background: #fff2f0; color: #ff4d4f; }
-    .task-detail-panel { display: none; flex-direction: column; height: 100%; }
+    .task-detail-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
     .task-detail-panel.show { display: flex; }
-    .task-detail-header-panel {
-      display: flex; align-items: center; gap: 10px;
-      padding: 12px 16px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
-    }
-    .task-detail-back {
-      display: flex; align-items: center; gap: 4px;
-      font-size: 13px; color: #1677ff; cursor: pointer;
-    }
-    .task-detail-back:hover { opacity: 0.7; }
+    .task-detail-header-panel { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
+    .task-detail-back { display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 13px; color: #1677ff; }
     .task-detail-back svg { width: 14px; height: 14px; }
-    .task-detail-name-panel {
-      font-size: 14px; font-weight: 500; color: #1a1a1a;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .task-detail-grid-wrap { flex: 1; overflow-y: auto; padding: 16px; }
-    .asset-modal-footer {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 20px; border-top: 1px solid #f0f0f0; flex-shrink: 0;
-    }
+    .task-detail-name-panel { font-size: 14px; font-weight: 500; }
+    .task-detail-grid-wrap { flex: 1; overflow-y: auto; padding: 12px 16px; }
+    .asset-modal-footer { padding: 12px 20px; border-top: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
     .asset-selected-count { font-size: 13px; color: #666; }
     .asset-footer-btns { display: flex; gap: 8px; }
-    .asset-btn-cancel {
-      padding: 6px 16px; border: 1px solid #d9d9d9; border-radius: 6px;
-      background: #fff; color: #333; font-size: 13px; cursor: pointer;
-    }
+    .asset-btn-cancel { padding: 6px 16px; border: 1px solid #d9d9d9; border-radius: 6px; background: #fff; font-size: 13px; color: #333; cursor: pointer; }
     .asset-btn-cancel:hover { border-color: #1677ff; color: #1677ff; }
-    .asset-btn-confirm {
-      padding: 6px 16px; border: none; border-radius: 6px;
-      background: #1677ff; color: #fff; font-size: 13px; cursor: pointer;
-    }
-    .asset-btn-confirm:disabled { background: #d8d8d8; cursor: not-allowed; }
-    .asset-btn-confirm:not(:disabled):hover { background: #4096ff; }
+    .asset-btn-confirm { padding: 6px 16px; border: none; border-radius: 6px; background: #1677ff; font-size: 13px; color: #fff; cursor: pointer; }
+    .asset-btn-confirm:hover { background: #4096ff; }
+    .asset-btn-confirm:disabled { background: #e0e0e0; cursor: not-allowed; }
 
-    /* ── 预览 ── */
-    .asset-preview-mask {
-      position: fixed; inset: 0; z-index: 2500;
-      background: rgba(0,0,0,0.75);
-      display: none; align-items: center; justify-content: center;
-    }
+    /* 预览浮层 */
+    .asset-preview-mask { position: fixed; inset: 0; z-index: 2500; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; cursor: pointer; }
     .asset-preview-mask.show { display: flex; }
-    .asset-preview-close {
-      position: absolute; top: 16px; right: 16px;
-      width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(255,255,255,0.15); color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 18px;
-    }
-    .asset-preview-img { max-width: 90vw; max-height: 85vh; border-radius: 8px; }
+    .asset-preview-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.15); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
+    .asset-preview-close:hover { background: rgba(255,255,255,0.3); }
+    .asset-preview-img { max-width: 90vw; max-height: 85vh; border-radius: 8px; object-fit: contain; }
 
-    /* ── Toast ── */
-    .toast {
-      position: fixed; top: 24px; left: 50%;
-      transform: translateX(-50%) translateY(-8px);
-      background: rgba(20,20,20,0.82); color: #fff;
-      padding: 7px 18px; border-radius: 8px; font-size: 13px;
-      z-index: 9999; opacity: 0; pointer-events: none;
-      transition: opacity 0.2s, transform 0.2s;
-    }
+    /* Toast */
+    .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-8px); background: rgba(20,20,20,0.82); color: #fff; padding: 7px 18px; border-radius: 8px; font-size: 13px; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* ── 详情弹窗补充样式 ── */
+    /* 详情弹窗补充 */
     .detail-input-section { margin-bottom: 16px; }
-    .detail-label { font-size: 12px; color: #999; margin-bottom: 4px; }
-    .detail-prompt {
-      font-size: 13px; color: #333; line-height: 1.6;
-      background: #f9f9f9; padding: 10px 12px; border-radius: 6px;
-    }
-    .detail-params {
-      display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px;
-    }
-    .detail-param {
-      font-size: 12px; color: #666;
-    }
-    .detail-param strong { color: #333; font-weight: 500; }
-    .detail-output-grid {
-      display: flex; flex-wrap: wrap; gap: 8px;
-    }
-    .detail-thumb-wrap {
-      width: 120px; height: 120px; border-radius: 6px;
-      overflow: hidden; position: relative; cursor: pointer;
-      border: 1px solid rgba(0,0,0,0.06);
-    }
+    .detail-label { font-size: 12px; color: #999; margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: .5px; }
+    .detail-prompt { font-size: 13px; color: #333; background: #f9f9f9; padding: 10px 12px; border-radius: 8px; line-height: 1.6; margin-bottom: 8px; }
+    .detail-params { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: #666; margin-bottom: 8px; }
+    .detail-param strong { color: #333; }
+    .detail-output-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .detail-thumb-wrap { width: 120px; height: 120px; border-radius: 6px; overflow: hidden; position: relative; cursor: pointer; }
     .detail-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .detail-thumb-wrap:hover .img-overlay { opacity: 1; }
+    .detail-thumb-wrap:hover .thumb-overlay { opacity: 1; }
 
-    /* ── 新任务高亮 ── */
-    @keyframes highlight-new {
-      0% { background: #e6f4ff; } 100% { background: #fff; }
-    }
+    /* 动画 */
+    @keyframes highlight-new { 0%{background:#e6f4ff} 100%{background:#fff} }
     .task-card.new-highlight { animation: highlight-new 2s ease-out; }
-    .row-card.new-highlight { animation: highlight-new 2s ease-out; }
 
-    /* ── 空状态 ── */
-    .empty-state {
-      text-align: center; padding: 60px 20px;
-    }
-    .empty-state svg { margin-bottom: 12px; }
-    .empty-state-text { font-size: 14px; color: #999; }
-
-    /* ── 整体布局 ── */
-    #root {
-      flex: 1; display: flex; flex-direction: column;
-      overflow: hidden; padding: 20px 20px 0;
-    }
-    .task-scroll-area {
-      flex: 1; overflow-y: auto; padding-top: 16px; padding-bottom: 16px;
-      position: relative;
-    }
-    #input-box-root { flex-shrink: 0; }
-
-    /* ── Spin ── */
-    @keyframes rot { to { transform: rotate(360deg); } }
-
-    /* ── 隐藏 file input ── */
+    /* 隐藏 file input */
     #uploadFileInput { display: none; }
   </style>
 </head>
 <body>
 
 <div class="toast" id="toast"></div>
+<div class="img-preview-mask" id="imgPreviewMask" onclick="this.style.display='none'">
+  <img class="img-preview-img" id="imgPreviewImg" src="" alt="" onclick="event.stopPropagation()">
+  <button class="img-preview-dl" id="imgPreviewDl" onclick="event.stopPropagation();var a=document.createElement('a');a.href=document.getElementById('imgPreviewImg').src;a.download='download.png';a.click();" title="下载">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  </button>
+</div>
 <div id="root"></div>
 <div id="input-box-root"></div>
 
@@ -739,264 +451,425 @@
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
 <script type="text/babel">
-const { Tag, Select, Input, Button, Modal, Empty, DatePicker, Space, Pagination, message } = antd;
-const { RangePicker } = DatePicker;
+const { Modal, Empty, Select, Input, DatePicker, Button, Space, Pagination, message } = antd;
+const RangePicker = DatePicker.RangePicker;
 
-// ── 常量 ──
-const TASK_TYPES = {
-  workflow:  { label: '工作流', color: 'blue' },
-  image_gen: { label: '图像通用生成', color: 'purple' },
-  video_gen: { label: '视频通用生成', color: 'cyan' },
-};
-const TASK_STATUSES = {
-  pending:    { label: '未开始', color: 'default' },
-  generating: { label: '进行中', color: 'processing' },
-  completed:  { label: '已完成', color: 'success' },
-  failed:     { label: '已失败', color: 'error' },
-};
-const VIDEO_GRADIENTS = [
-  ['#1e3c72','#2a5298'],['#6a3093','#a044ff'],
-  ['#134e5e','#71b280'],['#cc2b5e','#753a88'],['#b06ab3','#4568dc'],
-];
-const img = (s) => ({ type:'image', thumb:`https://picsum.photos/seed/${s}/80/80`, url:`https://picsum.photos/seed/${s}/400/400` });
-const vid = (i) => ({ type:'video', thumb:null, url:'', gradientIdx:i });
+// ═══ 常量 ═══
+const MODELS_MAP = { seedream5: 'seedream 5.0', banana2: 'banana 2', minimax1: 'MiniMax-01' };
+const VIDEO_GRADIENTS = [['#667eea','#764ba2'],['#f093fb','#f5576c'],['#4facfe','#00f2fe'],['#43e97b','#38f9d7'],['#fa709a','#fee140']];
+const GEN_SOURCES = { universal:'通用生成', poster:'大字报衍生', workflow:'工作流生成' };
+const img = s => ({ type:'image', thumb:`https://picsum.photos/seed/${s}/200/200`, url:`https://picsum.photos/seed/${s}/800/800` });
+const vid = (s,i,d) => ({ type:'video', thumb:'', url:'', gradientIdx:i||0, duration:d||'5s' });
 
-// ── Mock 数据 ──
+// ═══ Mock 数据 ═══
 const INITIAL_TASKS = [
-  { id:'1', name:'夏季促销主视觉批量生成', type:'image_gen', status:'completed',
-    createdTime:'2026-03-30 14:32', creator:'张三',
-    input:{ prompt:'618大促主图，写实风格，白底产品图，要求产品居中，光线柔和，高清细节，适合电商平台首页展示', refImages:[img('promo1a'),img('promo1b')], model:'seedream5', ratio:'1:1', res:'2K', count:120 },
-    output:{ total:120, items:[img('gen1a'),img('gen1b'),img('gen1c'),img('gen1d'),img('gen1e'),img('gen1f'),img('gen1g'),img('gen1h')] }},
-  { id:'2', name:'品牌视频素材Q1第二批', type:'video_gen', status:'generating',
-    createdTime:'2026-03-30 11:15', creator:'李四',
-    input:{ prompt:'品牌宣传视频，科技感，蓝紫色调，展示产品特性', refImages:[], model:'seedream5', ratio:'16:9', res:'1080P', count:8 },
-    output:{ total:0, items:[] }},
-  { id:'3', name:'社媒投放图组合工作流', type:'workflow', status:'completed',
-    createdTime:'2026-03-29 17:44', creator:'王五',
-    input:{ prompt:'社交媒体投放图组合，包含轮播图、故事图、帖子图，统一视觉风格', refImages:[img('ref3a')], model:'seedream5', ratio:'1:1', res:'2K', count:200, workflow:{ id:'wf1', name:'社媒组合工作流' } },
-    output:{ total:200, items:[img('wf3a'),img('wf3b'),img('wf3c'),img('wf3d'),img('wf3e'),img('wf3f')] }},
-  { id:'4', name:'新品上市详情页素材', type:'image_gen', status:'failed',
-    createdTime:'2026-03-29 10:20', creator:'张三',
-    input:{ prompt:'新品发布详情页主图，产品特写，柔和光影，质感背景', refImages:[img('ref4a'),img('ref4b'),img('ref4c')], model:'banana2', ratio:'3:4', res:'2K', count:30 },
-    output:{ total:0, items:[] }},
-  { id:'5', name:'直播间背景图批量', type:'image_gen', status:'completed',
-    createdTime:'2026-03-28 16:05', creator:'赵六',
-    input:{ prompt:'直播间背景，科技感，深色调，适合美妆直播', refImages:[], model:'seedream5', ratio:'16:9', res:'4K', count:15 },
-    output:{ total:15, items:[img('live5a'),img('live5b'),img('live5c'),img('live5d')] }},
-  { id:'6', name:'产品短视频脚本渲染', type:'video_gen', status:'completed',
-    createdTime:'2026-03-28 09:30', creator:'李四',
-    input:{ prompt:'产品展示短视频，15秒，写实风格，白色背景旋转展示', refImages:[img('ref6a')], model:'seedream5', ratio:'9:16', res:'1080P', count:6 },
-    output:{ total:6, items:[vid(0),vid(1),vid(2),vid(3)] }},
-  { id:'7', name:'KOL合作内容素材', type:'image_gen', status:'pending',
-    createdTime:'2026-03-27 14:00', creator:'王五',
-    input:{ prompt:'KOL合作推广图，时尚风格，街拍感，自然光线', refImages:[], model:'seedream5', ratio:'1:1', res:'2K', count:40 },
-    output:{ total:0, items:[] }},
-  { id:'8', name:'大字报裂变工作流', type:'workflow', status:'generating',
-    createdTime:'2026-04-01 09:00', creator:'张三',
-    input:{ prompt:'大字报风格裂变海报，红色主题，文字突出，适合社群传播', refImages:[img('ref8a'),img('ref8b')], model:'seedream5', ratio:'1:1', res:'2K', count:50, workflow:{ id:'wf2', name:'大字报裂变工作流' } },
-    output:{ total:0, items:[] }},
-  { id:'9', name:'季度品牌视觉升级', type:'image_gen', status:'completed',
-    createdTime:'2026-03-26 11:00', creator:'赵六',
-    input:{ prompt:'品牌视觉升级，简约现代风，渐变色系，适用于全渠道', refImages:[], model:'banana2', ratio:'2:3', res:'2K', count:24 },
-    output:{ total:24, items:[img('bv9a'),img('bv9b'),img('bv9c'),img('bv9d'),img('bv9e')] }},
-  { id:'10', name:'节日营销海报系列', type:'image_gen', status:'completed',
-    createdTime:'2026-03-25 15:30', creator:'张三',
-    input:{ prompt:'清明节营销海报，清新淡雅风格，绿色主调，产品融入自然场景', refImages:[img('ref10a')], model:'seedream5', ratio:'3:4', res:'2K', count:12 },
-    output:{ total:12, items:[img('fest10a'),img('fest10b'),img('fest10c'),img('fest10d'),img('fest10e'),img('fest10f')] }},
+  { id:'1', name:'夏季促销主视觉批量生成', type:'image', status:'completed', createdTime:'2026-04-02 14:32', creator:'我',
+    source:'universal', project:'走路赚金币',
+    input:{ prompt:'618大促主图，写实风格，白底产品图，要求高清细节丰富', refImages:[], inputType:'text', models:['seedream5'], ratio:'1:1', res:'2K', count:8 },
+    output:{ byModel:{ seedream5:{ total:8, items:[img('s1a'),img('s1b'),img('s1c'),img('s1d'),img('s1e'),img('s1f'),img('s1g'),img('s1h')] }}}},
+  { id:'2', name:'品牌形象图多模型对比', type:'image', status:'completed', createdTime:'2026-04-02 13:10', creator:'我',
+    source:'universal',
+    input:{ prompt:'品牌代言人形象照，时尚杂志封面风格', refImages:[{url:'https://picsum.photos/seed/ref1/200/200',thumb:'https://picsum.photos/seed/ref1/200/200'}], inputType:'image', models:['seedream5','banana2'], ratio:'3:4', res:'2K', count:4 },
+    output:{ byModel:{ seedream5:{ total:4, items:[img('m1a'),img('m1b'),img('m1c'),img('m1d')] }, banana2:{ total:4, items:[img('m2a'),img('m2b'),img('m2c'),img('m2d')] }}}},
+  { id:'3', name:'产品短视频素材', type:'video', status:'completed', createdTime:'2026-04-02 11:45', creator:'我',
+    source:'universal',
+    input:{ prompt:'护肤品产品展示动画，旋转展示，光影效果', refImages:[], inputType:'text', models:['minimax1'], ratio:'16:9', dur:'5秒', count:4 },
+    output:{ byModel:{ minimax1:{ total:4, items:[vid('v1',0,'5s'),vid('v2',1,'5s'),vid('v3',2,'5s'),vid('v4',3,'5s')] }}}},
+  { id:'4', name:'直播间背景视频', type:'video', status:'generating', createdTime:'2026-04-02 15:20', creator:'我',
+    source:'universal',
+    input:{ prompt:'直播间科技感背景循环动画，蓝紫色调', refImages:[{url:'https://picsum.photos/seed/ref2/200/200',thumb:'https://picsum.photos/seed/ref2/200/200'}], inputType:'image', models:['minimax1'], ratio:'16:9', dur:'10秒', count:3 },
+    output:{ byModel:{ minimax1:{ total:0, items:[] }}}},
+  { id:'5', name:'社媒投放图批量裂变', type:'image', status:'completed', createdTime:'2026-04-01 16:30', creator:'张三',
+    source:'poster', project:'走路赚金币',
+    input:{ prompt:'社交媒体投放素材，多种尺寸适配，品牌色系', refImages:[{url:'https://picsum.photos/seed/ref3/200/200',thumb:'https://picsum.photos/seed/ref3/200/200'},{url:'https://picsum.photos/seed/ref4/200/200',thumb:'https://picsum.photos/seed/ref4/200/200'}], inputType:'multi_image', models:['seedream5'], ratio:'1:1', res:'2K', count:20 },
+    output:{ byModel:{ seedream5:{ total:20, items:Array.from({length:20},(_,i)=>img('b5_'+i)) }}}},
+  { id:'6', name:'首尾帧产品转场视频', type:'video', status:'completed', createdTime:'2026-04-01 14:00', creator:'我',
+    source:'workflow',
+    input:{ prompt:'产品A到产品B的平滑转场', refImages:[{url:'https://picsum.photos/seed/kf1/200/200',thumb:'https://picsum.photos/seed/kf1/200/200'},{url:'https://picsum.photos/seed/kf2/200/200',thumb:'https://picsum.photos/seed/kf2/200/200'}], inputType:'keyframe', models:['minimax1'], ratio:'16:9', dur:'5秒', count:2 },
+    output:{ byModel:{ minimax1:{ total:2, items:[vid('kv1',0,'5s'),vid('kv2',1,'5s')] }}}},
+  { id:'7', name:'新品详情页主图', type:'image', status:'failed', createdTime:'2026-04-01 10:15', creator:'我',
+    source:'universal',
+    input:{ prompt:'新品上市详情页首屏，高端质感，深色背景', refImages:[], inputType:'text', models:['seedream5'], ratio:'3:4', res:'4K', count:4 },
+    output:{ byModel:{ seedream5:{ total:0, items:[] }}}},
+  { id:'8', name:'广告视频多模型测试', type:'video', status:'completed', createdTime:'2026-03-31 18:00', creator:'李四',
+    source:'universal',
+    input:{ prompt:'15秒产品广告视频，快节奏剪辑风格', refImages:[], inputType:'text', models:['minimax1','seedream5'], ratio:'9:16', dur:'15秒', count:3 },
+    output:{ byModel:{ minimax1:{ total:3, items:[vid('av1',0,'15s'),vid('av2',1,'15s'),vid('av3',2,'15s')] }, seedream5:{ total:3, items:[vid('av4',3,'15s'),vid('av5',4,'15s'),vid('av6',0,'15s')] }}}},
+  { id:'9', name:'多模型图片效果对比', type:'image', status:'completed', createdTime:'2026-03-31 15:30', creator:'我',
+    source:'universal',
+    input:{ prompt:'日式简约风格产品摄影，自然光线', refImages:[], inputType:'text', models:['seedream5','banana2'], ratio:'1:1', res:'2K', count:6 },
+    output:{ byModel:{ seedream5:{ total:6, items:[img('c1a'),img('c1b'),img('c1c'),img('c1d'),img('c1e'),img('c1f')] }, banana2:{ total:6, items:[img('c2a'),img('c2b'),img('c2c'),img('c2d'),img('c2e'),img('c2f')] }}}},
+  { id:'10', name:'季度营销海报', type:'image', status:'pending', createdTime:'2026-04-02 15:45', creator:'我',
+    source:'poster', project:'美白精华',
+    input:{ prompt:'Q2季度营销活动主视觉海报', refImages:[], inputType:'text', models:['seedream5'], ratio:'2:3', res:'2K', count:4 },
+    output:{ byModel:{ seedream5:{ total:0, items:[] }}}},
 ];
 
-// ── 工具函数 ──
-function relativeTime(timeStr) {
-  const now = Date.now(), ts = new Date(timeStr).getTime(), diff = now - ts;
+// ═══ 工具函数 ═══
+function relativeTime(ts) {
+  const d = new Date(ts), now = new Date(), diff = now - d;
   if (diff < 60000) return '刚刚';
   if (diff < 3600000) return Math.floor(diff/60000) + '分钟前';
   if (diff < 86400000) return Math.floor(diff/3600000) + '小时前';
-  const d = new Date(timeStr);
-  if (d.getFullYear() === new Date().getFullYear())
-    return `${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-  return timeStr.substring(0,16);
+  return ts;
+}
+function getTaskOutput(task, modelId) {
+  if (!task.output?.byModel) return { total:0, items:[] };
+  if (modelId) return task.output.byModel[modelId] || { total:0, items:[] };
+  const first = task.input.models[0];
+  return task.output.byModel[first] || { total:0, items:[] };
+}
+function getAllOutputItems(task) {
+  if (!task.output?.byModel) return [];
+  return Object.values(task.output.byModel).flatMap(m => m.items || []);
+}
+function getAllOutputTotal(task) {
+  if (!task.output?.byModel) return 0;
+  return Object.values(task.output.byModel).reduce((s,m) => s + (m.total||0), 0);
 }
 
-// ── VideoThumb ──
-function VideoThumb({ gradientIdx = 0, size = 36 }) {
-  const [c1,c2] = VIDEO_GRADIENTS[gradientIdx % VIDEO_GRADIENTS.length];
-  return <div style={{ width:size, height:size, borderRadius:4, background:`linear-gradient(135deg,${c1},${c2})`,
-    display:'flex', alignItems:'center', justifyContent:'center' }}>
-    <svg width={size*0.4} height={size*0.4} viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-  </div>;
-}
-
-// ── ViewToggle ──
-function ViewToggle({ mode, onChange }) {
-  return <div className="view-toggle">
-    <div className={`vt-btn ${mode==='list'?'active':''}`} onClick={()=>onChange('list')} title="列表模式">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
-      </svg>
-    </div>
-    <div className={`vt-btn ${mode==='expanded'?'active':''}`} onClick={()=>onChange('expanded')} title="展开模式">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-        <rect x="3" y="3" width="18" height="7" rx="1"/><rect x="3" y="14" width="18" height="7" rx="1"/>
-      </svg>
-    </div>
-  </div>;
-}
-
-// ── FilterBar ──
-function FilterBar({ viewMode, onViewChange, filters, setFilters }) {
-  const statusOpts = Object.entries(TASK_STATUSES).map(([k,v])=>({ value:k, label:v.label }));
-  const typeOpts = Object.entries(TASK_TYPES).map(([k,v])=>({ value:k, label:v.label }));
-
-  if (viewMode === 'expanded') {
-    return <div className="filter-bar">
-      <div className="filter-bar-compact">
-        <Input.Search placeholder="搜索任务..." size="small" allowClear style={{width:200}}
-          value={filters.search} onChange={e=>setFilters(f=>({...f, search:e.target.value}))}
-          onSearch={v=>setFilters(f=>({...f, search:v}))} />
-        <Select size="small" allowClear placeholder="全部状态" style={{width:110}}
-          options={statusOpts} value={filters.status} onChange={v=>setFilters(f=>({...f, status:v}))} />
-        <Select size="small" allowClear placeholder="全部类型" style={{width:140}}
-          options={typeOpts} value={filters.type} onChange={v=>setFilters(f=>({...f, type:v}))} />
-        <div className="filter-spacer" />
-        <ViewToggle mode={viewMode} onChange={onViewChange} />
+// ═══ React 组件从这里开始 ═══
+// ═══ 缩略图组件 ═══
+function VideoThumb({ item, collapsed }) {
+  const gi = item.gradientIdx || 0;
+  const g = VIDEO_GRADIENTS[gi % 5];
+  const dur = item.duration || '5s';
+  return <div className="o-thumb">
+    <div className="vid-thumb-inner" style={{background:`linear-gradient(135deg,${g[0]},${g[1]})`}}>
+      <div className="vid-play">
+        <svg width={collapsed?10:14} height={collapsed?10:14} viewBox="0 0 24 24" fill="#333"><polygon points="6 3 20 12 6 21"/></svg>
       </div>
-    </div>;
-  }
-
-  return <div className="filter-bar">
-    <div className="filter-bar-expanded">
-      <div className="filter-row">
-        <span className="filter-label">状态</span>
-        <Select size="small" allowClear placeholder="全部状态" style={{width:120}}
-          options={statusOpts} value={filters.status} onChange={v=>setFilters(f=>({...f, status:v}))} />
-        <span className="filter-label" style={{marginLeft:8}}>类型</span>
-        <Select size="small" allowClear placeholder="全部类型" style={{width:140}}
-          options={typeOpts} value={filters.type} onChange={v=>setFilters(f=>({...f, type:v}))} />
-        <span className="filter-label" style={{marginLeft:8}}>创建人</span>
-        <Input size="small" placeholder="搜索创建人" style={{width:120}} allowClear
-          value={filters.creator} onChange={e=>setFilters(f=>({...f, creator:e.target.value}))} />
-        <span className="filter-label" style={{marginLeft:8}}>时间</span>
-        <RangePicker size="small" style={{width:220}}
-          value={filters.dateRange} onChange={v=>setFilters(f=>({...f, dateRange:v}))} />
-        <Button size="small" onClick={()=>setFilters({status:undefined,type:undefined,search:'',creator:'',dateRange:null})}>重置</Button>
-        <div className="filter-spacer" />
-        <ViewToggle mode={viewMode} onChange={onViewChange} />
-      </div>
+      <span className="vid-dur">{dur}</span>
+    </div>
+    <span className="ai-badge">AI生成</span>
+    <div className="thumb-overlay">
+      <button className="thumb-act" title="预览" onClick={e=>{e.stopPropagation();message.info('预览功能开发中')}}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+      <button className="thumb-act" title="下载" onClick={e=>{e.stopPropagation();message.success('已下载')}}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
     </div>
   </div>;
 }
 
-// ── ExpandedCard ──
-function ExpandedCard({ task, onOpenDetail }) {
-  const typeConf = TASK_TYPES[task.type] || { label:task.type, color:'default' };
-  const statusConf = TASK_STATUSES[task.status] || { label:task.status, color:'default' };
-  const MAX_OUTPUT = 8;
+function ImageThumb({ item, index }) {
+  const [showEdit, setShowEdit] = React.useState(false);
+  const [showStorage, setShowStorage] = React.useState(false);
+  const RECENT_WORKFLOWS = ['大字报裂变工作流','产品展示工作流','品牌形象工作流'];
 
-  return <div className={`task-card ${task._new?'new-highlight':''}`}>
-    <div className="card-header">
-      <span style={{fontWeight:500, fontSize:14, color:'#1a1a1a'}}>{task.input.prompt?.slice(0,20) || task.name}</span>
-      <Tag color={typeConf.color} style={{margin:0}}>{task.input.model || typeConf.label}</Tag>
-      {task.input.ratio && <span style={{fontSize:12,color:'#999'}}>|&nbsp; {task.input.ratio}</span>}
-      {task.input.res && <span style={{fontSize:12,color:'#999'}}>|&nbsp; {task.input.res}</span>}
-      {task.status==='generating' && <span className="pulse-dot"/>}
-      <span className="card-time">{task.createdTime}</span>
-    </div>
-    <div className="card-output">
-      {task.status==='generating' && <div className="output-grid">
-        {Array.from({length:4}).map((_,i)=><div key={i} className="skeleton-thumb"/>)}
-      </div>}
-      {task.status==='failed' && <div className="failed-output">
-        <div className="failed-icon">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ff4d4f" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-        </div>
-        <div className="failed-text">生成失败，请重试</div>
-        <Button size="small" onClick={()=>message.info('重试功能开发中')}>重试</Button>
-      </div>}
-      {task.status==='pending' && <div className="pending-output">任务等待执行</div>}
-      {task.status==='completed' && <>
-        <div className="output-grid">
-          {task.output.items.slice(0,MAX_OUTPUT).map((item,i)=>
-            item.type==='video'
-              ? <div key={i} className="video-thumb-large" style={{background:`linear-gradient(135deg,${VIDEO_GRADIENTS[(item.gradientIdx||i)%5][0]},${VIDEO_GRADIENTS[(item.gradientIdx||i)%5][1]})`}}>
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                </div>
-              : <div key={i} className="output-thumb-wrap">
-                  <img src={item.thumb || item.url} alt="" loading="lazy"/>
-                  <span className="ai-badge">AI生成</span>
-                  <div className="img-overlay">
-                    <button className="img-action-btn" title="下载" onClick={e=>{e.stopPropagation();message.success('已下载')}}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    </button>
-                    <button className="img-action-btn" title="入库" onClick={e=>{e.stopPropagation();message.success('已入库')}}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
-                    </button>
-                    <button className="img-action-btn" title="再次生成" onClick={e=>{e.stopPropagation();message.info('再生成功能开发中')}}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                    </button>
-                  </div>
-                </div>
-          )}
-        </div>
-        {task.output.total > MAX_OUTPUT && <div className="output-summary">
-          共 {task.output.total} 张
-          <a className="view-all-link" onClick={()=>onOpenDetail(task)}>查看全部 →</a>
+  const doDownload = (e) => {
+    e.stopPropagation();
+    const date = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    const a = document.createElement('a'); a.href = item.url||item.thumb; a.download = `我-${date}-${(index||0)+1}.png`; a.click();
+    showToast('已开始下载');
+  };
+
+  return <div className="o-thumb" onClick={()=>window.__previewImage(item.url||item.thumb)} style={{cursor:'pointer'}}>
+    <img src={item.thumb || item.url} alt="" loading="lazy"/>
+    <span className="ai-badge">AI生成</span>
+    <div className="thumb-overlay" style={{alignItems:'flex-end',justifyContent:'flex-end',padding:6}}>
+      <button className="thumb-act" title="下载" onClick={doDownload}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+      <button className="thumb-act" title="入库" style={{position:'relative'}} onClick={e=>{e.stopPropagation();setShowStorage(!showStorage);setShowEdit(false);}}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
+        {showStorage && <div className="storage-dropdown" style={{bottom:'calc(100% + 4px)',right:0,left:'auto'}} onClick={e=>e.stopPropagation()}>
+          {STORAGE_TARGETS.map(t=><div key={t} className="storage-dd-item" onClick={()=>{showToast(`已入库到${t}`);setShowStorage(false);}}>{t}</div>)}
         </div>}
-      </>}
+      </button>
+      <button className="thumb-act" title="编辑" style={{position:'relative'}} onClick={e=>{e.stopPropagation();setShowEdit(!showEdit);setShowStorage(false);}}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        {showEdit && <div className="edit-menu" onClick={e=>e.stopPropagation()}>
+          <div className="edit-menu-item" onClick={()=>{showToast('已添加到图像生成');setShowEdit(false);}}>图像</div>
+          <div className="edit-menu-item" onClick={()=>{showToast('已添加到视频生成');setShowEdit(false);}}>视频</div>
+          <div className="edit-menu-item" onClick={()=>{showToast('已添加到对话');setShowEdit(false);}}>对话</div>
+          <div className="edit-menu-item" style={{position:'relative'}}>
+            工作流 <span className="sub-arrow">▸</span>
+            <div className="edit-submenu">
+              {RECENT_WORKFLOWS.map(w=><div key={w} className="edit-submenu-item" onClick={()=>{showToast(`已添加到${w}`);setShowEdit(false);}}>{w}</div>)}
+            </div>
+          </div>
+        </div>}
+      </button>
     </div>
-    {task.status==='completed' && <div className="card-actions">
-      <button className="card-act-btn" onClick={()=>message.info('重新编辑功能开发中')}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        重新编辑
-      </button>
-      <button className="card-act-btn" onClick={()=>message.info('再次生成功能开发中')}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        再次生成
-      </button>
-      <button className="card-act-more" title="更多操作" onClick={()=>onOpenDetail(task)}>···</button>
+  </div>;
+}
+
+function OutputRow({ items, total, type, collapsed, onViewAll }) {
+  const MAX = collapsed ? 8 : 4;
+  const showItems = items.slice(0, MAX);
+  const remaining = total - showItems.length;
+  return <div className={`output-row ${collapsed ? 'collapsed' : 'expanded'}`}>
+    {showItems.map((item, i) =>
+      item.type === 'video'
+        ? <VideoThumb key={i} item={item} collapsed={collapsed}/>
+        : <ImageThumb key={i} item={item} index={i}/>
+    )}
+    {remaining > 0 && <div className="o-thumb view-all-card" onClick={onViewAll}>
+      <div className="view-all-num">+{remaining}</div>
+      <span>查看全部</span>
     </div>}
   </div>;
 }
 
-// ── ListRowCard ──
-function ListRowCard({ task, onOpenDetail }) {
-  const typeConf = TASK_TYPES[task.type] || { label:task.type, color:'default' };
-  const statusConf = TASK_STATUSES[task.status] || { label:task.status, color:'default' };
-
-  const renderThumb = (item, i, size=36) => {
-    if (item.type==='video') return <VideoThumb key={i} gradientIdx={item.gradientIdx||i} size={size}/>;
-    return <img key={i} className="row-thumb" src={item.thumb||item.url} alt="" style={{width:size,height:size}}/>;
-  };
-
-  return <div className={`row-card ${task._new?'new-highlight':''}`}>
-    <Tag color={typeConf.color} style={{margin:0, flexShrink:0}}>{typeConf.label}</Tag>
-    <div className="row-prompt">{task.input.prompt}</div>
-    <div className="row-media">
-      {task.input.refImages?.slice(0,2).map((r,i)=> <img key={i} className="row-thumb" src={r.thumb} alt=""/>)}
-      {task.input.refImages?.length > 0 && task.output.items.length > 0 && <span className="row-arrow">→</span>}
-      {task.output.items.slice(0,3).map((item,i)=> renderThumb(item,i))}
-      {task.output.total > 3 && <span className="row-count-badge">+{task.output.total-3}</span>}
-    </div>
-    <Tag color={statusConf.color} style={{margin:0, flexShrink:0}}>
-      {statusConf.label}{task.status==='generating'&&<span className="pulse-dot" style={{marginLeft:4}}/>}
-    </Tag>
-    <span className="row-time">{relativeTime(task.createdTime)}</span>
-    <button className="row-detail-btn" onClick={e=>{e.stopPropagation();onOpenDetail(task)}}>查看详情</button>
+// ═══ 入库下拉 ═══
+const STORAGE_TARGETS = ['素材库','物料库','原料库'];
+function StorageDropdown({ show, task, onClose }) {
+  if (!show) return null;
+  const stored = task._storedTo || {};
+  return <div className="storage-dropdown" onClick={e=>e.stopPropagation()}>
+    {STORAGE_TARGETS.map(t => <div key={t} className="storage-dd-item" onClick={()=>{
+      if (stored[t]) { showToast(`${t}已存在，无法入库`); }
+      else { task._storedTo = {...stored,[t]:true}; showToast(`已入库到${t}`); }
+      onClose();
+    }}>{t}</div>)}
   </div>;
 }
 
-// ── DetailModal ──
+// ═══ 生成中卡片操作 ═══
+function GeneratingActions({ task, onOpenDetail }) {
+  const [showStorage, setShowStorage] = React.useState(false);
+  React.useEffect(()=>{
+    if (!showStorage) return;
+    const close = (e) => { if (!e.target.closest('.card-act-btn')) setShowStorage(false); };
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  },[showStorage]);
+
+  return <div className="card-actions">
+    <button className="card-act-btn" onClick={()=>window.__handleReEdit(task)}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      重新编辑
+    </button>
+    <button className="card-act-btn" onClick={()=>window.__handleRetry(task)}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      再次生成
+    </button>
+    <button className="card-act-btn" style={{position:'relative'}} onClick={e=>{e.stopPropagation();setShowStorage(!showStorage);}}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      批量入库
+      <StorageDropdown show={showStorage} task={task} onClose={()=>setShowStorage(false)}/>
+    </button>
+    <button className="card-act-stop" onClick={()=>window.__handleStop(task)}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+      停止生成
+    </button>
+  </div>;
+}
+
+// ═══ 卡片操作 ═══
+function CardActions({ task, onOpenDetail }) {
+  const [showStorage, setShowStorage] = React.useState(false);
+  React.useEffect(()=>{
+    if (!showStorage) return;
+    const close = (e) => { if (!e.target.closest('.card-act-btn')) setShowStorage(false); };
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  },[showStorage]);
+
+  return <div className="card-actions">
+    <button className="card-act-btn" onClick={()=>window.__handleReEdit(task)}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      重新编辑
+    </button>
+    <button className="card-act-btn" onClick={()=>window.__handleRetry(task)}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      再次生成
+    </button>
+    <button className="card-act-btn" style={{position:'relative'}} onClick={e=>{e.stopPropagation();setShowStorage(!showStorage);}}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      批量入库
+      <StorageDropdown show={showStorage} task={task} onClose={()=>setShowStorage(false)}/>
+    </button>
+    <button className="card-act-more" onClick={()=>parent.postMessage({action:'openTab',title:'生成结果',url:'AI 创作/生成结果.html'},'*')}>查看全部</button>
+  </div>;
+}
+
+// ═══ 任务卡片（核心组件） ═══
+function TaskCard({ task, viewMode, onOpenDetail }) {
+  const isMulti = task.input.models.length > 1;
+  const [activeModel, setActiveModel] = React.useState(task.input.models[0]);
+  const collapsed = viewMode === 'collapsed';
+  const currentOutput = getTaskOutput(task, activeModel);
+  const sourceName = GEN_SOURCES[task.source] || task.source || '通用生成';
+
+  return <div className={`task-card ${task._new?'new-highlight':''}`}>
+    {/* 卡片头 */}
+    <div className="card-header">
+      <span className="c-tag" style={{background:'#f5f5f5',color:'#666'}}>{sourceName}</span>
+      {task.input.refImages && task.input.refImages.length > 0 && <div className="card-ref-thumbs">
+        {task.input.refImages.slice(0,3).map((ref,i) => <div key={i} className="card-ref-thumb" onClick={()=>window.__previewImage(ref.url||ref.thumb)}>
+          <img src={ref.thumb||ref.url} alt=""/>
+        </div>)}
+      </div>}
+      <span className="card-prompt">{task.input.prompt}</span>
+      <div className="card-meta">
+        <span className="card-meta-item">{isMulti ? '多模型' : (MODELS_MAP[activeModel]||activeModel)}</span>
+        <span className="card-meta-item">{task.input.ratio}</span>
+        {task.type==='video'
+          ? <span className="card-meta-item">{task.input.dur}</span>
+          : <span className="card-meta-item">{task.input.res}</span>
+        }
+        {task.project && <span className="card-meta-item">{task.project}</span>}
+      </div>
+    </div>
+
+    {/* 多模型 Tab */}
+    {isMulti && task.status==='completed' && <div className="model-tabs">
+      {task.input.models.map(m => <button key={m} className={`model-tab ${m===activeModel?'active':''}`} onClick={()=>setActiveModel(m)}>
+        {MODELS_MAP[m]||m}<span className="model-tab-count">({getTaskOutput(task,m).total})</span>
+      </button>)}
+    </div>}
+
+    {/* 输出区 */}
+    <div className="card-output">
+      {task.status==='generating' && <div className={`output-row ${collapsed?'collapsed':'expanded'}`}>
+        {Array.from({length:collapsed?6:4}).map((_,i)=><div key={i} className="skel-thumb"/>)}
+      </div>}
+      {task.status==='failed' && (collapsed
+        ? <div style={{padding:'8px 0',fontSize:12,color:'#dc2626'}}>生成失败 <button className="card-act-btn" style={{marginLeft:8,padding:'2px 10px',fontSize:11}} onClick={()=>window.__handleRetry(task)}>重试</button></div>
+        : <div className="status-placeholder">
+          <div className="status-placeholder-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <div className="status-placeholder-text">生成失败，请重试</div>
+          <button className="card-act-btn" onClick={()=>window.__handleRetry(task)}>重试</button>
+        </div>
+      )}
+      {task.status==='aborted' && (collapsed
+        ? (currentOutput.items.length > 0
+          ? <OutputRow items={currentOutput.items} total={currentOutput.total} type={task.type} collapsed={collapsed} onViewAll={()=>onOpenDetail(task)}/>
+          : <div style={{padding:'8px 0',fontSize:12,color:'#d97706'}}>已中止生成</div>)
+        : (currentOutput.items.length > 0
+          ? <OutputRow items={currentOutput.items} total={currentOutput.total} type={task.type} collapsed={collapsed} onViewAll={()=>onOpenDetail(task)}/>
+          : <div className="status-placeholder"><div className="status-placeholder-text">已中止生成</div></div>)
+      )}
+      {task.status==='pending' && (collapsed
+        ? <div style={{padding:'8px 0',fontSize:12,color:'#999'}}>排队中...</div>
+        : <div className="status-placeholder">
+          <div className="status-placeholder-text">任务排队中，请稍候...</div>
+        </div>
+      )}
+      {task.status==='completed' && <OutputRow
+        items={currentOutput.items}
+        total={currentOutput.total}
+        type={task.type}
+        collapsed={collapsed}
+        onViewAll={()=>onOpenDetail(task)}
+      />}
+    </div>
+
+    {/* 卡片底部：左侧操作按钮 + 右侧元信息 */}
+    <div className="card-bottom">
+      {(task.status==='completed' || task.status==='aborted') && <CardActions task={task} onOpenDetail={onOpenDetail}/>}
+      {task.status==='generating' && <GeneratingActions task={task} onOpenDetail={onOpenDetail}/>}
+      <div className="card-bottom-meta">
+        <span className={`c-tag c-tag-${task.status}`}>
+          {({pending:'等待中',generating:'生成中',completed:'已完成',failed:'已失败',aborted:'已中止'})[task.status]||task.status}
+          {task.status==='generating'&&<span className="pulse-dot"/>}
+        </span>
+        <span>{relativeTime(task.createdTime)}</span>
+      </div>
+    </div>
+  </div>;
+}
+
+// ═══ 项目筛选器 ═══
+const PROJECT_TREE = [
+  { name:'休闲游戏', children:['消消乐','跑酷大冒险','解谜达人','塔防英雄'] },
+  { name:'工具应用', children:[] },
+  { name:'网赚激励', children:['走路赚金币'] },
+  { name:'内容阅读', children:[] },
+];
+function ProjectFilter({ value, onChange }) {
+  const [open, setOpen] = React.useState(false);
+  React.useEffect(()=>{
+    if (!open) return;
+    const close = (e) => { if (!e.target.closest('.project-filter')) setOpen(false); };
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  },[open]);
+
+  const label = value || '项目';
+  return <div className="project-filter">
+    <div className={`project-trigger ${open?'open':''}`} onClick={()=>setOpen(!open)}>
+      {label} <span className="arr">▾</span>
+    </div>
+    {open && <div className="project-panel show">
+      <div className="project-panel-title">选择目标项目</div>
+      {PROJECT_TREE.map(g => <div key={g.name} className="project-group">
+        <div className="project-group-head" onClick={()=>{onChange(value===g.name?undefined:g.name);if(!g.children.length)setOpen(false);}}>
+          <span className={`project-radio ${value===g.name?'selected':''}`}/>
+          {g.name}
+        </div>
+        {g.children.map(c => <div key={c} className={`project-child ${value===c?'selected':''}`} onClick={()=>{onChange(value===c?undefined:c);setOpen(false);}}>{c}</div>)}
+      </div>)}
+    </div>}
+  </div>;
+}
+
+// ═══ 视图切换 ═══
+function ViewToggle({ mode, onChange }) {
+  return <div className="view-toggle">
+    <button className={`vt-btn ${mode==='expanded'?'active':''}`} onClick={()=>onChange('expanded')} title="展开">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    </button>
+    <button className={`vt-btn ${mode==='collapsed'?'active':''}`} onClick={()=>onChange('collapsed')} title="紧凑">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>;
+}
+
+// ═══ 筛选栏 ═══
+function FilterBar({ viewMode, onViewChange, filters, setFilters, tasks, contentTab, onContentTabChange }) {
+  const models = React.useMemo(()=>{
+    const s = new Set(); (tasks||[]).forEach(t=>{ (t.input.models||[]).forEach(m=>s.add(m)); }); return [...s];
+  },[tasks]);
+
+  return <div className="filter-bar">
+    <div className="content-tabs">
+      {[{k:'chat',l:'对话'},{k:'image',l:'图像'},{k:'video',l:'视频'}].map(t=>
+        <button key={t.k} className={`ct-btn ${contentTab===t.k?'active':''}`} onClick={()=>onContentTabChange(t.k)}>{t.l}</button>
+      )}
+    </div>
+    <input className="filter-search" placeholder="搜索提示词..." value={filters.search} onChange={e=>setFilters(f=>({...f,search:e.target.value}))}/>
+    <Select size="small" placeholder="状态" allowClear style={{width:90}} value={filters.status} onChange={v=>setFilters(f=>({...f,status:v}))}>
+      <Select.Option value="generating">生成中</Select.Option>
+      <Select.Option value="completed">已成功</Select.Option>
+      <Select.Option value="failed">已失败</Select.Option>
+      <Select.Option value="aborted">已中止</Select.Option>
+    </Select>
+    <Select size="small" placeholder="日期范围" allowClear style={{width:110}} value={filters.dateRange} onChange={v=>setFilters(f=>({...f,dateRange:v}))}>
+      <Select.Option value="7">近 7 天</Select.Option>
+      <Select.Option value="30">近 30 天</Select.Option>
+      <Select.Option value="90">近 90 天</Select.Option>
+    </Select>
+    {models.length > 0 && <Select size="small" placeholder="模型" allowClear style={{width:120}} value={filters.model} onChange={v=>setFilters(f=>({...f,model:v}))}>
+      {models.map(m=><Select.Option key={m} value={m}>{MODELS_MAP[m]||m}</Select.Option>)}
+    </Select>}
+    <ProjectFilter value={filters.project} onChange={v=>setFilters(f=>({...f,project:v}))}/>
+    <div className="filter-spacer"/>
+    {contentTab !== 'chat' && <ViewToggle mode={viewMode} onChange={onViewChange}/>}
+  </div>;
+}
+
+// ═══ 详情弹窗 ═══
 function DetailModal({ task, open, onClose }) {
   const [page, setPage] = React.useState(1);
+  const [activeModel, setActiveModel] = React.useState(null);
   const PAGE_SIZE = 24;
-  React.useEffect(()=>{ if(open) setPage(1); },[open]);
-  if (!task) return null;
-  const typeConf = TASK_TYPES[task.type] || { label:task.type, color:'default' };
-  const statusConf = TASK_STATUSES[task.status] || { label:task.status, color:'default' };
-  const allItems = task.output.items || [];
-  const pageItems = allItems.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
 
-  return <Modal title={null} open={open} onCancel={onClose} width={900} centered
-    footer={<Space>
+  React.useEffect(()=>{ if(task) { setPage(1); setActiveModel(task.input.models[0]); } },[task]);
+  if (!task) return null;
+
+  const isMulti = task.input.models.length > 1;
+  const currentOutput = getTaskOutput(task, activeModel);
+  const pageItems = currentOutput.items.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
+  const sourceName = GEN_SOURCES[task.source] || task.source || '通用生成';
+
+  return <Modal open={open} onCancel={onClose} width={900} title={null} footer={
+    <Space>
       <Button onClick={()=>message.success('已全部下载')}>全部下载</Button>
       <Button onClick={()=>message.success('已批量入库')}>批量入库</Button>
       <Button onClick={()=>message.info('再生成功能开发中')}>再次生成</Button>
@@ -1004,8 +877,8 @@ function DetailModal({ task, open, onClose }) {
     </Space>}>
     <div style={{marginBottom:16}}>
       <Space size={8} style={{marginBottom:8}}>
-        <Tag color={typeConf.color}>{typeConf.label}</Tag>
-        <Tag color={statusConf.color}>{statusConf.label}</Tag>
+        <span className="c-tag" style={{background:'#f5f5f5',color:'#666'}}>{sourceName}</span>
+        <span className={`c-tag c-tag-${task.status}`}>{task.status==='completed'?'已完成':task.status}</span>
         <span style={{fontSize:12,color:'#999'}}>{task.createdTime}</span>
       </Space>
       <div style={{fontSize:16,fontWeight:600,color:'#1a1a1a'}}>{task.name}</div>
@@ -1014,111 +887,162 @@ function DetailModal({ task, open, onClose }) {
       <div className="detail-label">输入信息</div>
       <div className="detail-prompt">{task.input.prompt}</div>
       <div className="detail-params">
-        {task.input.model && <span className="detail-param">模型: <strong>{task.input.model}</strong></span>}
+        {task.input.models.map(m=><span key={m} className="detail-param">模型: <strong>{MODELS_MAP[m]||m}</strong></span>)}
         {task.input.ratio && <span className="detail-param">比例: <strong>{task.input.ratio}</strong></span>}
         {task.input.res && <span className="detail-param">分辨率: <strong>{task.input.res}</strong></span>}
+        {task.input.dur && <span className="detail-param">时长: <strong>{task.input.dur}</strong></span>}
         <span className="detail-param">数量: <strong>{task.input.count}</strong></span>
       </div>
       {task.input.refImages?.length > 0 && <div style={{display:'flex',gap:6,marginTop:8}}>
         {task.input.refImages.map((r,i)=><img key={i} src={r.thumb} style={{width:60,height:60,borderRadius:6,objectFit:'cover',border:'1px solid #e8e8e8'}} alt=""/>)}
       </div>}
     </div>
-    <div>
-      <div className="detail-label">输出内容 ({task.output.total} 张)</div>
+    {isMulti && <div className="model-tabs" style={{margin:'0 -24px',padding:'0 24px'}}>
+      {task.input.models.map(m => <button key={m} className={`model-tab ${m===activeModel?'active':''}`} onClick={()=>{setActiveModel(m);setPage(1);}}>
+        {MODELS_MAP[m]||m}<span className="model-tab-count">({getTaskOutput(task,m).total})</span>
+      </button>)}
+    </div>}
+    <div style={{marginTop:12}}>
+      <div className="detail-label">输出内容 ({currentOutput.total} {task.type==='video'?'个':'张'})</div>
       <div className="detail-output-grid">
         {pageItems.map((item,i)=>
           item.type==='video'
-            ? <div key={i} className="video-thumb-large" style={{width:120,height:120,borderRadius:6,background:`linear-gradient(135deg,${VIDEO_GRADIENTS[(item.gradientIdx||i)%5][0]},${VIDEO_GRADIENTS[(item.gradientIdx||i)%5][1]})`}}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              </div>
-            : <div key={i} className="detail-thumb-wrap">
-                <img src={item.url||item.thumb} alt="" loading="lazy"/>
-                <div className="img-overlay">
-                  <button className="img-action-btn" title="下载" onClick={()=>message.success('已下载')}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  </button>
-                  <button className="img-action-btn" title="入库" onClick={()=>message.success('已入库')}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
-                  </button>
-                </div>
-              </div>
+            ? <div key={i} style={{width:120,height:120}}><VideoThumb item={item} collapsed={false}/></div>
+            : <div key={i} className="detail-thumb-wrap" onClick={()=>window.__previewImage(item.url||item.thumb)}><img src={item.url||item.thumb} alt="" loading="lazy"/><div className="thumb-overlay" style={{alignItems:'flex-end',justifyContent:'flex-end',padding:4}}>
+                <button className="thumb-act" title="下载" onClick={e=>{e.stopPropagation();const d=new Date().toISOString().slice(0,10).replace(/-/g,'');const a=document.createElement('a');a.href=item.url||item.thumb;a.download=`我-${d}-${i+1}.png`;a.click();showToast('已开始下载');}}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </button>
+                <button className="thumb-act" title="入库" onClick={e=>{e.stopPropagation();showToast('已入库')}}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
+                </button>
+              </div></div>
         )}
       </div>
-      {task.output.total > PAGE_SIZE && <div style={{textAlign:'center',marginTop:16}}>
-        <Pagination current={page} pageSize={PAGE_SIZE} total={task.output.total} onChange={setPage} size="small" showSizeChanger={false}/>
+      {currentOutput.total > PAGE_SIZE && <div style={{textAlign:'center',marginTop:16}}>
+        <Pagination current={page} pageSize={PAGE_SIZE} total={currentOutput.total} onChange={setPage} size="small" showSizeChanger={false}/>
       </div>}
     </div>
   </Modal>;
 }
 
-// ── 根组件 ──
+// ═══ 对话侧边栏 ═══
+const INITIAL_CHATS = [
+  { id:'c1', title:'产品描述文案生成', time:'2026-04-02 16:30', messageCount:12 },
+  { id:'c2', title:'品牌故事创意', time:'2026-04-02 14:10', messageCount:8 },
+  { id:'c3', title:'618营销文案批量生成', time:'2026-04-01 11:20', messageCount:24 },
+];
+function ChatSidebar({ chats, activeChat, onSelect, onNew }) {
+  return <div className="chat-sidebar">
+    <div className="chat-sidebar-header">
+      <button className="chat-new-btn" onClick={onNew}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        新建对话
+      </button>
+    </div>
+    <div className="chat-list">
+      {chats.map(c => <div key={c.id} className={`chat-list-item ${activeChat===c.id?'active':''}`} onClick={()=>onSelect(c.id)}>
+        <div className="chat-list-title">{c.title}</div>
+        <div className="chat-list-meta">{c.messageCount} 条消息 · {relativeTime(c.time)}</div>
+      </div>)}
+    </div>
+  </div>;
+}
+
+// ═══ 根组件 ═══
 function UnifiedTaskPage() {
+  const [contentTab, setContentTab] = React.useState('image');
   const [viewMode, setViewMode] = React.useState('expanded');
-  const [filters, setFilters] = React.useState({ status:undefined, type:undefined, search:'', creator:'', dateRange:null });
+  const [filters, setFilters] = React.useState({ status:undefined, search:'', project:undefined, dateRange:undefined, model:undefined });
   const [tasks, setTasks] = React.useState(INITIAL_TASKS);
   const [detailTask, setDetailTask] = React.useState(null);
   const [showScrollBtn, setShowScrollBtn] = React.useState(false);
   const scrollRef = React.useRef(null);
 
-  // 监听 vanilla JS 事件
+  // 对话状态
+  const [chats, setChats] = React.useState(INITIAL_CHATS);
+  const [activeChat, setActiveChat] = React.useState(INITIAL_CHATS[0]?.id);
+  const handleNewChat = () => {
+    const nc = { id:'c'+Date.now(), title:'新对话', time:new Date().toISOString().replace('T',' ').substring(0,16), messageCount:0 };
+    setChats(prev => [nc, ...prev]);
+    setActiveChat(nc.id);
+  };
+
+  // 通知 Vanilla JS 输入框切换模式
   React.useEffect(()=>{
-    const onCreate = (e) => setTasks(prev => [{ ...e.detail, _new: true }, ...prev]);
-    const onUpdate = (e) => setTasks(prev => prev.map(t =>
-      t.id === e.detail.id ? { ...t, ...e.detail } : t
-    ));
+    window.dispatchEvent(new CustomEvent('contentTabChanged', { detail: contentTab }));
+  },[contentTab]);
+
+  React.useEffect(()=>{
+    const onCreate = (e) => {
+      setTasks(prev => [...prev, { ...e.detail, _new: true }]);
+      setTimeout(()=>scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }), 100);
+    };
+    const onUpdate = (e) => setTasks(prev => prev.map(t => t.id === e.detail.id ? { ...t, ...e.detail } : t));
     window.addEventListener('taskCreated', onCreate);
     window.addEventListener('taskUpdated', onUpdate);
     return () => { window.removeEventListener('taskCreated', onCreate); window.removeEventListener('taskUpdated', onUpdate); };
   },[]);
 
-  // 滚动检测：未到底部时显示"回到底部"按钮
   React.useEffect(()=>{
     const el = scrollRef.current;
     if (!el) return;
-    const onScroll = () => {
-      const gap = el.scrollHeight - el.scrollTop - el.clientHeight;
-      setShowScrollBtn(gap > 120);
-    };
+    const onScroll = () => setShowScrollBtn(el.scrollHeight - el.scrollTop - el.clientHeight > 120);
     el.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     return () => el.removeEventListener('scroll', onScroll);
   },[]);
 
-  const scrollToBottom = () => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  };
+  const scrollToBottom = () => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  window.__scrollToBottom = scrollToBottom;
+
+  // 同步回到底部按钮到 DOM
+  React.useEffect(()=>{
+    const btn = document.getElementById('scrollBottomBtn');
+    if (btn) { btn.className = 'scroll-bottom-btn' + (showScrollBtn ? ' visible' : ''); }
+  },[showScrollBtn]);
 
   const filteredTasks = React.useMemo(()=>{
     return tasks.filter(t => {
+      if (contentTab === 'image' && t.type !== 'image') return false;
+      if (contentTab === 'video' && t.type !== 'video') return false;
       if (filters.status && t.status !== filters.status) return false;
-      if (filters.type && t.type !== filters.type) return false;
       if (filters.search && !t.input.prompt.includes(filters.search) && !t.name.includes(filters.search)) return false;
-      if (filters.creator && !t.creator?.includes(filters.creator)) return false;
-      if (filters.dateRange?.[0] && filters.dateRange?.[1]) {
-        const ts = new Date(t.createdTime).getTime();
-        if (ts < filters.dateRange[0].startOf('day').valueOf() || ts > filters.dateRange[1].endOf('day').valueOf()) return false;
+      if (filters.project && t.project !== filters.project) return false;
+      if (filters.model && !(t.input.models||[]).includes(filters.model)) return false;
+      if (filters.dateRange) {
+        const days = parseInt(filters.dateRange);
+        const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days);
+        if (new Date(t.createdTime) < cutoff) return false;
       }
       return true;
-    }).sort((a,b) => new Date(b.createdTime) - new Date(a.createdTime));
-  },[tasks, filters]);
+    }).sort((a,b) => new Date(a.createdTime) - new Date(b.createdTime));
+  },[tasks, filters, contentTab]);
 
   return <>
-    <FilterBar viewMode={viewMode} onViewChange={setViewMode} filters={filters} setFilters={setFilters} />
-    <div className="task-scroll-area" ref={scrollRef}>
-    {filteredTasks.length === 0
-      ? <div className="empty-state"><Empty description="暂无匹配的任务"/></div>
-      : viewMode === 'expanded'
-        ? <div className="task-feed">
-            {filteredTasks.map(t=> <ExpandedCard key={t.id} task={t} onOpenDetail={setDetailTask}/>)}
-          </div>
-        : <div className="list-feed">
-            {filteredTasks.map(t=> <ListRowCard key={t.id} task={t} onOpenDetail={setDetailTask}/>)}
-          </div>
-    }
-    <button className={`scroll-bottom-btn ${showScrollBtn?'visible':''}`} onClick={scrollToBottom}>
-      回到底部
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </button>
+    <FilterBar viewMode={viewMode} onViewChange={setViewMode} filters={filters} setFilters={setFilters} tasks={tasks} contentTab={contentTab} onContentTabChange={setContentTab} />
+    <div className={contentTab==='chat' ? 'main-with-sidebar' : ''} style={{flex:1,display:'flex',flexDirection:contentTab==='chat'?'row':'column',overflow:'hidden'}}>
+      {contentTab==='chat' && <ChatSidebar chats={chats} activeChat={activeChat} onSelect={setActiveChat} onNew={handleNewChat}/>}
+      <div className="main-content" style={contentTab!=='chat'?{flex:1}:{}}>
+        {contentTab === 'chat'
+          ? <div className="task-scroll-area" ref={scrollRef} style={{flex:1}}>
+              <div style={{padding:'60px 20px',textAlign:'center',color:'#999'}}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1.5" style={{marginBottom:12}}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <div style={{fontSize:15,fontWeight:500,color:'#666',marginBottom:6}}>对话模式</div>
+                <div style={{fontSize:13}}>选择左侧会话或新建对话开始</div>
+              </div>
+            </div>
+          : <>
+            <div className="task-scroll-area" ref={scrollRef}>
+              {filteredTasks.length === 0
+                ? <div className="empty-state"><Empty description="暂无匹配的任务"/></div>
+                : <div className="task-feed">
+                    {filteredTasks.map(t=> <TaskCard key={t.id} task={t} viewMode={viewMode} onOpenDetail={setDetailTask}/>)}
+                  </div>
+              }
+            </div>
+          </>
+        }
+      </div>
     </div>
     <DetailModal task={detailTask} open={!!detailTask} onClose={()=>setDetailTask(null)} />
   </>;
@@ -1142,11 +1066,14 @@ const sel = {
   video: { ratio:'16:9', dur:'5秒', style:'写实', res:'1080P', count:'1' },
 };
 
-// 初始化输入框
 (function initInputBox() {
   const root = document.getElementById('input-box-root');
   root.innerHTML = `
-  <div class="input-box-wrapper">
+  <div class="input-box-wrapper" style="position:relative">
+    <button class="scroll-bottom-btn" id="scrollBottomBtn" onclick="window.__scrollToBottom && window.__scrollToBottom()">
+      回到底部
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
     <div class="input-box" id="inputBox">
       <div class="input-collapsed" onclick="expandInputBox()">
         <span class="input-plus-icon">+</span>
@@ -1185,8 +1112,6 @@ function expandInputBox() {
 function collapseInputBox() {
   document.getElementById('inputBox').classList.remove('expanded');
 }
-
-// 点击外部折叠
 document.addEventListener('click', function(e) {
   const box = document.getElementById('inputBox');
   if (!box || !box.classList.contains('expanded')) return;
@@ -1194,16 +1119,45 @@ document.addEventListener('click', function(e) {
   if (e.target.closest('.upload-dropdown') || e.target.closest('.asset-modal-mask') || e.target.closest('.opt-dd')) return;
   collapseInputBox();
 });
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') collapseInputBox();
-});
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') collapseInputBox(); });
 
 function onInputChange() {
   const has = document.getElementById('inputPrompt').value.trim().length > 0;
   document.getElementById('inputGenBtn').className = 'gen-btn' + (has ? ' has-text' : '');
 }
 
-// ── 上传菜单 ──
+// 输入框跟随 Tab 切换
+window.addEventListener('contentTabChanged', function(e) {
+  var tab = e.detail;
+  var prompt = document.getElementById('inputPrompt');
+  var uploadBlock = document.getElementById('inputUploadBlock');
+  var optArea = document.getElementById('inputOptArea');
+  var genBtn = document.getElementById('inputGenBtn');
+  var placeholder = document.querySelector('.input-placeholder');
+  curType = tab === 'video' ? 'video' : 'image';
+  if (tab === 'chat') {
+    prompt.placeholder = '输入对话内容...';
+    if (placeholder) placeholder.textContent = '输入对话内容...';
+    if (uploadBlock) uploadBlock.style.display = 'none';
+    if (optArea) optArea.style.display = 'none';
+    genBtn.innerHTML = '<span>发送</span>';
+  } else if (tab === 'video') {
+    prompt.placeholder = '描述您想要生成的视频...';
+    if (placeholder) placeholder.textContent = '描述您想要生成的视频...';
+    if (uploadBlock) uploadBlock.style.display = '';
+    if (optArea) optArea.style.display = '';
+    genBtn.innerHTML = '<span>⚡ 生成</span>';
+    renderInputOpts();
+  } else {
+    prompt.placeholder = '描述您想要生成的图像...';
+    if (placeholder) placeholder.textContent = '描述您想要生成的图像...';
+    if (uploadBlock) uploadBlock.style.display = '';
+    if (optArea) optArea.style.display = '';
+    genBtn.innerHTML = '<span>⚡ 生成</span>';
+    renderInputOpts();
+  }
+});
+
 function showUploadMenu(e, anchor) {
   e.stopPropagation();
   const dd = document.getElementById('uploadDropdown');
@@ -1223,21 +1177,16 @@ function triggerUpload() {
   document.getElementById('uploadDropdown').classList.remove('show');
   document.getElementById('uploadFileInput').click();
 }
-
 function onFileUpload(e) {
-  Array.from(e.target.files).forEach(f => {
-    addRefFromUrl(URL.createObjectURL(f));
-  });
+  Array.from(e.target.files).forEach(f => addRefFromUrl(URL.createObjectURL(f)));
   e.target.value = '';
 }
-
 function addRefFromUrl(url) {
   const strip = document.getElementById('inputRefStrip');
   if (!document.getElementById('inputRefAdd')) {
     document.getElementById('inputUploadBlock').style.display = 'none';
     const addBtn = document.createElement('div');
-    addBtn.className = 'input-ref-add';
-    addBtn.id = 'inputRefAdd';
+    addBtn.className = 'input-ref-add'; addBtn.id = 'inputRefAdd';
     addBtn.onclick = function(ev) { showUploadMenu(ev, this); };
     addBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
     strip.insertBefore(addBtn, strip.firstChild);
@@ -1247,7 +1196,6 @@ function addRefFromUrl(url) {
   item.innerHTML = `<img src="${url}" alt=""><div class="input-ref-del" onclick="removeInputRef(this)">✕</div>`;
   strip.appendChild(item);
 }
-
 function removeInputRef(btn) {
   btn.parentElement.remove();
   const strip = document.getElementById('inputRefStrip');
@@ -1258,13 +1206,98 @@ function removeInputRef(btn) {
   }
 }
 
-// ── 渲染选项 pills ──
+// ═══ 重新编辑 & 重试 ═══
+function clearRefImages() {
+  const strip = document.getElementById('inputRefStrip');
+  strip.querySelectorAll('.input-ref-item').forEach(el => el.remove());
+  const addBtn = document.getElementById('inputRefAdd');
+  if (addBtn) addBtn.remove();
+  document.getElementById('inputUploadBlock').style.display = '';
+}
+
+function restoreTaskToInput(task) {
+  curType = task.type === 'video' ? 'video' : 'image';
+  if (task.input.models && task.input.models[0]) sel[curType].model = task.input.models[0];
+  if (task.input.ratio) sel[curType].ratio = task.input.ratio;
+  if (task.input.res) sel[curType].res = task.input.res;
+  if (task.input.dur) sel[curType].dur = task.input.dur;
+  if (task.input.count) sel[curType].count = String(task.input.count);
+  expandInputBox();
+  document.getElementById('inputPrompt').value = task.input.prompt || '';
+  onInputChange();
+  clearRefImages();
+  if (task.input.refImages && task.input.refImages.length) {
+    task.input.refImages.forEach(function(ref) { addRefFromUrl(ref.thumb || ref.url); });
+  }
+  if (typeof renderInputOpts === 'function') renderInputOpts();
+}
+
+function navigateToWorkflow(task) {
+  localStorage.setItem('pendingWorkflow', JSON.stringify({
+    type: task.type,
+    prompt: task.input.prompt,
+    opts: task.input,
+  }));
+  parent.postMessage({
+    action: 'openTab',
+    title: '图像素材衍生工作流',
+    url: 'AI 创作/图像素材衍生工作流.html'
+  }, '*');
+}
+
+window.__handleReEdit = function(task) {
+  if (task.source === 'workflow') {
+    navigateToWorkflow(task);
+  } else {
+    restoreTaskToInput(task);
+  }
+};
+
+window.__handleRetry = function(task) {
+  if (task.source === 'workflow') {
+    navigateToWorkflow(task);
+  } else {
+    restoreTaskToInput(task);
+    setTimeout(function() { doGenerate(); }, 300);
+  }
+};
+
+window.__handleStop = function(task) {
+  window.dispatchEvent(new CustomEvent('taskUpdated', { detail: { id: task.id, status: 'aborted' } }));
+  showToast('已停止生成');
+};
+
+window.__previewImage = function(url) {
+  var mask = document.getElementById('imgPreviewMask');
+  var img = document.getElementById('imgPreviewImg');
+  if (!mask || !img) return;
+  img.src = url;
+  mask.style.cssText = 'display:flex!important;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;cursor:pointer;';
+};
+
+// 用事件委托处理图片点击预览，绕开 React 合成事件和 overlay pointer-events 问题
+document.addEventListener('click', function(e) {
+  if (e.target.closest('button')) return;
+  if (e.target.closest('.input-ref-del')) return;
+  if (e.target.closest('#imgPreviewMask')) return;
+  var container = e.target.closest('.o-thumb, .card-ref-thumb, .input-ref-item');
+  if (!container) return;
+  var img = container.querySelector('img');
+  if (img && img.src) {
+    e.stopPropagation();
+    window.__previewImage(img.src);
+  }
+}, false);
+</script>
+
+<script>
+// ══════════════════════════════════════
+// Option Pills + 生成 + Asset Modal
+// ══════════════════════════════════════
 function renderInputOpts() {
   const area = document.getElementById('inputOptArea');
   if (!area) return;
   area.innerHTML = '';
-
-  // 模型 pill
   const modelName = (MODELS_DATA.find(m=>m.id===sel[curType].model)||MODELS_DATA[0]).name;
   area.innerHTML += `<div class="opt-pill" id="pill-model" onclick="togglePill(event,'model')">
     <span>${modelName}</span><span class="arr">▼</span>
@@ -1273,11 +1306,8 @@ function renderInputOpts() {
       ${MODELS_DATA.map(m=>`<div class="model-opt${m.id===sel[curType].model?' active':''}" onclick="pickModel(event,'${m.id}')">${m.name}</div>`).join('')}
     </div>
   </div>`;
-
-  // 比例 pill
   const ratio = sel[curType].ratio;
-  const rs = RATIO_SIZES[ratio] || [14,14];
-  const sc = 11/Math.max(rs[0],rs[1]);
+  const rs = RATIO_SIZES[ratio]||[14,14]; const sc = 11/Math.max(rs[0],rs[1]);
   const iw=Math.round(rs[0]*sc), ih=Math.round(rs[1]*sc);
   const resLabel = sel[curType].res==='4K'?'超清 4K':sel[curType].res==='1K'?'1K':'高清 2K';
   const ratioVals = ['1:1','2:3','3:2','3:4','4:3','9:16','16:9'];
@@ -1298,8 +1328,6 @@ function renderInputOpts() {
       </div>
     </div>
   </div>`;
-
-  // 数量 pill
   const count = sel[curType].count || '1';
   area.innerHTML += `<div class="opt-pill" id="pill-count" onclick="togglePill(event,'count')">
     <span>${count} 张</span><span class="arr">▼</span>
@@ -1316,7 +1344,6 @@ function togglePill(e, key) {
   e.stopPropagation();
   const dd = document.getElementById('dd-'+key);
   if (!dd) return;
-  // Close all other dropdowns
   document.querySelectorAll('.opt-dd.show').forEach(d=>{ if(d!==dd) d.classList.remove('show'); });
   document.querySelectorAll('.opt-pill.open').forEach(p=>{ if(p.id!=='pill-'+key) p.classList.remove('open'); });
   dd.classList.toggle('show');
@@ -1329,240 +1356,145 @@ document.addEventListener('click', function(e) {
   }
 });
 
-function pickModel(e, id) {
-  e.stopPropagation();
-  sel[curType].model = id;
-  renderInputOpts();
-}
-function pickRatio(e, r) {
-  e.stopPropagation();
-  sel[curType].ratio = r;
-  renderInputOpts();
-}
-function pickRes(e, r) {
-  e.stopPropagation();
-  sel[curType].res = r;
-  renderInputOpts();
-}
-function pickCount(e, n) {
-  e.stopPropagation();
-  sel[curType].count = n;
-  renderInputOpts();
-}
+function pickModel(e,id){ e.stopPropagation(); sel[curType].model=id; renderInputOpts(); }
+function pickRatio(e,r){ e.stopPropagation(); sel[curType].ratio=r; renderInputOpts(); }
+function pickRes(e,r){ e.stopPropagation(); sel[curType].res=r; renderInputOpts(); }
+function pickCount(e,n){ e.stopPropagation(); sel[curType].count=n; renderInputOpts(); }
 
-// ── 生成 ──
 function doGenerate() {
   const txt = document.getElementById('inputPrompt').value.trim();
   if (!txt) { document.getElementById('inputPrompt').focus(); return; }
-
   const refImgs = [];
-  document.querySelectorAll('#inputRefStrip .input-ref-item img').forEach(img => {
-    refImgs.push({ thumb: img.src, url: img.src });
-  });
-
+  document.querySelectorAll('#inputRefStrip .input-ref-item img').forEach(img => refImgs.push({ thumb: img.src, url: img.src }));
+  const modelId = sel[curType].model || 'seedream5';
   const newTask = {
-    id: String(Date.now()),
-    name: txt.length > 30 ? txt.substring(0,30)+'...' : txt,
-    type: curType === 'video' ? 'video_gen' : 'image_gen',
-    status: 'generating',
+    id: String(Date.now()), name: txt.length>30?txt.substring(0,30)+'...':txt,
+    type: curType==='video'?'video':'image', status:'generating',
     createdTime: new Date().toISOString().replace('T',' ').substring(0,16),
-    isRead: true, creator: '我',
-    input: { prompt: txt, refImages: refImgs, model: sel[curType].model, ratio: sel[curType].ratio, res: sel[curType].res, count: parseInt(sel[curType].count)||1 },
-    output: { total: 0, items: [] }
+    creator:'我', source:'universal',
+    input: { prompt:txt, refImages:refImgs, inputType:refImgs.length>1?'multi_image':refImgs.length===1?'image':'text', models:[modelId], ratio:sel[curType].ratio, res:sel[curType].res, dur:sel[curType].dur, count:parseInt(sel[curType].count)||1 },
+    output: { byModel: { [modelId]: { total:0, items:[] } } }
   };
-
   window.dispatchEvent(new CustomEvent('taskCreated', { detail: newTask }));
   collapseInputBox();
   document.getElementById('inputPrompt').value = '';
   onInputChange();
   showToast('任务已提交');
-
-  // 模拟完成
   setTimeout(() => {
     const cnt = newTask.input.count;
-    const items = Array.from({length: Math.min(cnt,12)}, (_,i) => ({
-      type: curType === 'video' ? 'video' : 'image',
-      thumb: `https://picsum.photos/seed/new${newTask.id}_${i}/80/80`,
-      url: `https://picsum.photos/seed/new${newTask.id}_${i}/400/400`,
-      gradientIdx: i,
+    const items = Array.from({length:Math.min(cnt,12)}, (_,i) => ({
+      type: curType==='video'?'video':'image',
+      thumb: `https://picsum.photos/seed/new${newTask.id}_${i}/200/200`,
+      url: `https://picsum.photos/seed/new${newTask.id}_${i}/800/800`,
+      gradientIdx: i, duration: '5s',
     }));
     window.dispatchEvent(new CustomEvent('taskUpdated', {
-      detail: { id: newTask.id, status: 'completed', output: { total: cnt, items } }
+      detail: { id: newTask.id, status:'completed', output: { byModel: { [modelId]: { total:cnt, items } } } }
     }));
   }, 3000);
 }
 
-// ── Toast ──
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 2000);
 }
 
 // ══════════════════════════════════════
-// 素材库弹窗 (Asset Modal)
+// 素材库弹窗
 // ══════════════════════════════════════
 const MOCK_ASSETS = {
-  '素材库': [
-    {id:'s1',name:'城市夜景.jpg',thumb:'https://picsum.photos/seed/city1/200/200',type:'image'},
-    {id:'s2',name:'海滩日落.jpg',thumb:'https://picsum.photos/seed/beach1/200/200',type:'image'},
-    {id:'s3',name:'山间晨雾.jpg',thumb:'https://picsum.photos/seed/mount1/200/200',type:'image'},
-    {id:'s4',name:'都市街景.jpg',thumb:'https://picsum.photos/seed/street1/200/200',type:'image'},
-    {id:'s5',name:'星空银河.jpg',thumb:'https://picsum.photos/seed/star1/200/200',type:'image'},
-    {id:'s6',name:'古镇小巷.jpg',thumb:'https://picsum.photos/seed/town1/200/200',type:'image'},
-  ],
-  '物料库': [
-    {id:'m1',name:'产品主图_A.jpg',thumb:'https://picsum.photos/seed/prod1/200/200',type:'image'},
-    {id:'m2',name:'产品主图_B.jpg',thumb:'https://picsum.photos/seed/prod2/200/200',type:'image'},
-    {id:'m3',name:'广告背景_1.jpg',thumb:'https://picsum.photos/seed/ad1/200/200',type:'image'},
-    {id:'m4',name:'广告背景_2.jpg',thumb:'https://picsum.photos/seed/ad2/200/200',type:'image'},
-  ],
-  '原料库': [
-    {id:'r1',name:'肌理纹理_01.jpg',thumb:'https://picsum.photos/seed/tex1/200/200',type:'image'},
-    {id:'r2',name:'肌理纹理_02.jpg',thumb:'https://picsum.photos/seed/tex2/200/200',type:'image'},
-    {id:'r3',name:'光效素材_01.jpg',thumb:'https://picsum.photos/seed/light1/200/200',type:'image'},
-  ],
+  '素材库': [{id:'s1',name:'城市夜景.jpg',thumb:'https://picsum.photos/seed/city1/200/200'},{id:'s2',name:'海滩日落.jpg',thumb:'https://picsum.photos/seed/beach1/200/200'},{id:'s3',name:'山间晨雾.jpg',thumb:'https://picsum.photos/seed/mount1/200/200'},{id:'s4',name:'都市街景.jpg',thumb:'https://picsum.photos/seed/street1/200/200'},{id:'s5',name:'星空银河.jpg',thumb:'https://picsum.photos/seed/star1/200/200'},{id:'s6',name:'古镇小巷.jpg',thumb:'https://picsum.photos/seed/town1/200/200'}],
+  '物料库': [{id:'m1',name:'产品主图_A.jpg',thumb:'https://picsum.photos/seed/prod1/200/200'},{id:'m2',name:'产品主图_B.jpg',thumb:'https://picsum.photos/seed/prod2/200/200'},{id:'m3',name:'广告背景_1.jpg',thumb:'https://picsum.photos/seed/ad1/200/200'},{id:'m4',name:'广告背景_2.jpg',thumb:'https://picsum.photos/seed/ad2/200/200'}],
+  '原料库': [{id:'r1',name:'肌理纹理_01.jpg',thumb:'https://picsum.photos/seed/tex1/200/200'},{id:'r2',name:'肌理纹理_02.jpg',thumb:'https://picsum.photos/seed/tex2/200/200'},{id:'r3',name:'光效素材_01.jpg',thumb:'https://picsum.photos/seed/light1/200/200'}],
   '产品物料': [],
 };
-
 const MOCK_PRODUCTS_ASSET = [
-  {id:'prod1',name:'水光精华露',category:'护肤',sku:'SKU-2001',thumb:'https://picsum.photos/seed/pico1/200/200',materials:[
-    {id:'pm1',name:'icon_主图.jpg',thumb:'https://picsum.photos/seed/pi1/200/200',tag:'icon'},
-    {id:'pm2',name:'icon_白底.jpg',thumb:'https://picsum.photos/seed/pi2/200/200',tag:'icon'},
-  ]},
-  {id:'prod2',name:'玻尿酸面膜',category:'护肤',sku:'SKU-2002',thumb:'https://picsum.photos/seed/pico2/200/200',materials:[
-    {id:'pm6',name:'icon_主图.jpg',thumb:'https://picsum.photos/seed/pi3/200/200',tag:'icon'},
-  ]},
+  {id:'prod1',name:'水光精华露',category:'护肤',sku:'SKU-2001',thumb:'https://picsum.photos/seed/pico1/200/200',materials:[{id:'pm1',name:'icon_主图.jpg',thumb:'https://picsum.photos/seed/pi1/200/200'},{id:'pm2',name:'icon_白底.jpg',thumb:'https://picsum.photos/seed/pi2/200/200'}]},
+  {id:'prod2',name:'玻尿酸面膜',category:'护肤',sku:'SKU-2002',thumb:'https://picsum.photos/seed/pico2/200/200',materials:[{id:'pm6',name:'icon_主图.jpg',thumb:'https://picsum.photos/seed/pi3/200/200'}]},
 ];
-
 const MOCK_TASKS_ASSET = [
-  {id:'task1',name:'护肤品春季推广素材',type:'图片生成',status:'done',time:'2026-03-30 14:22',count:6,thumbs:[
-    {id:'td1',name:'推广图_01.jpg',thumb:'https://picsum.photos/seed/tg1/200/200'},
-    {id:'td2',name:'推广图_02.jpg',thumb:'https://picsum.photos/seed/tg2/200/200'},
-  ]},
-  {id:'task2',name:'618大促主图',type:'图片生成',status:'done',time:'2026-03-29 09:15',count:8,thumbs:[
-    {id:'td7',name:'主图_01.jpg',thumb:'https://picsum.photos/seed/zg1/200/200'},
-  ]},
+  {id:'task1',name:'护肤品春季推广素材',type:'图片生成',status:'done',time:'2026-03-30 14:22',count:6,thumbs:[{id:'td1',name:'推广图_01.jpg',thumb:'https://picsum.photos/seed/tg1/200/200'},{id:'td2',name:'推广图_02.jpg',thumb:'https://picsum.photos/seed/tg2/200/200'}]},
+  {id:'task2',name:'618大促主图',type:'图片生成',status:'done',time:'2026-03-29 09:15',count:8,thumbs:[{id:'td7',name:'主图_01.jpg',thumb:'https://picsum.photos/seed/zg1/200/200'}]},
 ];
-
 let assetSelected = new Set();
 let assetCurrentCat = '素材库';
 
 function openAssetModal(cat) {
   document.getElementById('uploadDropdown').classList.remove('show');
-  assetCurrentCat = cat;
-  assetSelected.clear();
+  assetCurrentCat = cat; assetSelected.clear();
   document.getElementById('assetModalTitle').textContent = cat==='产品物料'?'选择产品物料':'选择'+cat.replace('库','');
   document.querySelectorAll('.asset-sidebar-item').forEach(el=>el.classList.toggle('active',el.dataset.cat===cat));
-  renderAssetFilterBar();
-  renderAssetContent();
-  updateAssetFooter();
+  renderAssetFilterBar(); renderAssetContent(); updateAssetFooter();
   document.getElementById('assetModalMask').classList.add('show');
 }
-
-function closeAssetModal() {
-  document.getElementById('assetModalMask').classList.remove('show');
-  backToTaskList();
-}
-
+function closeAssetModal() { document.getElementById('assetModalMask').classList.remove('show'); backToTaskList(); }
 function switchAssetCat(el) {
   document.querySelectorAll('.asset-sidebar-item').forEach(i=>i.classList.remove('active'));
-  el.classList.add('active');
-  assetCurrentCat = el.dataset.cat;
-  assetSelected.clear();
+  el.classList.add('active'); assetCurrentCat = el.dataset.cat; assetSelected.clear();
   document.getElementById('assetModalTitle').textContent = assetCurrentCat==='产品物料'?'选择产品物料':'选择'+assetCurrentCat.replace('库','');
-  renderAssetFilterBar();
-  backToTaskList();
-  renderAssetContent();
-  updateAssetFooter();
+  renderAssetFilterBar(); backToTaskList(); renderAssetContent(); updateAssetFooter();
 }
-
 function renderAssetFilterBar() {
-  const bar = document.getElementById('assetFilterBar');
-  bar.innerHTML = '<select class="asset-filter-select"><option value="">时间范围</option><option value="7d">近7天</option><option value="30d">近30天</option></select><select class="asset-filter-select"><option value="">全部类型</option><option value="image">图片</option><option value="video">视频</option></select>';
+  document.getElementById('assetFilterBar').innerHTML = '<select class="asset-filter-select"><option value="">时间范围</option><option value="7d">近7天</option><option value="30d">近30天</option></select><select class="asset-filter-select"><option value="">全部类型</option><option value="image">图片</option><option value="video">视频</option></select>';
 }
-
 function renderAssetContent() {
   document.getElementById('taskDetailPanel').classList.remove('show');
-  if (assetCurrentCat==='产品物料') {
-    document.getElementById('assetGridWrap').style.display='none';
-    renderProductListModal();
-  } else {
-    document.getElementById('assetGridWrap').style.display='';
-    renderAssetGrid();
-  }
+  if (assetCurrentCat==='产品物料') { document.getElementById('assetGridWrap').style.display='none'; renderProductListModal(); }
+  else { document.getElementById('assetGridWrap').style.display=''; renderAssetGrid(); }
 }
-
 function renderAssetGrid() {
-  const grid = document.getElementById('assetGrid');
   const items = MOCK_ASSETS[assetCurrentCat] || [];
-  grid.innerHTML = items.map(a=>`
+  document.getElementById('assetGrid').innerHTML = items.map(a=>`
     <div class="asset-card${assetSelected.has(a.id)?' selected':''}" data-id="${a.id}" onclick="toggleAssetCard(this,'${a.id}')">
       <div class="asset-card-thumb"><img src="${a.thumb}" alt="${a.name}" loading="lazy"><div class="asset-card-check">✓</div></div>
       <div class="asset-card-name" title="${a.name}">${a.name}</div>
     </div>`).join('');
 }
-
 function renderProductListModal() {
   const wrap = document.getElementById('assetGridWrap');
   wrap.style.display='';
   wrap.innerHTML = `<div class="task-list">${MOCK_PRODUCTS_ASSET.map(p=>`
     <div class="task-row-asset" onclick="openProductDetailModal('${p.id}')">
-      <div style="width:40px;height:40px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#f0f0f0">
-        <img src="${p.thumb}" style="width:100%;height:100%;object-fit:cover;display:block" alt="">
-      </div>
-      <div class="task-row-body">
-        <div class="task-row-title-asset">${p.name}</div>
-        <div class="task-row-meta"><span>${p.category}</span><span>${p.sku}</span><span>${p.materials.length} 个物料</span></div>
-      </div>
+      <div style="width:40px;height:40px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#f0f0f0"><img src="${p.thumb}" style="width:100%;height:100%;object-fit:cover;display:block" alt=""></div>
+      <div class="task-row-body"><div class="task-row-title-asset">${p.name}</div><div class="task-row-meta"><span>${p.category}</span><span>${p.sku}</span><span>${p.materials.length} 个物料</span></div></div>
       <span class="task-row-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
     </div>`).join('')}</div>`;
 }
-
 function openProductDetailModal(prodId) {
   const prod = MOCK_PRODUCTS_ASSET.find(p=>p.id===prodId);
   if (!prod||!prod.materials.length) return;
   document.getElementById('assetGridWrap').style.display='none';
   document.getElementById('assetFilterBar').style.display='none';
   document.getElementById('taskDetailName').textContent = prod.name;
-  const grid = document.getElementById('taskDetailGrid');
-  grid.innerHTML = prod.materials.map(a=>`
+  document.getElementById('taskDetailGrid').innerHTML = prod.materials.map(a=>`
     <div class="asset-card${assetSelected.has(a.id)?' selected':''}" data-id="${a.id}" onclick="toggleAssetCard(this,'${a.id}')">
       <div class="asset-card-thumb"><img src="${a.thumb}" alt="${a.name}" loading="lazy"><div class="asset-card-check">✓</div></div>
       <div class="asset-card-name" title="${a.name}">${a.name}</div>
     </div>`).join('');
   document.getElementById('taskDetailPanel').classList.add('show');
 }
-
 function backToTaskList() {
   document.getElementById('taskDetailPanel').classList.remove('show');
   document.getElementById('assetFilterBar').style.display='';
   if (assetCurrentCat==='产品物料') renderProductListModal();
   else document.getElementById('assetGridWrap').style.display='';
 }
-
 function toggleAssetCard(card, id) {
   if (assetSelected.has(id)) { assetSelected.delete(id); card.classList.remove('selected'); }
   else { assetSelected.add(id); card.classList.add('selected'); }
   updateAssetFooter();
 }
-
 function updateAssetFooter() {
   document.getElementById('assetSelCount').textContent = assetSelected.size;
   document.getElementById('assetConfirmBtn').disabled = assetSelected.size===0;
 }
-
 function confirmAssetSelect() {
   const allItems = [...Object.values(MOCK_ASSETS).flat(), ...MOCK_PRODUCTS_ASSET.flatMap(p=>p.materials), ...MOCK_TASKS_ASSET.flatMap(t=>t.thumbs)];
   allItems.forEach(a=>{ if(assetSelected.has(a.id)) addRefFromUrl(a.thumb); });
   closeAssetModal();
 }
-
-function showAssetPreview(src) {
-  document.getElementById('assetPreviewImg').src = src;
-  document.getElementById('assetPreviewMask').classList.add('show');
-}
+function showAssetPreview(src) { document.getElementById('assetPreviewImg').src=src; document.getElementById('assetPreviewMask').classList.add('show'); }
 function closeAssetPreview() { document.getElementById('assetPreviewMask').classList.remove('show'); }
 
 // ── loadPendingGen 兼容 ──
@@ -1578,8 +1510,7 @@ function closeAssetPreview() { document.getElementById('assetPreviewMask').class
       setTimeout(()=>{
         expandInputBox();
         document.getElementById('inputPrompt').value = data.prompt;
-        onInputChange();
-        renderInputOpts();
+        onInputChange(); renderInputOpts();
         setTimeout(()=>doGenerate(), 500);
       }, 300);
     }

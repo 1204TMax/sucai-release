@@ -12,7 +12,7 @@
                          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
             font-size: 14px;
             line-height: 1.5715;
-            background: #f0f2f6;
+            background: #fff;
             min-height: 100vh;
             padding: 102px 24px 40px;
         }
@@ -66,17 +66,17 @@
 
         /* 左侧上传区块 */
         .upload-block {
-            width: 68px; flex-shrink: 0; height: 108px; margin-top: 14px;
+            width: 68px; flex-shrink: 0; height: 108px;
             background: #f7f7f7; border: 1.5px dashed rgba(0,0,0,0.14);
             border-radius: 10px; display: flex; align-items: center;
             justify-content: center; cursor: pointer; color: #c8c8c8;
             transition: border-color 0.15s, color 0.15s, background-color 0.15s;
         }
         .upload-block:hover { border-color: #1677ff; color: #1677ff; background-color: #f0f7ff; }
-        #uploadInput, #uploadFirst, #uploadLast { display: none; }
+        #uploadInput, #uploadFirst, #uploadLast, #chatMediaInput, #chatFileInput { display: none; }
 
         textarea.prompt {
-            flex: 1; min-height: 135px; border: none; outline: none;
+            flex: 1; min-height: 108px; border: none; outline: none;
             font-size: 15px; font-family: inherit; color: #1a1a1a;
             background: transparent; resize: none; line-height: 1.65;
         }
@@ -176,8 +176,8 @@
             display: inline-flex; align-items: center; gap: 5px;
         }
         .opt-pill.open .opt-pill-val { color: #1a1a1a; }
-        .arr { font-size: 9px; opacity: 0.25; transition: transform 0.15s, opacity 0.15s; }
-        .opt-pill.open .arr { transform: rotate(180deg); opacity: 0.5; }
+        .arr { display: none; }
+        .opt-pill.open .arr { display: none; }
 
         /* 比例小图标（pill 内）*/
         .pill-ratio-box {
@@ -262,6 +262,26 @@
             opacity: 0; transition: opacity 0.15s; z-index: 600;
         }
         .model-opt-row:hover::after { opacity: 1; }
+        /* 对话模型单选 */
+        .model-radio {
+            width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+            border: 1.5px solid rgba(0,0,0,0.25);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+        }
+        .model-radio.active { background: #1a1a1a; border-color: #1a1a1a; }
+        .model-radio.active::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fff; display: block; }
+        .cm-tier-label {
+            font-size: 10px; color: #bbb; font-weight: 600; letter-spacing: 0.06em;
+            text-transform: uppercase; padding: 8px 10px 2px;
+        }
+        .cm-tier-label:first-child { padding-top: 2px; }
+
+        /* 切换 pill（思考/搜索） */
+        .toggle-pill { gap: 5px; }
+        .toggle-pill .arr { display: none; }
+        .toggle-pill.on { background: rgba(22,119,255,0.08); border-color: rgba(22,119,255,0.28); color: #1677ff; }
+
         .model-count-wrap {
             display: flex; align-items: center; gap: 4px; flex-shrink: 0;
         }
@@ -470,6 +490,43 @@
         }
         .chat-tool-btn:hover { background: rgba(0,0,0,0.05); color: #666; }
 
+        /* 上传文件按钮（对话模式 toolbar） */
+        .chat-upload-btn {
+            height: 30px; padding: 0 11px;
+            border: 1px solid rgba(0,0,0,0.14); border-radius: 8px;
+            background: transparent; color: #666;
+            font-size: 13px; font-family: inherit;
+            cursor: pointer; white-space: nowrap; flex-shrink: 0;
+            transition: border-color 0.14s, color 0.14s;
+        }
+        .chat-upload-btn:hover { border-color: rgba(0,0,0,0.3); color: #1a1a1a; }
+
+        /* 对话附件预览条 */
+        .chat-attach-strip {
+            display: none; flex-wrap: wrap; gap: 8px;
+            padding: 8px 18px 0;
+            border-top: 1px solid rgba(0,0,0,0.06);
+        }
+        .chat-attach-strip.show { display: flex; }
+        .chat-file-card {
+            position: relative; display: flex; align-items: center; gap: 7px;
+            height: 52px; padding: 0 10px 0 9px; border-radius: 8px;
+            background: #f5f5f5; border: 1px solid rgba(0,0,0,0.07);
+            max-width: 170px; box-sizing: border-box;
+        }
+        .chat-file-icon { color: #999; flex-shrink: 0; }
+        .chat-file-name { font-size: 12px; color: #555; line-height: 1.4;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 115px; }
+        .chat-attach-del {
+            position: absolute; top: -5px; right: -5px;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: rgba(0,0,0,0.55); color: #fff; font-size: 8px;
+            display: none; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 1;
+        }
+        .chat-file-card:hover .chat-attach-del,
+        .ref-item:hover .chat-attach-del { display: flex; }
+
         /* 发送按钮（对话模式下的 gen-btn） */
         .gen-btn.send-mode {
             width: 34px; height: 34px; padding: 0;
@@ -558,8 +615,17 @@
         .asset-modal-header {
             display: flex; align-items: center; justify-content: space-between;
             padding: 16px 20px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
+            gap: 12px;
         }
-        .asset-modal-title { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+        .asset-modal-title { font-size: 16px; font-weight: 600; color: #1a1a1a; flex-shrink: 0; }
+        .asset-header-search {
+            flex: 1; max-width: 220px; height: 30px; padding: 0 10px 0 30px;
+            border: 1px solid #e0e0e0; border-radius: 6px;
+            font-size: 13px; font-family: inherit; color: #333; outline: none;
+            background: #fafafa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") 9px center no-repeat;
+            transition: border-color 0.15s;
+        }
+        .asset-header-search:focus { border-color: #1677ff; background-color: #fff; }
         .asset-modal-close {
             width: 28px; height: 28px; border-radius: 6px;
             display: flex; align-items: center; justify-content: center;
@@ -574,6 +640,10 @@
             width: 140px; flex-shrink: 0;
             border-right: 1px solid #f0f0f0;
             padding: 8px 0; overflow-y: auto;
+            transition: opacity 0.2s, filter 0.2s;
+        }
+        .searching .asset-sidebar {
+            opacity: 0.35; filter: grayscale(0.6); pointer-events: none;
         }
         .asset-sidebar-item {
             display: flex; align-items: center; gap: 8px;
@@ -607,6 +677,17 @@
             background-repeat: no-repeat; background-position: right 10px center;
         }
         .asset-filter-select:focus { border-color: #1677ff; }
+        .date-range-custom {
+            display: none; align-items: center; gap: 4px;
+        }
+        .date-range-custom.show { display: inline-flex; }
+        .date-input {
+            height: 32px; padding: 0 8px; border: 1px solid #e0e0e0;
+            border-radius: 6px; font-size: 13px; font-family: inherit;
+            color: #555; background: #fafafa; outline: none; cursor: pointer; width: 118px;
+        }
+        .date-input:focus { border-color: #1677ff; }
+        .date-range-sep { color: #bbb; font-size: 13px; }
         /* 内容网格 */
         .asset-grid-wrap { flex: 1; overflow-y: auto; padding: 16px; }
         .asset-grid {
@@ -660,7 +741,13 @@
         .sel-panel-header {
             padding: 12px 14px 8px; font-size: 13px; font-weight: 500; color: #555;
             flex-shrink: 0; white-space: nowrap;
+            display: flex; align-items: center; justify-content: space-between;
         }
+        .sel-panel-clear {
+            font-size: 12px; font-weight: 400; color: #999; cursor: pointer;
+            transition: color 0.14s;
+        }
+        .sel-panel-clear:hover { color: #ff4d4f; }
         .sel-panel-grid {
             flex: 1; overflow-y: auto; padding: 0 10px 10px;
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
@@ -845,18 +932,14 @@
                 </svg>视频
             </button>
         </div>
-        <button class="history-btn" onclick="openHistory()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-            生成历史
-        </button>
     </div>
 
     <div class="input-box" id="inputBox">
         <input type="file" id="uploadInput" accept="image/*" multiple onchange="onUpload(event)">
         <input type="file" id="uploadFirst" accept="image/*" onchange="onUploadFrame(event,'frameFirst')">
         <input type="file" id="uploadLast"  accept="image/*" onchange="onUploadFrame(event,'frameLast')">
+        <input type="file" id="chatMediaInput" accept="image/*,video/*" multiple onchange="onChatMedia(event)">
+        <input type="file" id="chatFileInput" multiple onchange="onChatFile(event)">
         <button id="parseBtn" class="parse-btn" onclick="parseRefImage()" style="display:none">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
             解析提示词
@@ -879,7 +962,13 @@
         <!-- 首尾帧区域（视频模式 首尾帧 时显示） -->
         <div class="keyframe-strip" id="keyframeStrip"></div>
 
+        <!-- 对话附件预览条 -->
+        <div class="chat-attach-strip" id="chatAttachStrip"></div>
+
         <div class="toolbar" id="toolbar">
+            <button class="chat-tool-btn" id="chatAttachBtn" style="display:none" title="添加附件" onclick="showChatAttachMenu(event,this)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            </button>
             <div id="optArea" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"></div>
             <div id="chatExtra" style="display:none;flex:1;align-items:center;gap:2px;">
                 <button class="chat-tool-btn" title="表情">
@@ -926,6 +1015,18 @@
     <div class="upload-dropdown-item" onclick="openAssetModal('我的任务')" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
         我的任务
+    </div>
+</div>
+
+<!-- 对话附件来源下拉菜单 -->
+<div class="upload-dropdown" id="chatAttachDropdown">
+    <div class="upload-dropdown-item" onclick="document.getElementById('chatAttachDropdown').classList.remove('show');document.getElementById('chatMediaInput').click()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        图片/视频
+    </div>
+    <div class="upload-dropdown-item" onclick="document.getElementById('chatAttachDropdown').classList.remove('show');document.getElementById('chatFileInput').click()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        文件
     </div>
 </div>
 
@@ -980,7 +1081,10 @@
                 </div>
             </div>
             <div class="asset-selected-panel" id="assetSelectedPanel">
-                <div class="sel-panel-header">已选 <span id="selPanelCount">0</span> 项</div>
+                <div class="sel-panel-header">
+                    <span>已选 <span id="selPanelCount">0</span> 项</span>
+                    <span class="sel-panel-clear" onclick="clearAllSelected()">清空</span>
+                </div>
                 <div class="sel-panel-grid" id="selPanelGrid"></div>
             </div>
         </div>
@@ -1012,6 +1116,25 @@ const MODELS = [
     { id: 'banana2',   name: 'banana2',     desc: '谷歌的图像模型，对提示词的理解能力很强大' },
 ];
 
+const CHAT_MODELS = {
+    fast: [
+        { id: 'gpt54mini',        name: 'GPT-5.4 mini',     desc: 'OpenAI · 快速轻量，日常对话首选' },
+        { id: 'claude-haiku-45',  name: 'Claude Haiku 4.5', desc: 'Anthropic · 极速响应，高频调用理想' },
+        { id: 'claude-flash-30',  name: 'Claude 3.0 Flash', desc: 'Anthropic · 低成本快速，综合性价比高' },
+        { id: 'glm-51',           name: 'GLM-5.1',           desc: '智谱 AI · 中文理解优秀，推理高效' },
+        { id: 'qwen3-max',        name: 'Qwen3-Max',         desc: '阿里通义 · 速度质量均衡，中英文兼优' },
+        { id: 'kimi-k25',         name: 'Kimi-K2.5',         desc: '月之暗面 · 超长上下文，速度极快' },
+    ],
+    smart: [
+        { id: 'gpt54',            name: 'GPT-5.4',           desc: 'OpenAI · 旗舰推理，复杂任务首选' },
+        { id: 'gemini-31-pro',    name: 'Gemini 3.1 Pro',    desc: 'Google · 多模态强，百万级上下文' },
+        { id: 'claude-sonnet-46', name: 'Claude Sonnet 4.6', desc: 'Anthropic · 代码与分析突出，速智均衡' },
+        { id: 'claude-opus-46',   name: 'Claude Opus 4.6',   desc: 'Anthropic · 最强推理，深度思考首选' },
+        { id: 'grok4',            name: 'Grok4',             desc: 'xAI · 实时联网，擅长时事分析' },
+        { id: 'deepseek-32',      name: 'DeepSeek 3.2',      desc: '深度求索 · 代码与数学能力强，开源之光' },
+    ],
+};
+
 const PROJECTS = [
     { category: '休闲游戏', products: ['消消乐', '跑酷大冒险', '解谜达人', '塔防英雄'] },
     { category: '工具应用', products: ['清理大师', 'WiFi管家', '天气预报Pro', '超级省电'] },
@@ -1019,35 +1142,63 @@ const PROJECTS = [
     { category: '内容阅读', products: ['小说畅读', '漫画星球', '壁纸精选', '短剧热播'] },
 ];
 
-const PLATFORM_TABS = ['全部', '巨量', '腾讯', '快手'];
+const PLATFORM_TABS = ['常用', '广点通', '字节', 'OPPO', 'vivo', '华为'];
 const PLATFORM_PRESETS = {
-    '巨量': [
-        { w: 1080, h: 1920, ratio: '9:16' },
-        { w: 720,  h: 1280, ratio: '9:16' },
-        { w: 1080, h: 1080, ratio: '1:1'  },
-        { w: 1280, h: 720,  ratio: '16:9' },
-    ],
-    '腾讯': [
-        { w: 800,  h: 800,  ratio: '1:1'  },
-        { w: 1280, h: 720,  ratio: '16:9' },
-        { w: 1080, h: 1920, ratio: '9:16' },
-        { w: 480,  h: 320,  ratio: '3:2'  },
+    '广点通': [
         { w: 960,  h: 334,  ratio: '横幅' },
-    ],
-    '快手': [
-        { w: 1080, h: 1920, ratio: '9:16' },
-        { w: 720,  h: 1280, ratio: '9:16' },
-        { w: 1080, h: 1080, ratio: '1:1'  },
         { w: 1280, h: 720,  ratio: '16:9' },
+        { w: 480,  h: 320,  ratio: '3:2'  },
+        { w: 800,  h: 800,  ratio: '1:1'  },
+        { w: 1080, h: 1920, ratio: '9:16' },
     ],
-    '更多': [],
+    '字节': [
+        { w: 2560, h: 1440, ratio: '16:9'  },
+        { w: 1280, h: 720,  ratio: '16:9'  },
+        { w: 1368, h: 900,  ratio: '38:25' },
+        { w: 456,  h: 300,  ratio: '38:25' },
+        { w: 720,  h: 720,  ratio: '1:1'   },
+        { w: 1440, h: 2560, ratio: '9:16'  },
+    ],
+    'OPPO': [
+        { w: 1280, h: 720,  ratio: '16:9' },
+        { w: 1080, h: 1920, ratio: '9:16' },
+    ],
+    'vivo': [
+        { w: 640,  h: 264, ratio: '横幅' },
+        { w: 1280, h: 720, ratio: '16:9' },
+        { w: 240,  h: 180, ratio: '4:3'  },
+        { w: 720,  h: 720, ratio: '1:1'  },
+    ],
+    '华为': [
+        { w: 2160, h: 340,  ratio: '横幅'  },
+        { w: 1080, h: 170,  ratio: '横幅'  },
+        { w: 2560, h: 1440, ratio: '16:9'  },
+        { w: 1280, h: 720,  ratio: '16:9'  },
+        { w: 1368, h: 900,  ratio: '38:25' },
+        { w: 456,  h: 300,  ratio: '38:25' },
+        { w: 2560, h: 2560, ratio: '1:1'   },
+        { w: 900,  h: 900,  ratio: '1:1'   },
+        { w: 720,  h: 720,  ratio: '1:1'   },
+        { w: 1440, h: 1920, ratio: '3:4'   },
+        { w: 720,  h: 960,  ratio: '3:4'   },
+        { w: 1440, h: 2160, ratio: '2:3'   },
+        { w: 720,  h: 1080, ratio: '2:3'   },
+        { w: 1440, h: 2560, ratio: '9:16'  },
+    ],
 };
 
 const OPTS = {
+    chat: [
+        { key: 'chat-model', type: 'chat-model' },
+        { key: 'think',      type: 'toggle', label: '思考模式' },
+        { key: 'search',     type: 'toggle', label: '网络搜索' },
+        { key: 'project',    type: 'project' },
+        { key: 'upload',     type: 'upload-btn', label: '上传文件' },
+    ],
     image: [
         { key: 'model',     type: 'model' },
         { key: 'ratio-res', type: 'ratio-res',
-          ratioValues: ['1:1','2:3','3:2','3:4','4:3','9:16','16:9','21:9'] },
+          ratioValues: ['21:9','16:9','3:2','4:3','1:1','3:4','2:3','9:16'] },
         { key: 'count',     type: 'count',
           values: ['1','2','3','4','5','6','7','8','9','10'] },
         { key: 'project',  type: 'project' },
@@ -1057,9 +1208,9 @@ const OPTS = {
         { key: 'count',      type: 'count', unit: '个',
           values: ['1','2','3','4','5','6','7','8','9','10'] },
         { key: 'mode',       type: 'chips', label: '生成模式',
-          values: ['参考图','首尾帧','文本生成'], def: '参考图' },
+          values: ['智能参考','首尾帧'], def: '智能参考' },
         { key: 'ratio-dur',  type: 'ratio-dur',
-          ratioValues: ['16:9','9:16','1:1','4:3','3:4'],
+          ratioValues: ['16:9','4:3','1:1','3:4','9:16'],
           durValues: ['5秒','10秒','15秒','30秒'] },
         { key: 'project',    type: 'project' },
     ],
@@ -1067,8 +1218,9 @@ const OPTS = {
 
 let curType = 'image';
 const sel = {
-    image: { models: ['seedream5'], modelCounts: {}, ratio: '1:1', res: '2K', sizeW: 2048, sizeH: 2048, count: '1', project: '', ratioTab: '全部', platformSize: null, customRatios: [] },
-    video: { models: ['seedream5'], modelCounts: {}, count: '1', mode: '参考图', ratio: '16:9', ratioTab: '全部', platformSize: null, dur: '5秒', project: '', frameFirst: null, frameLast: null },
+    chat:  { model: 'gpt54mini', think: false, search: false, project: '' },
+    image: { models: ['seedream5'], modelCounts: {}, ratio: '1:1', res: '2K', sizeW: 2048, sizeH: 2048, count: '1', project: '', ratioTab: '常用', platformSize: null, customRatios: [] },
+    video: { models: ['seedream5'], modelCounts: {}, count: '1', mode: '智能参考', ratio: '16:9', ratioTab: '常用', platformSize: null, dur: '5秒', project: '', frameFirst: null, frameLast: null },
 };
 
 function onInput() {
@@ -1091,6 +1243,81 @@ document.addEventListener('click', () => document.getElementById('uploadDropdown
 function triggerUpload() {
     document.getElementById('uploadDropdown').classList.remove('show');
     document.getElementById('uploadInput').click();
+}
+
+// ── 对话附件 ──
+let chatAttachments = [];
+let _chatAttachId = 0;
+
+function showChatAttachMenu(e, anchor) {
+    e.stopPropagation();
+    const dd = document.getElementById('chatAttachDropdown');
+    if (dd.classList.contains('show')) { dd.classList.remove('show'); return; }
+    const rect = anchor.getBoundingClientRect();
+    dd.style.left = rect.left + 'px';
+    dd.style.top = (rect.bottom + 6) + 'px';
+    dd.classList.add('show');
+}
+document.addEventListener('click', () => document.getElementById('chatAttachDropdown')?.classList.remove('show'));
+
+function onChatMedia(e) {
+    Array.from(e.target.files).forEach(f => {
+        const isVideo = f.type.startsWith('video/');
+        const url = URL.createObjectURL(f);
+        const id = 'ca' + (++_chatAttachId);
+        chatAttachments.push({ id, type: 'media', url, name: f.name, isVideo });
+    });
+    e.target.value = '';
+    renderChatAttachStrip();
+}
+
+function onChatFile(e) {
+    Array.from(e.target.files).forEach(f => {
+        const id = 'ca' + (++_chatAttachId);
+        const ext = f.name.split('.').pop().toLowerCase();
+        const imageExts = ['jpg','jpeg','png','gif','webp','bmp','svg','heic','tiff'];
+        const videoExts = ['mp4','webm','mov','avi','mkv','m4v'];
+        const isMedia = f.type.startsWith('image/') || f.type.startsWith('video/')
+                     || imageExts.includes(ext) || videoExts.includes(ext);
+        const isVideo = f.type.startsWith('video/') || videoExts.includes(ext);
+        if (isMedia) {
+            const url = URL.createObjectURL(f);
+            chatAttachments.push({ id, type: 'media', url, name: f.name, isVideo });
+        } else {
+            chatAttachments.push({ id, type: 'file', name: f.name });
+        }
+    });
+    e.target.value = '';
+    renderChatAttachStrip();
+}
+
+function removeChatAttach(id) {
+    chatAttachments = chatAttachments.filter(a => a.id !== id);
+    renderChatAttachStrip();
+}
+
+function renderChatAttachStrip() {
+    const strip = document.getElementById('chatAttachStrip');
+    if (!chatAttachments.length) {
+        strip.innerHTML = '';
+        strip.style.display = 'none';
+        return;
+    }
+    strip.style.display = 'flex';
+    strip.innerHTML = chatAttachments.map(a => {
+        if (a.type === 'media') {
+            return `<div class="ref-item" style="position:relative;width:60px;height:60px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid rgba(0,0,0,0.08);background:#f0f0f0">
+                <img src="${a.url}" style="width:100%;height:100%;object-fit:cover;display:block">
+                <div class="ref-del" style="display:none" onclick="removeChatAttach('${a.id}')">✕</div>
+            </div>`;
+        } else {
+            return `<div class="chat-file-card">
+                <svg class="chat-file-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span class="chat-file-name" title="${a.name}">${a.name}</span>
+                <div class="chat-attach-del" onclick="removeChatAttach('${a.id}')">✕</div>
+            </div>`;
+        }
+    }).join('');
 }
 
 function onUpload(e) {
@@ -1296,15 +1523,17 @@ const MOCK_TASKS = [
 ];
 
 const FILTER_DEFAULT = `
-    <select class="asset-filter-select" onchange="filterAssets()"><option value="">时间范围</option><option value="7d">近7天</option><option value="30d">近30天</option><option value="90d">近90天</option><option value="180d">近半年</option><option value="365d">近一年</option></select>
+    <select class="asset-filter-select" onchange="onDateRangeChange(this)"><option value="">时间范围</option><option value="7d">近7天</option><option value="30d">近30天</option><option value="90d">近90天</option><option value="180d">近半年</option><option value="365d">近一年</option><option value="custom">自定义…</option></select>
+    <span class="date-range-custom"><input type="date" class="date-input" oninput="filterAssets()"><span class="date-range-sep">—</span><input type="date" class="date-input" oninput="filterAssets()"></span>
     <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部品类</option><option value="skincare">护肤</option><option value="makeup">彩妆</option><option value="food">食品</option><option value="digital">数码</option><option value="clothing">服饰</option></select>
     <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部产品</option><option value="prod_a">产品A</option><option value="prod_b">产品B</option><option value="prod_c">产品C</option></select>
     <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部类型</option><option value="image">图片</option><option value="video">视频</option></select>
     <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部CP</option><option value="cp1">CP-01</option><option value="cp2">CP-02</option><option value="cp3">CP-03</option></select>
-    <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部画幅</option><option value="1:1">1:1</option><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="4:3">4:3</option><option value="3:4">3:4</option></select>`;
+    <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部比例</option><option value="1:1">1:1</option><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="4:3">4:3</option><option value="3:4">3:4</option></select>`;
 
 const FILTER_TASK = `
-    <select class="asset-filter-select" onchange="filterAssets()"><option value="">创建时间</option><option value="7d">近7天</option><option value="30d">近30天</option><option value="90d">近90天</option></select>
+    <select class="asset-filter-select" onchange="onDateRangeChange(this)"><option value="">创建时间</option><option value="7d">近7天</option><option value="30d">近30天</option><option value="90d">近90天</option><option value="custom">自定义…</option></select>
+    <span class="date-range-custom"><input type="date" class="date-input" oninput="filterAssets()"><span class="date-range-sep">—</span><input type="date" class="date-input" oninput="filterAssets()"></span>
     <select class="asset-filter-select" onchange="filterAssets()"><option value="">全部任务类型</option><option value="img">图片生成</option><option value="vid">视频生成</option></select>`;
 
 const FILTER_PRODUCT = `
@@ -1317,7 +1546,7 @@ let assetCurrentCat = '素材库';
 
 function renderFilterBar() {
     const bar = document.getElementById('assetFilterBar');
-    const searchBox = `<input class="asset-search" id="assetSearchInput" placeholder="搜索名称…" oninput="filterAssets()" style="flex:0 0 180px">`;
+    const searchBox = `<input class="asset-search" id="assetSearchInput" placeholder="输入名称进行搜索…" oninput="filterAssets()" style="flex:0 0 180px">`;
     if (assetCurrentCat === '我的任务') bar.innerHTML = searchBox + FILTER_TASK;
     else if (assetCurrentCat === '产品物料') bar.innerHTML = searchBox + FILTER_PRODUCT;
     else bar.innerHTML = searchBox + FILTER_DEFAULT;
@@ -1538,6 +1767,14 @@ function removeSelItem(id) {
     updateSelectionPanel();
 }
 
+function clearAllSelected() {
+    assetSelected.clear();
+    assetSelectedMap.clear();
+    document.querySelectorAll('.asset-card.selected').forEach(c => c.classList.remove('selected'));
+    updateAssetFooter();
+    updateSelectionPanel();
+}
+
 function confirmAssetSelect() {
     const items = MOCK_ASSETS[assetCurrentCat] || [];
     items.forEach(a => { if (assetSelected.has(a.id)) addRefFromUrl(a.thumb); });
@@ -1554,7 +1791,17 @@ function closeAssetPreview() {
     document.getElementById('assetPreviewMask').classList.remove('show');
 }
 
-function filterAssets() { renderAssetGrid(); }
+function onDateRangeChange(sel) {
+    const custom = sel.nextElementSibling;
+    custom.classList.toggle('show', sel.value === 'custom');
+    filterAssets();
+}
+
+function filterAssets() {
+    const q = (document.getElementById('assetSearchInput')?.value || '').trim();
+    document.querySelector('.asset-modal').classList.toggle('searching', q.length > 0);
+    renderAssetGrid();
+}
 
 // ── 解析参考图 ──
 const PARSE_PROMPTS = [
@@ -1683,12 +1930,12 @@ function renderOpts() {
             const res   = sel[curType].res;
             const resLabel = res === '4K' ? '超清 4K' : res === '1K' ? '1K' : '高清 2K';
             const customRatios = sel[curType].customRatios || [];
-            const ratioTab = sel[curType].ratioTab || '全部';
+            const ratioTab = sel[curType].ratioTab || '常用';
             const ps = sel[curType].platformSize;
 
             // Compute pill ratio icon
             let rw = 14, rh = 14;
-            if (ratioTab !== '全部' && ps) {
+            if (ratioTab !== '常用' && ps) {
                 rw = ps.w; rh = ps.h;
             } else if (RATIO_SIZES[ratio]) {
                 [rw, rh] = RATIO_SIZES[ratio];
@@ -1703,10 +1950,10 @@ function renderOpts() {
             const sc = 11 / Math.max(rw, rh);
             const iw = Math.round(rw * sc), ih = Math.round(rh * sc);
 
-            if (ratioTab !== '全部' && ps) {
-                pillVal = `<span class="pill-ratio-box" style="width:${iw}px;height:${ih}px;"></span>${ps.w}×${ps.h} · ${resLabel}`;
+            if (ratioTab !== '常用' && ps) {
+                pillVal = `${ps.w}×${ps.h} · ${resLabel}`;
             } else {
-                pillVal = `<span class="pill-ratio-box" style="width:${iw}px;height:${ih}px;"></span>${ratio} · ${resLabel}`;
+                pillVal = `${ratio} · ${resLabel}`;
             }
 
             // Platform tab bar
@@ -1719,7 +1966,7 @@ function renderOpts() {
 
             // Preset ratio content (swaps based on active tab)
             let presetContent;
-            if (ratioTab === '全部') {
+            if (ratioTab === '常用') {
                 presetContent = `<div class="ratio-row">
                     ${opt.ratioValues.map(v => {
                         const [w, h] = RATIO_SIZES[v] || [14, 14];
@@ -1780,7 +2027,7 @@ function renderOpts() {
                 : '';
 
             ddInner = `<div class="dd-section">
-                <div class="dd-section-title">预设比例</div>
+                <div class="dd-section-title">比例</div>
                 ${tabBar}
                 ${presetContent}
             </div>
@@ -1799,6 +2046,7 @@ function renderOpts() {
                 </div>
             </div>
             ${opt.showRes !== false ? `<div class="dd-section">
+                <div class="dd-section-title">质量</div>
                 <div class="res-toggle">
                     <div class="res-large${res==='1K'?' active':''}" onclick="pickRatioRes(event,'res','1K')">1K</div>
                     <div class="res-large${res==='2K'?' active':''}" onclick="pickRatioRes(event,'res','2K')">高清 2K</div>
@@ -1808,18 +2056,18 @@ function renderOpts() {
 
         } else if (opt.type === 'ratio-dur') {
             const ratio = sel[curType].ratio || '16:9';
-            const ratioTab = sel[curType].ratioTab || '全部';
+            const ratioTab = sel[curType].ratioTab || '常用';
             const ps = sel[curType].platformSize;
 
             // pill 图标
             let rw = 14, rh = 14;
-            if (ratioTab !== '全部' && ps) { rw = ps.w; rh = ps.h; }
+            if (ratioTab !== '常用' && ps) { rw = ps.w; rh = ps.h; }
             else if (RATIO_SIZES[ratio]) { [rw, rh] = RATIO_SIZES[ratio]; }
             const sc = 11 / Math.max(rw, rh);
             const iw = Math.round(rw * sc), ih = Math.round(rh * sc);
-            const ratioDisplay = (ratioTab !== '全部' && ps) ? `${ps.w}×${ps.h}` : ratio;
+            const ratioDisplay = (ratioTab !== '常用' && ps) ? `${ps.w}×${ps.h}` : ratio;
             const dur = sel[curType].dur || '5秒';
-            pillVal = `<span class="pill-ratio-box" style="width:${iw}px;height:${ih}px;"></span>${ratioDisplay} · ${dur}`;
+            pillVal = `${ratioDisplay} · ${dur}`;
 
             // 平台 tab bar
             const tabBar = `<div class="ratio-platform-tabs">
@@ -1831,7 +2079,7 @@ function renderOpts() {
 
             // 预设比例内容
             let presetContent;
-            if (ratioTab === '全部') {
+            if (ratioTab === '常用') {
                 presetContent = `<div class="ratio-row">
                     ${opt.ratioValues.map(v => {
                         const [w, h] = RATIO_SIZES[v] || [14, 14];
@@ -1877,7 +2125,7 @@ function renderOpts() {
                 <div class="dd-chips">
                     ${(opt.durValues || ['5秒','10秒','15秒','30秒']).map(v =>
                         `<span class="dd-chip${v===dur?' active':''}"
-                               onclick="pickOpt(event,'dur','${v}')">${v}</span>`
+                               onclick="pickDur(event,'${v}')">${v}</span>`
                     ).join('')}
                 </div>
             </div>`;
@@ -1979,6 +2227,41 @@ function renderOpts() {
                 }).join('')}
             </div>`;
 
+        } else if (opt.type === 'chat-model') {
+            const mid = sel.chat.model;
+            const allModels = [...CHAT_MODELS.fast, ...CHAT_MODELS.smart];
+            const m = allModels.find(x => x.id === mid) || CHAT_MODELS.fast[0];
+            pillVal = m.name;
+            const renderTier = (list) => list.map(mx =>
+                `<div class="model-opt-row" data-desc="${mx.desc}"
+                      onclick="pickChatModel(event,'${mx.id}')">
+                    <div class="model-radio${mx.id === mid ? ' active' : ''}"></div>
+                    <span class="model-opt-name">${mx.name}</span>
+                </div>`
+            ).join('');
+            ddInner = `<div class="dd-section" style="padding-bottom:0">
+                <div class="cm-tier-label">快速</div>
+                <div class="model-list">${renderTier(CHAT_MODELS.fast)}</div>
+                <div class="cm-tier-label">智能</div>
+                <div class="model-list">${renderTier(CHAT_MODELS.smart)}</div>
+            </div>`;
+
+        } else if (opt.type === 'toggle') {
+            const on = !!sel[curType][opt.key];
+            const iconThink = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`;
+            const iconSearch = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`;
+            const icon = opt.key === 'think' ? iconThink : iconSearch;
+            pillVal = `${icon} ${opt.label}`;
+            if (on) pill.classList.add('on');
+            pill.classList.add('toggle-pill');
+            ddInner = null;
+
+        } else if (opt.type === 'upload-btn') {
+            const icon = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+            pillVal = `${icon} ${opt.label}`;
+            pill.classList.add('toggle-pill');
+            ddInner = null;
+
         } else {
             const val = sel[curType][opt.key];
             pillVal = val;
@@ -2000,13 +2283,27 @@ function renderOpts() {
         const clearBtn = (opt.type === 'project' && sel[curType].project)
             ? `<button class="pill-clear" onclick="clearProject(event)">✕</button>` : '';
 
-        pill.innerHTML = `
-            <span class="opt-pill-val">${pillVal}</span>${clearBtn}
-            <span class="arr">▾</span>
-            <div class="opt-dd" id="dd-${opt.key}">${ddInner}</div>`;
+        if (ddInner === null) {
+            // toggle pill — no dropdown, no arrow
+            pill.innerHTML = `<span class="opt-pill-val">${pillVal}</span>`;
+        } else {
+            pill.innerHTML = `
+                <span class="opt-pill-val">${pillVal}</span>${clearBtn}
+                <span class="arr">▾</span>
+                <div class="opt-dd" id="dd-${opt.key}">${ddInner}</div>`;
+        }
 
         pill.addEventListener('click', e => {
             e.stopPropagation();
+            if (opt.type === 'toggle') {
+                sel[curType][opt.key] = !sel[curType][opt.key];
+                renderOpts();
+                return;
+            }
+            if (opt.type === 'upload-btn') {
+                setTimeout(() => document.getElementById('chatFileInput').click(), 0);
+                return;
+            }
             const dd = pill.querySelector('.opt-dd');
             const isOpen = pill.classList.contains('open');
             closeAll();
@@ -2015,6 +2312,13 @@ function renderOpts() {
 
         area.appendChild(pill);
     });
+}
+
+function pickChatModel(e, id) {
+    e.stopPropagation();
+    sel.chat.model = id;
+    closeAll();
+    renderOpts();
 }
 
 function confirmCount(e) {
@@ -2122,6 +2426,12 @@ function clearProject(e) {
     sel[curType].project = '';
     closeAll();
     renderOpts();
+}
+
+function pickDur(e, val) {
+    e.stopPropagation();
+    sel[curType].dur = val;
+    reopenRatioPanel();
 }
 
 function pickRatioRes(e, type, val) {
@@ -2237,16 +2547,21 @@ function switchType(btn) {
     curType = btn.dataset.type;
     const isChat = curType === 'chat';
 
-    // 上传区 & 参考图条
+    // 上传区 & 参考图条（对话模式与图像/视频模式保持一致）
     if (!document.getElementById('refAddBtn')) {
-        document.getElementById('uploadBlock').style.display = isChat ? 'none' : '';
+        document.getElementById('uploadBlock').style.display = '';
     }
-    document.getElementById('refStrip').style.display = isChat ? 'none' : '';
+    document.getElementById('chatAttachBtn').style.display = 'none';
+    if (!isChat) {
+        chatAttachments = [];
+        document.getElementById('chatAttachStrip').style.display = 'none';
+        document.getElementById('chatAttachStrip').innerHTML = '';
+    }
     renderKeyframeStrip();
 
     // 选项区 vs 对话工具
-    document.getElementById('optArea').style.display = isChat ? 'none' : 'flex';
-    document.getElementById('chatExtra').style.display = isChat ? 'flex' : 'none';
+    document.getElementById('optArea').style.display = 'flex';
+    document.getElementById('chatExtra').style.display = 'none';
     if (!isChat) document.getElementById('parseBtn').style.display =
         document.querySelector('.ref-item') ? '' : 'none';
     else document.getElementById('parseBtn').style.display = 'none';
@@ -2267,7 +2582,7 @@ function switchType(btn) {
     document.getElementById('prompt').placeholder = ph[curType] || '';
 
     closeAll();
-    if (!isChat) renderOpts();
+    renderOpts();
 }
 
 function useWorkflow(type) {
