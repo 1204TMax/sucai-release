@@ -32,7 +32,7 @@ const MENU_CONFIG = [
       items: [
         { name: '通用生成', page: 'AI 创作/通用生成.html', icon: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>' },
         { name: '生成详情', page: 'AI 创作/生成详情.html', icon: '<path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>' },
-        { name: '生成结果', page: 'AI 创作/生成结果.html', icon: '<rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>' }
+        { name: '全部图片', page: 'AI 创作/全部图片.html', icon: '<rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>' }
       ]
     }
   },
@@ -53,7 +53,7 @@ const MENU_CONFIG = [
       },
       {
         name: '原料管理',
-        page: '系统设置/模型配置.html',
+        page: '共享样式/该需求暂未完成.html',
         icon: '<line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line>'
       },
       {
@@ -69,7 +69,7 @@ const MENU_CONFIG = [
     children: [
       {
         name: '素材库',
-        page: '素材管理/index.html',
+        page: '素材管理/素材库.html',
         icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><circle cx="15.5" cy="8.5" r="1.5"></circle><circle cx="15.5" cy="15.5" r="1.5"></circle><circle cx="8.5" cy="15.5" r="1.5"></circle>'
       },
       {
@@ -79,12 +79,12 @@ const MENU_CONFIG = [
       },
       {
         name: '手动合成',
-        page: '系统设置/模型配置.html',
+        page: '共享样式/该需求暂未完成.html',
         icon: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>'
       },
       {
         name: '自动合成',
-        page: '素材管理/混剪策略.html',
+        page: '共享样式/该需求暂未完成.html',
         icon: '<polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>'
       }
     ]
@@ -95,12 +95,12 @@ const MENU_CONFIG = [
     children: [
       {
         name: '模型配置',
-        page: '系统设置/模型配置.html',
+        page: '共享样式/该需求暂未完成.html',
         icon: '<path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path>'
       },
       {
         name: '算力成本',
-        page: '系统设置/算力成本.html',
+        page: '共享样式/该需求暂未完成.html',
         icon: '<line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>'
       }
     ]

@@ -2587,7 +2587,7 @@ function switchType(btn) {
 
 function useWorkflow(type) {
     if (type === 'image') {
-        parent.postMessage({ action: 'openTab', title: '图像素材衍生', url: 'AI 创作/图像素材衍生工作流.html' }, '*');
+        parent.postMessage({ action: 'openTab', title: '工作流-裂变', url: 'AI 创作/工作流-裂变.html' }, '*');
         return;
     }
     const btn = document.querySelector(`.type-btn[data-type="${type}"]`);

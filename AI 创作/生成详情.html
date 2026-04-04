@@ -708,7 +708,7 @@ function CardActions({ task, onOpenDetail }) {
       批量入库
       <StorageDropdown show={showStorage} task={task} onClose={()=>setShowStorage(false)}/>
     </button>
-    <button className="card-act-more" onClick={()=>parent.postMessage({action:'openTab',title:'生成结果',url:'AI 创作/生成结果.html'},'*')}>查看全部</button>
+    <button className="card-act-more" onClick={()=>parent.postMessage({action:'openTab',title:'全部图片',url:'AI 创作/全部图片.html'},'*')}>查看全部</button>
   </div>;
 }
 
@@ -765,10 +765,10 @@ function TaskCard({ task, viewMode, onOpenDetail }) {
       )}
       {task.status==='aborted' && (collapsed
         ? (currentOutput.items.length > 0
-          ? <OutputRow items={currentOutput.items} total={currentOutput.total} type={task.type} collapsed={collapsed} onViewAll={()=>parent.postMessage({action:'openTab',title:'生成结果',url:'AI 创作/生成结果.html'},'*')}/>
+          ? <OutputRow items={currentOutput.items} total={currentOutput.total} type={task.type} collapsed={collapsed} onViewAll={()=>parent.postMessage({action:'openTab',title:'全部图片',url:'AI 创作/全部图片.html'},'*')}/>
           : <div style={{padding:'8px 0',fontSize:12,color:'#d97706'}}>已中止生成</div>)
         : (currentOutput.items.length > 0
-          ? <OutputRow items={currentOutput.items} total={currentOutput.total} type={task.type} collapsed={collapsed} onViewAll={()=>parent.postMessage({action:'openTab',title:'生成结果',url:'AI 创作/生成结果.html'},'*')}/>
+          ? <OutputRow items={currentOutput.items} total={currentOutput.total} type={task.type} collapsed={collapsed} onViewAll={()=>parent.postMessage({action:'openTab',title:'全部图片',url:'AI 创作/全部图片.html'},'*')}/>
           : <div className="status-placeholder"><div className="status-placeholder-text">已中止生成</div></div>)
       )}
       {task.status==='pending' && (collapsed
@@ -782,7 +782,7 @@ function TaskCard({ task, viewMode, onOpenDetail }) {
         total={currentOutput.total}
         type={task.type}
         collapsed={collapsed}
-        onViewAll={()=>parent.postMessage({action:'openTab',title:'生成结果',url:'AI 创作/生成结果.html'},'*')}
+        onViewAll={()=>parent.postMessage({action:'openTab',title:'全部图片',url:'AI 创作/全部图片.html'},'*')}
       />}
     </div>
 
@@ -1266,8 +1266,8 @@ function navigateToWorkflow(task) {
   }));
   parent.postMessage({
     action: 'openTab',
-    title: '图像素材衍生工作流',
-    url: 'AI 创作/图像素材衍生工作流.html'
+    title: '工作流-裂变',
+    url: 'AI 创作/工作流-裂变.html'
   }, '*');
 }
 
