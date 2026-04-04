@@ -266,6 +266,30 @@
     .dd-count-chip:hover { background: #f5f5f5; }
     .dd-count-chip.active { border-color: #1677ff; background: #e6f4ff; color: #1677ff; }
 
+    /* ═══ Toggle pills (思考/搜索/上传) ═══ */
+    .toggle-pill { gap: 5px; }
+    .toggle-pill .arr { display: none; }
+    .toggle-pill.on { background: rgba(22,119,255,0.08); border-color: rgba(22,119,255,0.28); color: #1677ff; }
+
+    /* ═══ Chat model dropdown ═══ */
+    .model-list { display: flex; flex-direction: column; gap: 2px; }
+    .model-opt-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: background .12s; position: relative; white-space: nowrap; }
+    .model-opt-row:hover { background: #f5f5f5; }
+    .model-opt-name { flex: 1; font-size: 12px; color: #333; }
+    .model-radio { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; transition: all .15s; }
+    .model-radio.active { background: #1a1a1a; border-color: #1a1a1a; }
+    .model-radio.active::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fff; display: block; }
+    .cm-tier-label { font-size: 10px; color: #bbb; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 8px 10px 2px; }
+    .cm-tier-label:first-child { padding-top: 2px; }
+    .model-opt-row::after { content: attr(data-desc); position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%); background: rgba(20,20,20,0.88); color: #fff; font-size: 11px; font-weight: normal; padding: 6px 10px; border-radius: 6px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 600; }
+    .model-opt-row:hover::after { opacity: 1; }
+
+    /* ═══ Chips (视频模式/时长) ═══ */
+    .dd-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+    .dd-chip { padding: 5px 12px; border-radius: 6px; font-size: 12px; color: #555; cursor: pointer; border: 1px solid transparent; transition: all .12s; white-space: nowrap; }
+    .dd-chip:hover { background: #f5f5f5; }
+    .dd-chip.active { border-color: #1677ff; background: #e6f4ff; color: #1677ff; }
+
     /* ═══ 生成按钮 ═══ */
     .gen-btn { background: #e0e0e0; color: #fff; border: none; padding: 6px 18px; border-radius: 8px; font-size: 13px; cursor: not-allowed; display: flex; align-items: center; gap: 4px; transition: background .15s; }
     .gen-btn.has-text { background: #1677ff; cursor: pointer; }
@@ -1138,10 +1162,29 @@ const MODELS_DATA = [
   { id:'seedream5', name:'seedream5.0', desc:'字节最强大的图像模型，对中文字体支持友好' },
   { id:'banana2', name:'banana2', desc:'谷歌的图像模型，对提示词的理解能力很强大' },
 ];
+const CHAT_MODELS = {
+  fast: [
+    { id:'gpt54mini', name:'GPT-5.4 mini', desc:'OpenAI · 快速轻量，日常对话首选' },
+    { id:'claude-haiku-45', name:'Claude Haiku 4.5', desc:'Anthropic · 极速响应，高频调用理想' },
+    { id:'claude-flash-30', name:'Claude 3.0 Flash', desc:'Anthropic · 低成本快速，综合性价比高' },
+    { id:'glm-51', name:'GLM-5.1', desc:'智谱 AI · 中文理解优秀，推理高效' },
+    { id:'qwen3-max', name:'Qwen3-Max', desc:'阿里通义 · 速度质量均衡，中英文兼优' },
+    { id:'kimi-k25', name:'Kimi-K2.5', desc:'月之暗面 · 超长上下文，速度极快' },
+  ],
+  smart: [
+    { id:'gpt54', name:'GPT-5.4', desc:'OpenAI · 旗舰推理，复杂任务首选' },
+    { id:'gemini-31-pro', name:'Gemini 3.1 Pro', desc:'Google · 多模态强，百万级上下文' },
+    { id:'claude-sonnet-46', name:'Claude Sonnet 4.6', desc:'Anthropic · 代码与分析突出，速智均衡' },
+    { id:'claude-opus-46', name:'Claude Opus 4.6', desc:'Anthropic · 最强推理，深度思考首选' },
+    { id:'grok4', name:'Grok4', desc:'xAI · 实时联网，擅长时事分析' },
+    { id:'deepseek-32', name:'DeepSeek 3.2', desc:'深度求索 · 代码与数学能力强，开源之光' },
+  ],
+};
 let curType = 'image';
 const sel = {
+  chat:  { model:'gpt54mini', think:false, search:false },
   image: { model:'seedream5', ratio:'1:1', res:'2K', count:'1' },
-  video: { ratio:'16:9', dur:'5秒', style:'写实', res:'1080P', count:'1' },
+  video: { model:'seedream5', ratio:'16:9', dur:'5秒', mode:'智能参考', count:'1' },
 };
 
 (function initInputBox() {
@@ -1212,13 +1255,14 @@ window.addEventListener('contentTabChanged', function(e) {
   var optArea = document.getElementById('inputOptArea');
   var genBtn = document.getElementById('inputGenBtn');
   var placeholder = document.querySelector('.input-placeholder');
-  curType = tab === 'video' ? 'video' : 'image';
+  curType = tab === 'video' ? 'video' : tab === 'chat' ? 'chat' : 'image';
   if (tab === 'chat') {
     prompt.placeholder = '输入文本内容...';
     if (placeholder) placeholder.textContent = '输入文本内容...';
     if (uploadBlock) uploadBlock.style.display = 'none';
-    if (optArea) optArea.style.display = 'none';
+    if (optArea) optArea.style.display = '';
     genBtn.innerHTML = '<span>发送</span>';
+    renderInputOpts();
   } else if (tab === 'video') {
     prompt.placeholder = '描述您想要生成的视频...';
     if (placeholder) placeholder.textContent = '描述您想要生成的视频...';
@@ -1409,46 +1453,153 @@ function renderInputOpts() {
   const area = document.getElementById('inputOptArea');
   if (!area) return;
   area.innerHTML = '';
-  const modelName = (MODELS_DATA.find(m=>m.id===sel[curType].model)||MODELS_DATA[0]).name;
-  area.innerHTML += `<div class="opt-pill" id="pill-model" onclick="togglePill(event,'model')">
-    <span>${modelName}</span><span class="arr">▼</span>
-    <div class="opt-dd" id="dd-model">
-      <div class="dd-section-title">模型</div>
-      ${MODELS_DATA.map(m=>`<div class="model-opt${m.id===sel[curType].model?' active':''}" onclick="pickModel(event,'${m.id}')">${m.name}</div>`).join('')}
-    </div>
-  </div>`;
-  const ratio = sel[curType].ratio;
-  const rs = RATIO_SIZES[ratio]||[14,14]; const sc = 11/Math.max(rs[0],rs[1]);
-  const iw=Math.round(rs[0]*sc), ih=Math.round(rs[1]*sc);
-  const resLabel = sel[curType].res==='4K'?'超清 4K':sel[curType].res==='1K'?'1K':'高清 2K';
-  const ratioVals = ['1:1','2:3','3:2','3:4','4:3','9:16','16:9'];
-  area.innerHTML += `<div class="opt-pill" id="pill-ratio" onclick="togglePill(event,'ratio')">
-    <span class="pill-ratio-box" style="width:${iw}px;height:${ih}px"></span>
-    <span>${ratio} · ${resLabel}</span><span class="arr">▼</span>
-    <div class="opt-dd" id="dd-ratio" style="min-width:280px">
-      <div class="dd-section-title">画面比例</div>
-      <div class="ratio-row">${ratioVals.map(r=>{
-        const s=RATIO_SIZES[r]||[14,14]; const sc2=11/Math.max(s[0],s[1]);
-        return `<div class="ratio-chip${r===ratio?' active':''}" onclick="pickRatio(event,'${r}')">
-          <div class="ratio-box" style="width:${Math.round(s[0]*sc2)}px;height:${Math.round(s[1]*sc2)}px"></div>
-          <span class="ratio-lbl">${r}</span></div>`;
-      }).join('')}</div>
-      <div class="dd-section-title" style="margin-top:10px">分辨率</div>
-      <div class="dd-res-row">
-        ${['1K','2K','4K'].map(r=>`<div class="dd-res-chip${r===sel[curType].res?' active':''}" onclick="pickRes(event,'${r}')">${r==='4K'?'超清 4K':r==='1K'?'1K':'高清 2K'}</div>`).join('')}
+
+  if (curType === 'chat') {
+    // ── 对话模型选择 ──
+    const mid = sel.chat.model;
+    const allModels = [...CHAT_MODELS.fast, ...CHAT_MODELS.smart];
+    const cm = allModels.find(x=>x.id===mid) || CHAT_MODELS.fast[0];
+    const renderTier = (list) => list.map(mx =>
+      `<div class="model-opt-row" data-desc="${mx.desc}" onclick="pickChatModel(event,'${mx.id}')">
+        <div class="model-radio${mx.id===mid?' active':''}"></div>
+        <span class="model-opt-name">${mx.name}</span>
+      </div>`
+    ).join('');
+    area.innerHTML += `<div class="opt-pill" id="pill-chat-model" onclick="togglePill(event,'chat-model')">
+      <span>${cm.name}</span><span class="arr">▼</span>
+      <div class="opt-dd" id="dd-chat-model" style="min-width:220px">
+        <div class="cm-tier-label">快速</div>
+        <div class="model-list">${renderTier(CHAT_MODELS.fast)}</div>
+        <div class="cm-tier-label">智能</div>
+        <div class="model-list">${renderTier(CHAT_MODELS.smart)}</div>
       </div>
-    </div>
-  </div>`;
-  const count = sel[curType].count || '1';
-  area.innerHTML += `<div class="opt-pill" id="pill-count" onclick="togglePill(event,'count')">
-    <span>${count} 张</span><span class="arr">▼</span>
-    <div class="opt-dd" id="dd-count">
-      <div class="dd-section-title">生成数量</div>
-      <div class="dd-count-row">${['1','2','3','4','5','6','7','8','9','10'].map(n=>
-        `<div class="dd-count-chip${n===count?' active':''}" onclick="pickCount(event,'${n}')">${n}</div>`
-      ).join('')}</div>
-    </div>
-  </div>`;
+    </div>`;
+
+    // ── 思考模式 ──
+    const thinkOn = sel.chat.think;
+    area.innerHTML += `<div class="opt-pill toggle-pill${thinkOn?' on':''}" onclick="toggleChatOpt('think')">
+      <span class="opt-pill-val"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> 思考模式</span>
+    </div>`;
+
+    // ── 网络搜索 ──
+    const searchOn = sel.chat.search;
+    area.innerHTML += `<div class="opt-pill toggle-pill${searchOn?' on':''}" onclick="toggleChatOpt('search')">
+      <span class="opt-pill-val"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> 网络搜索</span>
+    </div>`;
+
+    // ── 上传文件 ──
+    area.innerHTML += `<div class="opt-pill toggle-pill" onclick="void(0)">
+      <span class="opt-pill-val"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> 上传文件</span>
+    </div>`;
+
+  } else if (curType === 'video') {
+    // ── 模型 ──
+    const modelId = sel.video.model || 'seedream5';
+    const modelName = (MODELS_DATA.find(m=>m.id===modelId)||MODELS_DATA[0]).name;
+    area.innerHTML += `<div class="opt-pill" id="pill-model" onclick="togglePill(event,'model')">
+      <span>${modelName}</span><span class="arr">▼</span>
+      <div class="opt-dd" id="dd-model">
+        <div class="dd-section-title">模型</div>
+        ${MODELS_DATA.map(m=>`<div class="model-opt${m.id===modelId?' active':''}" onclick="pickModel(event,'${m.id}')">${m.name}</div>`).join('')}
+      </div>
+    </div>`;
+
+    // ── 数量 ──
+    const vCount = sel.video.count || '1';
+    area.innerHTML += `<div class="opt-pill" id="pill-count" onclick="togglePill(event,'count')">
+      <span>${vCount} 个</span><span class="arr">▼</span>
+      <div class="opt-dd" id="dd-count">
+        <div class="dd-section-title">生成数量</div>
+        <div class="dd-chips" style="flex-wrap:nowrap">
+          ${['1','2','3','4','5','6','7','8','9','10'].map(n=>`<span class="dd-chip${n===vCount?' active':''}" onclick="pickCount(event,'${n}')">${n}</span>`).join('')}
+        </div>
+      </div>
+    </div>`;
+
+    // ── 生成模式 ──
+    const vMode = sel.video.mode || '智能参考';
+    area.innerHTML += `<div class="opt-pill" id="pill-mode" onclick="togglePill(event,'mode')">
+      <span>${vMode}</span><span class="arr">▼</span>
+      <div class="opt-dd" id="dd-mode">
+        <div class="dd-section-title">生成模式</div>
+        <div class="dd-chips">
+          ${['智能参考','首尾帧'].map(v=>`<span class="dd-chip${v===vMode?' active':''}" onclick="pickMode(event,'${v}')">${v}</span>`).join('')}
+        </div>
+      </div>
+    </div>`;
+
+    // ── 比例 + 时长 ──
+    const vRatio = sel.video.ratio || '16:9';
+    const vDur = sel.video.dur || '5秒';
+    const vrs = RATIO_SIZES[vRatio]||[16,9]; const vsc = 11/Math.max(vrs[0],vrs[1]);
+    const viw=Math.round(vrs[0]*vsc), vih=Math.round(vrs[1]*vsc);
+    const videoRatioVals = ['16:9','4:3','1:1','3:4','9:16'];
+    area.innerHTML += `<div class="opt-pill" id="pill-ratio" onclick="togglePill(event,'ratio')">
+      <span class="pill-ratio-box" style="width:${viw}px;height:${vih}px"></span>
+      <span>${vRatio} · ${vDur}</span><span class="arr">▼</span>
+      <div class="opt-dd" id="dd-ratio" style="min-width:300px">
+        <div class="dd-section-title">比例</div>
+        <div class="ratio-row">${videoRatioVals.map(r=>{
+          const s=RATIO_SIZES[r]||[14,14]; const sc2=11/Math.max(s[0],s[1]);
+          return `<div class="ratio-chip${r===vRatio?' active':''}" onclick="pickRatio(event,'${r}')">
+            <div class="ratio-box" style="width:${Math.round(s[0]*sc2)}px;height:${Math.round(s[1]*sc2)}px"></div>
+            <span class="ratio-lbl">${r}</span></div>`;
+        }).join('')}</div>
+        <div class="dd-section-title" style="margin-top:10px">时长</div>
+        <div class="dd-chips">
+          ${['5秒','10秒','15秒','30秒'].map(v=>`<span class="dd-chip${v===vDur?' active':''}" onclick="pickDur(event,'${v}')">${v}</span>`).join('')}
+        </div>
+      </div>
+    </div>`;
+
+  } else {
+    // ── Image 模式（默认） ──
+    // 模型
+    const modelName = (MODELS_DATA.find(m=>m.id===sel[curType].model)||MODELS_DATA[0]).name;
+    area.innerHTML += `<div class="opt-pill" id="pill-model" onclick="togglePill(event,'model')">
+      <span>${modelName}</span><span class="arr">▼</span>
+      <div class="opt-dd" id="dd-model">
+        <div class="dd-section-title">模型</div>
+        ${MODELS_DATA.map(m=>`<div class="model-opt${m.id===sel[curType].model?' active':''}" onclick="pickModel(event,'${m.id}')">${m.name}</div>`).join('')}
+      </div>
+    </div>`;
+
+    // 数量
+    const count = sel[curType].count || '1';
+    area.innerHTML += `<div class="opt-pill" id="pill-count" onclick="togglePill(event,'count')">
+      <span>${count} 张</span><span class="arr">▼</span>
+      <div class="opt-dd" id="dd-count">
+        <div class="dd-section-title">生成数量</div>
+        <div class="dd-count-row">${['1','2','3','4','5','6','7','8','9','10'].map(n=>
+          `<div class="dd-count-chip${n===count?' active':''}" onclick="pickCount(event,'${n}')">${n}</div>`
+        ).join('')}</div>
+      </div>
+    </div>`;
+
+    // 比例 + 分辨率
+    const ratio = sel[curType].ratio;
+    const rs = RATIO_SIZES[ratio]||[14,14]; const sc = 11/Math.max(rs[0],rs[1]);
+    const iw=Math.round(rs[0]*sc), ih=Math.round(rs[1]*sc);
+    const resLabel = sel[curType].res==='4K'?'超清 4K':sel[curType].res==='1K'?'1K':'高清 2K';
+    const ratioVals = ['1:1','2:3','3:2','3:4','4:3','9:16','16:9'];
+    area.innerHTML += `<div class="opt-pill" id="pill-ratio" onclick="togglePill(event,'ratio')">
+      <span class="pill-ratio-box" style="width:${iw}px;height:${ih}px"></span>
+      <span>${ratio} · ${resLabel}</span><span class="arr">▼</span>
+      <div class="opt-dd" id="dd-ratio" style="min-width:280px">
+        <div class="dd-section-title">画面比例</div>
+        <div class="ratio-row">${ratioVals.map(r=>{
+          const s=RATIO_SIZES[r]||[14,14]; const sc2=11/Math.max(s[0],s[1]);
+          return `<div class="ratio-chip${r===ratio?' active':''}" onclick="pickRatio(event,'${r}')">
+            <div class="ratio-box" style="width:${Math.round(s[0]*sc2)}px;height:${Math.round(s[1]*sc2)}px"></div>
+            <span class="ratio-lbl">${r}</span></div>`;
+        }).join('')}</div>
+        <div class="dd-section-title" style="margin-top:10px">分辨率</div>
+        <div class="dd-res-row">
+          ${['1K','2K','4K'].map(r=>`<div class="dd-res-chip${r===sel[curType].res?' active':''}" onclick="pickRes(event,'${r}')">${r==='4K'?'超清 4K':r==='1K'?'1K':'高清 2K'}</div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
 }
 
 function togglePill(e, key) {
@@ -1471,6 +1622,10 @@ function pickModel(e,id){ e.stopPropagation(); sel[curType].model=id; renderInpu
 function pickRatio(e,r){ e.stopPropagation(); sel[curType].ratio=r; renderInputOpts(); }
 function pickRes(e,r){ e.stopPropagation(); sel[curType].res=r; renderInputOpts(); }
 function pickCount(e,n){ e.stopPropagation(); sel[curType].count=n; renderInputOpts(); }
+function pickChatModel(e,id){ e.stopPropagation(); sel.chat.model=id; renderInputOpts(); }
+function toggleChatOpt(key){ sel.chat[key]=!sel.chat[key]; renderInputOpts(); }
+function pickMode(e,v){ e.stopPropagation(); sel.video.mode=v; renderInputOpts(); }
+function pickDur(e,v){ e.stopPropagation(); sel.video.dur=v; renderInputOpts(); }
 
 function doGenerate() {
   const txt = document.getElementById('inputPrompt').value.trim();
