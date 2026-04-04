@@ -949,7 +949,8 @@ function renderOutputArea(task, currentOutput, collapsed) {
     return collapsed ? '<div style="padding:8px 0;font-size:12px;color:#d97706">已中止生成</div>' : '<div class="status-placeholder"><div class="status-placeholder-text">已中止生成</div></div>';
   }
   if (s === 'pending') {
-    return collapsed ? '<div style="padding:8px 0;font-size:12px;color:#999">排队中...</div>' : '<div class="status-placeholder"><div class="status-placeholder-text">任务排队中，请稍候...</div></div>';
+    var n = collapsed ? 6 : 4;
+    return '<div class="output-row '+(collapsed?'collapsed':'expanded')+'">'+Array(n+1).join('<div class="skel-thumb"></div>')+'</div>';
   }
   if (s === 'completed') return renderOutputRow(task, currentOutput, collapsed);
   return '';
@@ -1028,7 +1029,7 @@ function renderCardActions(task) {
       +'<button class="card-act-more" onclick="parent.postMessage({action:\'openTab\',title:\'全部图片\',url:\'AI 创作/全部图片.html\'},\'*\')">查看全部</button>'
       +'</div>';
   }
-  if (s === 'generating') {
+  if (s === 'generating' || s === 'pending') {
     return '<div class="card-actions">'
       +'<button class="card-act-btn" onclick="handleReEditById(\''+id+'\')">'+icon(SVG.edit)+' 重新编辑</button>'
       +'<button class="card-act-btn" onclick="handleRetryById(\''+id+'\')">'+icon(SVG.retry)+' 再次生成</button>'
@@ -1199,7 +1200,7 @@ const sel = {
       <div class="input-collapsed" onclick="expandInputBox()">
         <span class="input-plus-icon">+</span>
         <span class="input-placeholder">描述您想要生成的内容...</span>
-        <button class="input-gen-mini" id="miniGenBtn" disabled>⚡ 生成</button>
+        <button class="input-gen-mini" id="miniGenBtn" disabled>生成</button>
       </div>
       <div class="input-expanded">
         <div class="input-top">
@@ -1217,7 +1218,7 @@ const sel = {
           <div id="inputOptArea" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"></div>
           <div class="input-toolbar-spacer"></div>
           <button class="gen-btn" id="inputGenBtn" onclick="doGenerate()">
-            <span>⚡ 生成</span>
+            <span>生成</span>
           </button>
         </div>
       </div>
@@ -1268,14 +1269,14 @@ window.addEventListener('contentTabChanged', function(e) {
     if (placeholder) placeholder.textContent = '描述您想要生成的视频...';
     if (uploadBlock) uploadBlock.style.display = '';
     if (optArea) optArea.style.display = '';
-    genBtn.innerHTML = '<span>⚡ 生成</span>';
+    genBtn.innerHTML = '<span>生成</span>';
     renderInputOpts();
   } else {
     prompt.placeholder = '描述您想要生成的图像...';
     if (placeholder) placeholder.textContent = '描述您想要生成的图像...';
     if (uploadBlock) uploadBlock.style.display = '';
     if (optArea) optArea.style.display = '';
-    genBtn.innerHTML = '<span>⚡ 生成</span>';
+    genBtn.innerHTML = '<span>生成</span>';
     renderInputOpts();
   }
 });
