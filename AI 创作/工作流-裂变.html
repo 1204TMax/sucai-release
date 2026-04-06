@@ -35,6 +35,9 @@
             --border-secondary: #f0f0f0;
             --fill-secondary: #f5f5f5;
             --bg-container: #fff;
+            --bg-elevated: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.92) 100%);
+            --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.03), 0 8px 24px rgba(0, 0, 0, 0.06);
+            --shadow-soft: 0 6px 20px rgba(22, 119, 255, 0.08);
             --error: #ff4d4f;
         }
 
@@ -43,14 +46,60 @@
             margin: 0 auto;
         }
 
+        .page-hero {
+            margin-bottom: 16px;
+            padding: 0;
+        }
+        .page-hero-main {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+        .page-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            height: 22px;
+            padding: 0 8px;
+            border-radius: 999px;
+            background: var(--primary-bg);
+            color: var(--primary);
+            border: 1px solid var(--primary-border);
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .page-title {
+            font-size: 20px;
+            line-height: 1.4;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .page-desc {
+            max-width: 640px;
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+        .page-meta {
+            display: none;
+        }
+        .meta-chip {
+            display: none;
+        }
+
         /* ── 步骤条 [Ant Design 导航规范 spec/navigation.zh-CN.md] ── */
         /* 横向流程步骤条，步骤多于2步时使用，建议不超过5步 */
         .steps {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 32px;
-            padding: 0 40px;
+            margin-bottom: 20px;
+            padding: 0 24px;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            backdrop-filter: none;
         }
         .step {
             display: flex;
@@ -118,8 +167,32 @@
         .form-card {
             background: var(--bg-container);
             border-radius: 8px;
+            border: none;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
-            padding: 32px;
+            padding: 28px 32px 32px;
+        }
+
+        .section-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .section-head-main {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .section-desc {
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-tertiary);
         }
 
         /* ── 表单项 [Ant Design 数据录入规范 spec/data-entry.zh-CN.md] ── */
@@ -147,20 +220,22 @@
         /* ── 上传区 [Ant Design 数据录入规范 - 拖拽上传] ── */
         .upload-area {
             border: 1.5px dashed var(--border);
-            border-radius: 8px;
-            padding: 32px;
+            border-radius: 16px;
+            padding: 32px 24px;
             text-align: center;
             cursor: pointer;
-            transition: border-color 0.2s, background 0.2s;
-            background: #fafafa;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
         }
         .upload-area:hover {
             border-color: var(--primary);
-            background: var(--primary-bg);
+            background: linear-gradient(180deg, rgba(230, 244, 255, 0.82) 0%, rgba(255, 255, 255, 1) 100%);
+            box-shadow: 0 0 0 4px rgba(22, 119, 255, 0.06);
         }
         .upload-area.dragover {
             border-color: var(--primary);
-            background: var(--primary-bg);
+            background: linear-gradient(180deg, rgba(230, 244, 255, 0.82) 0%, rgba(255, 255, 255, 1) 100%);
+            box-shadow: 0 0 0 4px rgba(22, 119, 255, 0.06);
         }
         .upload-icon {
             width: 48px;
@@ -250,6 +325,10 @@
             align-items: center;
             gap: 8px;
             flex-wrap: wrap;
+            padding: 16px;
+            border: 1px solid var(--border-secondary);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.01);
         }
         /* [Ant Design 按钮规范] 数量选择按钮，高度 32px 与主按钮统一 */
         .count-btn {
@@ -309,14 +388,17 @@
             display: flex;
             align-items: flex-start;
             gap: 12px;
-            padding: 14px 16px;
+            padding: 16px;
             border: 1px solid var(--border-secondary);
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s;
             background: #fff;
         }
-        .api-card:hover { border-color: var(--primary-border); }
+        .api-card:hover {
+            border-color: var(--primary-border);
+            box-shadow: 0 4px 12px rgba(22, 119, 255, 0.06);
+        }
         .api-card.active {
             border-color: var(--primary);
             background: var(--primary-bg);
@@ -419,8 +501,13 @@
 
         /* ── Step 2 确认页 ── */
         .confirm-header {
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
             margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-secondary);
         }
         .confirm-icon {
             width: 48px;
@@ -439,6 +526,10 @@
         .summary-table {
             width: 100%;
             border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.01);
+            border: 1px solid var(--border-secondary);
+            border-radius: 12px;
+            overflow: hidden;
         }
         .summary-table tr {
             border-bottom: 1px solid var(--border-secondary);
@@ -535,8 +626,12 @@
 <div class="page-container">
 
     <!-- 页面标题 -->
-    <div style="margin-bottom: 20px;">
-        <h1 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">大字报裂变衍生工作流</h1>
+    <div class="page-hero">
+        <div class="page-hero-main">
+            <div class="page-eyebrow">AI 工作流</div>
+            <h1 class="page-title">大字报裂变衍生工作流</h1>
+            <p class="page-desc">上传参考图并补充改图方向后，系统会按你选择的接口自动生成多组裂变结果，提交后可在生成详情中查看进度与产出。</p>
+        </div>
     </div>
 
     <!-- 步骤条 -->
@@ -554,6 +649,13 @@
 
     <!-- Step 1: 填写信息 -->
     <div id="step1" class="form-card">
+        <div class="section-head">
+            <div class="section-head-main">
+                <div class="section-title">填写任务参数</div>
+                <div class="section-desc">上传参考图后，补充改图方向、生成数量和接口选择。</div>
+            </div>
+        </div>
+
         <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
 
         <!-- 参考图 -->
@@ -649,6 +751,7 @@
                 </svg>
             </div>
             <div class="confirm-title">确认任务信息</div>
+            <div class="section-desc">请确认参考图、生成数量和接口选择。提交后系统将进入排队并开始执行当前裂变任务。</div>
         </div>
 
         <table class="summary-table" id="summaryTable">

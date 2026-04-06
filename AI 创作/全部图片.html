@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>生成结果 - 量化投放系统</title>
+    <link rel="stylesheet" href="../共享样式/components.css">
+    <link rel="stylesheet" href="../共享样式/image-preview.css">
+    <script src="../共享样式/components.js"></script>
+    <script src="../共享样式/image-preview.js"></script>
     <style>
         /* ══════════════════════════════════════════
            Design System Variables
@@ -223,6 +227,18 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
 
+        .pill-single {
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+            color: var(--text-lo);
+            cursor: default;
+        }
+
+        .pill-single:hover {
+            color: var(--text-lo);
+        }
+
         .pill-n {
             font-size: var(--text-xs);
             color: var(--text-muted);
@@ -232,6 +248,7 @@
             margin-left: 1px;
         }
         .pill.on .pill-n { background: var(--bg-hover); color: var(--text-lo); }
+        .pill-single .pill-n { background: transparent; padding: 0; }
 
         /* ── Buttons ── */
         .b {
@@ -316,6 +333,28 @@
         .ratio-pills { }
 
         /* ── Image Grid ── */
+        .model-group {
+            margin-bottom: var(--space-5);
+        }
+
+        .model-group-head {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-3);
+        }
+
+        .model-group-title {
+            font-size: var(--text-md);
+            font-weight: 600;
+            color: var(--text-hi);
+        }
+
+        .model-group-count {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+        }
+
         .grid-row {
             display: flex;
             gap: var(--space-2);
@@ -385,73 +424,41 @@
             pointer-events: auto;
         }
 
-        .img-item.selected .img-actions {
+        .img-item.selected .thumb-overlay {
             display: none;
         }
 
-        /* ── Overlay Action Icons ── */
-        .img-actions {
-            position: absolute;
-            bottom: var(--space-2);
-            right: var(--space-2);
-            display: flex;
-            gap: var(--space-1);
-            z-index: 2;
+        body.batch-mode .img-item .thumb-overlay {
+            display: none;
         }
 
-        .icon-btn {
-            width: var(--h-sm);
-            height: var(--h-sm);
-            display: flex;
+        .batch-preview-btn {
+            position: absolute;
+            right: var(--space-2);
+            bottom: var(--space-2);
+            z-index: 3;
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: var(--r-full);
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            display: none;
             align-items: center;
             justify-content: center;
-            border-radius: var(--r-sm);
-            border: none;
-            background: rgba(255,255,255,0.9);
-            color: var(--text-lo);
             cursor: pointer;
-            transition: all var(--ease);
-            position: relative;
+            transition: background var(--ease), transform var(--ease);
         }
 
-        .icon-btn:hover {
-            background: white;
-            color: var(--accent-solid);
+        .batch-preview-btn:hover {
+            background: rgba(0, 0, 0, 0.68);
+            transform: translateY(-1px);
         }
 
-        .icon-btn.danger:hover {
-            background: rgba(229,72,77,0.08);
-            color: var(--error);
+        body.batch-mode .img-item:not(.is-loading):hover .batch-preview-btn,
+        body.batch-mode .img-item.selected:not(.is-loading) .batch-preview-btn {
+            display: inline-flex;
         }
-
-        .icon-btn .tip {
-            position: absolute;
-            bottom: calc(100% + var(--space-2));
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.75);
-            color: white;
-            font-size: var(--text-sm);
-            padding: var(--space-1) var(--space-2);
-            border-radius: var(--r-sm);
-            white-space: nowrap;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity var(--ease);
-            z-index: 10;
-        }
-
-        .icon-btn .tip::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 4px solid transparent;
-            border-top-color: rgba(0,0,0,0.75);
-        }
-
-        .icon-btn:hover .tip { opacity: 1; }
 
         /* ── Checkbox (batch mode) ── */
         .img-cb {
@@ -719,9 +726,9 @@
         <div class="row-end" id="toolbarActions">
             <!-- Density toggle -->
             <div class="pills">
-                <button class="pill" onclick="setDensity('sparse',this)">小</button>
+                <button class="pill" onclick="setDensity('sparse',this)">大</button>
                 <button class="pill on" onclick="setDensity('medium',this)">中</button>
-                <button class="pill" onclick="setDensity('dense',this)">大</button>
+                <button class="pill" onclick="setDensity('dense',this)">小</button>
             </div>
             <div class="sep"></div>
             <button class="b b-soft" id="dlAllBtn" onclick="downloadAll()">下载全部</button>
@@ -883,6 +890,17 @@ let images = [
     { id:16, ratio:'1:1',   ar:1,     color:COLORS[15], name:'方图-004', model:'Banana 2' },
 ];
 
+function previewUrlFor(item) {
+    var w = item.ratio === '9:16' ? 900 : (item.ratio === '16:9' ? 1600 : 1200);
+    var h = item.ratio === '9:16' ? 1600 : (item.ratio === '16:9' ? 900 : 1200);
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'">'
+        + '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+item.color+'" stop-opacity="0.88"/><stop offset="1" stop-color="'+item.color+'"/></linearGradient></defs>'
+        + '<rect width="100%" height="100%" fill="url(#g)"/>'
+        + '<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="rgba(255,255,255,0.88)" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="56" font-weight="600">'+item.name+'</text>'
+        + '</svg>';
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
 // ═══════════════════════════════════════════════════
 // State
 // ═══════════════════════════════════════════════════
@@ -973,34 +991,36 @@ function renderTabs() {
     base.forEach(i => counts[i.ratio] = (counts[i.ratio] || 0) + 1);
     const ratios = Object.keys(counts);
 
-    // 只有一个比例时不显示
+    // 只有一个比例时只显示该比例，不显示“全部比例”
     const sep2 = document.getElementById('filterSep2');
-    if (ratios.length <= 1) { el.style.display = 'none'; if (sep2) sep2.style.display = 'none'; return; }
+    if (!ratios.length) { el.style.display = 'none'; if (sep2) sep2.style.display = 'none'; return; }
 
     el.style.display = 'inline-flex';
     if (sep2) sep2.style.display = '';
     el.innerHTML = '';
 
-    const mk = (label, key) => {
+    const mk = (label, key, extraClass = '') => {
         const b = document.createElement('button');
-        b.className = 'pill' + (curRatio === key ? ' on' : '');
+        b.className = 'pill' + (curRatio === key ? ' on' : '') + (extraClass ? ' ' + extraClass : '');
         b.innerHTML = label;
-        b.onclick = () => { curRatio = key; render(); };
+        if (!extraClass) b.onclick = () => { curRatio = key; render(); };
+        else b.type = 'button';
         el.appendChild(b);
     };
 
+    if (ratios.length === 1) {
+        if (curRatio === 'all') curRatio = ratios[0];
+        mk(`${ratios[0]} <span class="pill-n"></span>`, ratios[0], 'pill-single');
+        return;
+    }
+
+    if (curRatio !== 'all' && !counts[curRatio]) curRatio = 'all';
     mk(`全部比例`, 'all');
     ratios.forEach(r => mk(`${r} <span class="pill-n"></span>`, r));
 }
 
-function renderGrid() {
-    const container = document.getElementById('grid');
-    const cw = container.offsetWidth;
-    if (!cw) return;
-
-    const rows = justify(filtered(), cw, ROW_H[density]);
-    container.innerHTML = '';
-
+function renderRows(container, list, cw) {
+    const rows = justify(list, cw, ROW_H[density]);
     rows.forEach(row => {
         const rowEl = document.createElement('div');
         rowEl.className = row.last ? 'grid-row-last' : 'grid-row';
@@ -1009,52 +1029,64 @@ function renderGrid() {
     });
 }
 
+function renderGrid() {
+    const container = document.getElementById('grid');
+    const cw = container.offsetWidth;
+    if (!cw) return;
+
+    const list = filtered();
+    container.innerHTML = '';
+
+    const models = curModel === 'all' ? [...new Set(list.map(i => i.model))] : [curModel];
+    models.forEach(model => {
+        const items = list.filter(i => i.model === model);
+        if (!items.length) return;
+        const group = document.createElement('section');
+        group.className = 'model-group';
+        group.innerHTML = `
+            <div class="model-group-head">
+                <div class="model-group-title">${model}</div>
+                <div class="model-group-count">${items.length} 张</div>
+            </div>
+        `;
+        renderRows(group, items, cw);
+        container.appendChild(group);
+    });
+}
+
 function mkCard(item) {
+    const isLoading = !!item.isLoading;
     const el = document.createElement('div');
-    el.className = 'img-item' + (selected.has(item.id) ? ' selected' : '');
+    el.className = 'img-item cc-thumb-host' + (selected.has(item.id) ? ' selected' : '') + (isLoading ? ' is-loading' : '');
     el.style.width  = Math.round(item.w) + 'px';
     el.style.height = Math.round(item.h) + 'px';
     el.dataset.id = item.id;
 
-    // Color block
+    const contentHtml = isLoading
+        ? `<div class="cc-img-loading-thumb" style="width:100%;height:100%;"><div class="cc-img-loading-spinner"></div></div>`
+        : `<div class="img-block" style="background:linear-gradient(135deg,${item.color}dd,${item.color})">${item.name}</div>`;
+
+    const batchPreviewBtn = !isLoading
+        ? `<button class="batch-preview-btn" title="预览" onclick="event.stopPropagation();openPreview(find(${item.id}))">${ico.eye}</button>`
+        : '';
+
     el.innerHTML = `
-        <div class="img-block" style="background:linear-gradient(135deg,${item.color}dd,${item.color})">${item.name}</div>
+        ${contentHtml}
         <div class="img-cb${selected.has(item.id) ? ' checked' : ''}" data-cb="1">${ico.chk}</div>
-        <div class="img-overlay">
-            <div class="img-actions">${mkActions(item)}</div>
-        </div>`;
+        ${batchPreviewBtn}
+        ${isLoading ? '' : thumbOverlayHtml('', `event.stopPropagation();dlItem(${item.id})`)}
+    `;
 
     el.addEventListener('click', e => {
-        if (e.target.closest('[data-ib]')) return;
+        if (!isLoading && e.target.closest('[data-ib], .batch-preview-btn')) return;
         if (batchMode) {
             toggleSel(item.id);
-        } else {
+        } else if (!isLoading) {
             openPreview(item);
         }
     });
 
     return el;
-}
-
-function mkActions(item) {
-    let h = '';
-    if (batchMode) {
-        h += ibtn('预览', ico.eye, `openPreview(find(${item.id}))`);
-    }
-    h += ibtn('下载', ico.dl,    `dlItem(${item.id})`);
-    h += `<div class="archive-wrap">`;
-    h += `<button class="icon-btn" data-ib="1" onclick="event.stopPropagation();showArchiveForItem(${item.id},this)">
-        ${ico.inbox}<span class="tip">入库</span>
-    </button>`;
-    h += `<div class="archive-dropdown"></div></div>`;
-    h += ibtn('编辑', ico.edit,  `editItem(${item.id})`);
-    return h;
-}
-
-function ibtn(label, svg, action, danger) {
-    return `<button class="icon-btn${danger ? ' danger' : ''}" data-ib="1" onclick="event.stopPropagation();${action}">
-        ${svg}<span class="tip">${label}</span>
-    </button>`;
 }
 
 // ═══════════════════════════════════════════════════
@@ -1229,33 +1261,15 @@ function execDelete() {
 // ═══════════════════════════════════════════════════
 function openPreview(item) {
     if (!item) return;
-    const mask = document.getElementById('previewMask');
-    const canvas = document.getElementById('previewCanvas');
-    const foot = document.getElementById('previewFoot');
-
-    const pw = Math.min(item.ar * 500, 800);
-    const ph = Math.min(500, 800 / item.ar);
-    canvas.style.cssText = `
-        background:linear-gradient(135deg,${item.color}dd,${item.color});
-        width:${pw}px; height:${ph}px;
-        max-width:80vw; max-height:70vh;
-        border-radius:8px 8px 0 0;
-    `;
-    canvas.textContent = item.name;
-
-    foot.innerHTML = `
-        <button class="b b-icon b-soft" title="下载" onclick="dlItem(${item.id})">${ico.dl}</button>
-        <div class="archive-wrap">
-            <button class="b b-icon b-soft" title="入库" onclick="showArchiveForItem(${item.id},this)">${ico.inbox}</button>
-            <div class="archive-dropdown"></div>
-        </div>
-        <button class="b b-icon b-soft" title="编辑" onclick="editItem(${item.id})">${ico.edit}</button>
-    `;
-    mask.classList.add('visible');
+    var items = filtered();
+    var list = items.map(function(img){ return previewUrlFor(img); });
+    var currentUrl = previewUrlFor(item);
+    var idx = items.findIndex(function(img){ return img.id === item.id; });
+    window.__previewImage(currentUrl, list, idx >= 0 ? idx : 0);
 }
 
 function closePreview() {
-    document.getElementById('previewMask').classList.remove('visible');
+    closeImagePreview();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1268,6 +1282,10 @@ window.addEventListener('resize', () => { clearTimeout(_rt); _rt = setTimeout(re
 
 renderInfo();
 render();
+</script>
+<script>
+function showToast(msg) { alert(msg); }
+initImagePreview();
 </script>
 </body>
 </html>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>通用生成 - 量化投放系统</title>
     <link rel="stylesheet" href="../共享样式/project-picker.css">
+    <link rel="stylesheet" href="../共享样式/confirm-modal.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -469,17 +470,97 @@
         @keyframes rot { to { transform: rotate(360deg); } }
 
         /* 解析按钮 */
-        .parse-btn {
-            position: absolute; top: 12px; right: 14px; z-index: 10;
+        /* ── 提示词工具箱 ── */
+        .toolbox-wrap {
+            position: absolute; top: 12px; right: 14px; z-index: 20;
+        }
+        .toolbox-btn {
             display: inline-flex; align-items: center; gap: 5px;
-            height: 28px; padding: 0 10px; border-radius: 20px;
+            height: 28px; padding: 0 10px; border-radius: 6px;
             border: 1px solid rgba(0,0,0,0.15); background: rgba(0,0,0,0.02);
             font-size: 12px; font-weight: 500; font-family: inherit;
             color: #555; cursor: pointer; white-space: nowrap;
             transition: border-color 0.14s, background 0.14s, color 0.14s;
         }
-        .parse-btn:hover { border-color: rgba(0,0,0,0.3); color: #1a1a1a; background: rgba(0,0,0,0.04); }
-        .parse-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+        .toolbox-btn:hover { border-color: rgba(0,0,0,0.3); color: #1a1a1a; background: rgba(0,0,0,0.04); }
+        .toolbox-panel {
+            display: none; position: absolute; top: calc(100% + 6px); right: 0;
+            background: #fff; border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            min-width: 160px; overflow: visible; z-index: 20;
+        }
+        .toolbox-panel.show { display: block; }
+        .toolbox-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px; font-size: 13px; color: #333;
+            cursor: pointer; white-space: nowrap;
+            transition: background 0.12s;
+        }
+        .toolbox-item:hover { background: #f5f7fa; }
+        .toolbox-item.disabled { color: #bbb; cursor: not-allowed; }
+        .toolbox-item.disabled:hover { background: transparent; }
+        .toolbox-item.has-tip { position: relative; }
+        .toolbox-item.has-tip::after {
+            content: attr(data-tip);
+            position: absolute;
+            right: calc(100% + 8px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(20,20,20,0.9);
+            color: #fff;
+            font-size: 12px;
+            line-height: 1.4;
+            padding: 7px 10px;
+            border-radius: 8px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.14s;
+            z-index: 40;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+        }
+        .toolbox-item.has-tip:hover::after { opacity: 1; }
+        .toolbox-item svg { flex-shrink: 0; }
+        /* 多图选择面板 */
+        .toolbox-img-picker {
+            padding: 10px 12px; border-top: 1px solid rgba(0,0,0,0.07);
+        }
+        .toolbox-img-picker-title {
+            font-size: 11px; color: #999; margin-bottom: 8px;
+        }
+        .toolbox-img-grid {
+            display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;
+        }
+        .toolbox-img-thumb {
+            position: relative; width: 52px; height: 52px;
+            border-radius: 6px; overflow: hidden; cursor: pointer;
+            border: 2px solid transparent; transition: border-color 0.12s;
+        }
+        .toolbox-img-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .toolbox-img-thumb.selected { border-color: #1677ff; }
+        .toolbox-img-thumb .thumb-check {
+            display: none; position: absolute; top: 2px; right: 2px;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: #1677ff; align-items: center; justify-content: center;
+        }
+        .toolbox-img-thumb.selected .thumb-check { display: flex; }
+        .toolbox-img-thumb .thumb-preview {
+            position: absolute; left: 4px; bottom: 4px;
+            width: 18px; height: 18px; border-radius: 50%;
+            background: rgba(0,0,0,0.58); color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.12s;
+        }
+        .toolbox-img-thumb:hover .thumb-preview { opacity: 1; }
+        .toolbox-img-thumb .thumb-preview:hover { background: rgba(0,0,0,0.72); }
+        .toolbox-img-confirm {
+            width: 100%; height: 28px; border-radius: 6px;
+            border: none; background: #1677ff; color: #fff;
+            font-size: 12px; font-family: inherit; cursor: pointer;
+            transition: background 0.12s;
+        }
+        .toolbox-img-confirm:hover { background: #0958d9; }
+        .toolbox-img-confirm:disabled { background: #bbb; cursor: not-allowed; }
 
         /* 对话工具按钮 */
         .chat-tool-btn {
@@ -868,14 +949,17 @@
 
         /* ── Toast ── */
         .toast {
-            position: fixed; top: 16px; left: 50%;
-            transform: translateX(-50%) translateY(-8px);
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, calc(-50% - 8px));
             background: rgba(20,20,20,0.82); color: #fff;
-            padding: 7px 18px; border-radius: 8px; font-size: 13px;
+            padding: 10px 18px; border-radius: 8px; font-size: 13px;
             z-index: 9999; opacity: 0; pointer-events: none;
             transition: opacity 0.2s, transform 0.2s;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.18);
         }
-        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.error { background: #ff4d4f; color: #fff; }
+        .toast.ghost { background: rgba(20,20,20,0.58); color: #fff; backdrop-filter: blur(6px); }
+        .toast.show { opacity: 1; transform: translate(-50%, -50%); }
 
         .notif {
             position: fixed; top: 16px; right: 16px;
@@ -931,10 +1015,27 @@
         <input type="file" id="uploadLast"  accept="image/*" onchange="onUploadFrame(event,'frameLast')">
         <input type="file" id="chatMediaInput" accept="image/*,video/*" multiple onchange="onChatMedia(event)">
         <input type="file" id="chatFileInput" multiple onchange="onChatFile(event)">
-        <button id="parseBtn" class="parse-btn" onclick="parseRefImage()" style="display:none">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-            解析提示词
-        </button>
+        <div class="toolbox-wrap" id="toolboxWrap" onmouseenter="toolboxShow()" onmouseleave="toolboxHide()">
+            <button class="toolbox-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                提示词工具箱
+            </button>
+            <div class="toolbox-panel" id="toolboxPanel">
+                <div class="toolbox-item disabled has-tip" id="toolboxParseItem" data-tip="请先上传参考图" onclick="onToolboxParse()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    解析参考图
+                </div>
+                <div class="toolbox-item disabled has-tip" id="toolboxFormatItem" data-tip="保留你的提示词内容的前提下，使其变得更整洁" onclick="onToolboxFormat()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M7 12h10"/><path d="M10 17h4"/></svg>
+                    提示词格式化
+                </div>
+                <div class="toolbox-img-picker" id="toolboxImgPicker" style="display:none">
+                    <div class="toolbox-img-picker-title">选择要解析的图片</div>
+                    <div class="toolbox-img-grid" id="toolboxImgGrid"></div>
+                    <button class="toolbox-img-confirm" id="toolboxImgConfirm" onclick="doParseSelected()">解析选中图片</button>
+                </div>
+            </div>
+        </div>
 
         <div class="input-top">
             <div class="upload-block" id="uploadBlock" onclick="showUploadMenu(event, this)">
@@ -1107,6 +1208,15 @@ const MODELS = [
     { id: 'banana2',   name: 'banana2',     desc: '谷歌的图像模型，对提示词的理解能力很强大' },
 ];
 
+const VIDEO_MODELS = [
+    { id: 'seedance2',     name: 'Seedance 2.0',        desc: '标准版视频生成模型' },
+    { id: 'seedance2fast', name: 'Seedance 2.0 Fast',   desc: '快速版视频生成模型' },
+    { id: 'viduq3ref',     name: 'Vidu Q3 Reference',   desc: '支持参考图的视频生成模型' },
+    { id: 'kling30',       name: 'Kling 3.0',           desc: 'Kling 标准视频模型' },
+    { id: 'kling30omni',   name: 'Kling 3.0 Omni',      desc: 'Kling 多能力视频模型' },
+    { id: 'wan26',         name: 'Wan 2.6',             desc: 'Wan 视频生成模型' },
+];
+
 const CHAT_MODELS = {
     fast: [
         { id: 'gpt54mini',        name: 'GPT-5.4 mini',     desc: 'OpenAI · 快速轻量，日常对话首选' },
@@ -1211,12 +1321,13 @@ let curType = 'image';
 const sel = {
     chat:  { model: 'gpt54mini', think: false, search: false, project: '' },
     image: { models: ['seedream5'], modelCounts: {}, ratio: '1:1', res: '2K', sizeW: 2048, sizeH: 2048, count: '1', project: '', ratioTab: '常用', platformSize: null, customRatios: [] },
-    video: { models: ['seedream5'], modelCounts: {}, count: '1', mode: '智能参考', ratio: '16:9', ratioTab: '常用', platformSize: null, dur: '5秒', project: '', frameFirst: null, frameLast: null },
+    video: { models: ['seedance2'], modelCounts: {}, count: '1', mode: '智能参考', ratio: '16:9', ratioTab: '常用', platformSize: null, dur: '5秒', project: '', frameFirst: null, frameLast: null },
 };
 
 function onInput() {
     const has = document.getElementById('prompt').value.trim().length > 0;
     document.getElementById('genBtn').className = 'gen-btn' + (has ? ' has-text' : '');
+    syncToolboxFormatState();
 }
 
 // ── 上传来源菜单 ──
@@ -1337,7 +1448,7 @@ function onUpload(e) {
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>`;
         strip.insertBefore(addBtn, strip.firstChild);
-        document.getElementById('parseBtn').style.display = '';
+        syncToolboxParseState();
     }
 
     Array.from(e.target.files).forEach(f => {
@@ -1348,6 +1459,7 @@ function onUpload(e) {
         strip.appendChild(item);
     });
     e.target.value = '';
+    syncToolboxParseState();
 }
 
 // 从素材库弹窗添加图片到参考图
@@ -1371,12 +1483,13 @@ function addRefFromUrl(url) {
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>`;
         strip.insertBefore(addBtn, strip.firstChild);
-        document.getElementById('parseBtn').style.display = '';
+        syncToolboxParseState();
     }
     const item = document.createElement('div');
     item.className = 'ref-item';
     item.innerHTML = `<img src="${url}" alt="" style="cursor:pointer" onclick="previewImage('${url}')"><div class="ref-del" onclick="removeRef(this)">✕</div>`;
     strip.appendChild(item);
+    syncToolboxParseState();
 }
 
 function removeRef(btn) {
@@ -1386,7 +1499,9 @@ function removeRef(btn) {
     if (!strip.querySelector('.ref-item')) {
         document.getElementById('refAddBtn')?.remove();
         document.getElementById('uploadBlock').style.display = '';
-        document.getElementById('parseBtn').style.display = 'none';
+        syncToolboxParseState();
+    } else {
+        syncToolboxParseState();
     }
 }
 
@@ -1815,7 +1930,7 @@ function filterAssets() {
     renderAssetGrid();
 }
 
-// ── 解析参考图 ──
+// ── 提示词工具箱 ──
 const PARSE_PROMPTS = [
     '一位优雅的女性站在城市街头，身穿简约白色西装，背景是模糊的霓虹灯光，电影感光线，高清写实风格',
     '古朴的中式茶馆内，茶烟袅袅，阳光透过木质雕花窗户洒落，暖色调，细腻纹理，写实摄影风格',
@@ -1823,20 +1938,165 @@ const PARSE_PROMPTS = [
     '春日樱花树下，花瓣随风飘落，少女侧坐其中，浅粉色调，柔光，日系胶片风格',
     '深邃宇宙背景，星云与星系交织，宏观视角，壮阔震撼，写实科学插画风格',
 ];
-function parseRefImage() {
-    const btn = document.getElementById('parseBtn');
-    if (!btn || btn.disabled) return;
-    btn.disabled = true;
-    const origHTML = btn.innerHTML;
-    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:rot 0.6s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 解析中…';
-    setTimeout(() => {
-        const p = PARSE_PROMPTS[Math.floor(Math.random() * PARSE_PROMPTS.length)];
-        const ta = document.getElementById('prompt');
-        ta.value = p;
+
+function onToolboxParse() {
+    pinToolboxPanel();
+    const refItems = document.querySelectorAll('#refStrip .ref-item');
+    if (refItems.length === 0) return; // disabled 状态，不响应
+    if (refItems.length === 1) {
+        // 单图直接解析
+        doParseWithLoading();
+    } else {
+        // 多图：展开选图面板
+        const picker = document.getElementById('toolboxImgPicker');
+        const grid = document.getElementById('toolboxImgGrid');
+        if (picker.style.display === 'none') {
+            grid.innerHTML = '';
+            refItems.forEach(function(item, i) {
+                const img = item.querySelector('img');
+                const src = img ? img.src : '';
+                const thumb = document.createElement('div');
+                thumb.className = 'toolbox-img-thumb';
+                thumb.dataset.src = src;
+                thumb.innerHTML = '<img src="' + src + '" alt="参考图' + (i+1) + '">'
+                    + '<div class="thumb-preview" onclick="event.stopPropagation();previewImage(\'' + src + '\')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg></div>'
+                    + '<div class="thumb-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>';
+                thumb.onclick = function() {
+                    this.classList.toggle('selected');
+                    updateImgConfirmBtn();
+                };
+                grid.appendChild(thumb);
+            });
+            picker.style.display = '';
+            updateImgConfirmBtn();
+        } else {
+            picker.style.display = 'none';
+        }
+    }
+}
+
+function updateImgConfirmBtn() {
+    const selected = document.querySelectorAll('#toolboxImgGrid .toolbox-img-thumb.selected').length;
+    const btn = document.getElementById('toolboxImgConfirm');
+    btn.disabled = selected === 0;
+    btn.textContent = selected > 0 ? '解析选中图片（' + selected + '）' : '解析选中图片';
+}
+
+function doParseSelected() {
+    document.getElementById('toolboxImgPicker').style.display = 'none';
+    doParseWithLoading();
+}
+
+let _toolboxBusy = false;
+
+function doParseWithLoading() {
+    const item = document.getElementById('toolboxParseItem');
+    const ta = document.getElementById('prompt');
+    if (!item) return;
+    if (_toolboxBusy) { showToast('请等待生成完成后尝试', 'ghost'); return; }
+
+    const startLoading = function() {
+        const origHTML = item.innerHTML;
+        _toolboxBusy = true;
+        item.style.pointerEvents = 'none';
+        item.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:rot 0.6s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 解析中…';
+        setTimeout(function() {
+            _toolboxBusy = false;
+            item.style.pointerEvents = '';
+            item.innerHTML = origHTML;
+            showToast('生成失败，请重试', 'error');
+        }, 3000);
+    };
+
+    if (ta && ta.value.trim()) {
+        openConfirmModal({
+            title: '提示',
+            description: '解析后将替换已输入的提示词，请确认。',
+            cancelText: '取消',
+            confirmText: '确认',
+            onConfirm: startLoading
+        });
+        return;
+    }
+
+    startLoading();
+}
+
+var _toolboxHideTimer = null;
+var _toolboxPinned = false;
+function toolboxShow() {
+    if (_toolboxHideTimer) { clearTimeout(_toolboxHideTimer); _toolboxHideTimer = null; }
+    document.getElementById('toolboxPanel').classList.add('show');
+}
+function toolboxHide() {
+    if (_toolboxPinned) return;
+    _toolboxHideTimer = setTimeout(function() {
+        if (_toolboxPinned) return;
+        document.getElementById('toolboxPanel').classList.remove('show');
+        document.getElementById('toolboxImgPicker').style.display = 'none';
+    }, 120);
+}
+function pinToolboxPanel() {
+    _toolboxPinned = true;
+    if (_toolboxHideTimer) { clearTimeout(_toolboxHideTimer); _toolboxHideTimer = null; }
+    document.getElementById('toolboxPanel').classList.add('show');
+}
+function unpinToolboxPanel() {
+    _toolboxPinned = false;
+    document.getElementById('toolboxPanel').classList.remove('show');
+    document.getElementById('toolboxImgPicker').style.display = 'none';
+}
+
+// ── 解析按钮状态同步（有无参考图）──
+function syncToolboxParseState() {
+    const item = document.getElementById('toolboxParseItem');
+    if (!item) return;
+    const hasRef = !!document.querySelector('#refStrip .ref-item');
+    item.dataset.tip = hasRef ? '将参考图解析成提示词' : '请先上传参考图';
+    if (hasRef) item.classList.remove('disabled');
+    else item.classList.add('disabled');
+}
+
+function syncToolboxFormatState() {
+    const item = document.getElementById('toolboxFormatItem');
+    const ta = document.getElementById('prompt');
+    if (!item || !ta) return;
+    const hasText = ta.value.trim().length > 0;
+    if (hasText) item.classList.remove('disabled');
+    else item.classList.add('disabled');
+}
+
+function onToolboxFormat() {
+    pinToolboxPanel();
+    const item = document.getElementById('toolboxFormatItem');
+    const ta = document.getElementById('prompt');
+    if (!item || !ta || item.classList.contains('disabled') || item.dataset.loading === '1') return;
+    if (_toolboxBusy) { showToast('请等待生成完成后尝试', 'ghost'); return; }
+    const value = ta.value.trim();
+    if (!value) return;
+
+    const origHTML = item.innerHTML;
+    _toolboxBusy = true;
+    item.dataset.loading = '1';
+    item.style.pointerEvents = 'none';
+    item.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:rot 0.6s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 提示词格式化';
+
+    setTimeout(function() {
+        ta.value = [
+            '主体：' + value,
+            '场景：补充明确的环境与空间信息',
+            '构图：补充景别、视角与主体位置',
+            '风格：补充画面风格、质感与色调',
+            '光线：补充光源方向、明暗关系与氛围',
+            '细节：补充材质、动作、表情与重点元素',
+            '输出要求：高清、主体清晰、细节丰富'
+        ].join('\n');
+        _toolboxBusy = false;
+        item.dataset.loading = '0';
+        item.style.pointerEvents = '';
+        item.innerHTML = origHTML;
         onInput();
-        btn.disabled = false;
-        btn.innerHTML = origHTML;
-    }, 1000);
+    }, 3000);
 }
 
 // ── 尺寸推算 ──
@@ -1892,16 +2152,18 @@ function renderOpts() {
         let pillVal = '', ddInner = '';
 
         if (opt.type === 'model') {
-            const models = sel[curType].models || [MODELS[0].id];
+            const modelList = curType === 'video' ? VIDEO_MODELS : MODELS;
+            const models = sel[curType].models || [modelList[0].id];
             const isMulti = models.length > 1;
 
             if (isMulti) {
-                const firstName = (MODELS.find(x => x.id === models[0]) || MODELS[0]).name;
+                const firstName = (modelList.find(x => x.id === models[0]) || modelList[0]).name;
+                const countUnit = curType === 'video' ? '个' : '张';
                 pillVal = `${firstName} 等 ${models.length} 个模型`;
                 ddInner = `<div class="dd-section">
                     <div class="dd-section-title">模型与张数</div>
                     <div class="model-list">
-                        ${MODELS.map(mx => {
+                        ${modelList.map(mx => {
                             const checked = models.includes(mx.id);
                             const cnt = sel[curType].modelCounts[mx.id] || '1';
                             return `<div class="model-opt-row" data-desc="${mx.desc}"
@@ -1913,19 +2175,19 @@ function renderOpts() {
                                            value="${cnt}"
                                            onchange="setModelCount(event,'${mx.id}')"
                                            onkeydown="if(event.key==='Enter'){event.target.blur()}">
-                                    <span class="model-count-unit">张</span>
+                                    <span class="model-count-unit">${countUnit}</span>
                                 </div>` : ''}
                             </div>`;
                         }).join('')}
                     </div>
                 </div>`;
             } else {
-                const m = MODELS.find(x => x.id === models[0]) || MODELS[0];
+                const m = modelList.find(x => x.id === models[0]) || modelList[0];
                 pillVal = m.name;
                 ddInner = `<div class="dd-section">
                     <div class="dd-section-title">模型</div>
                     <div class="model-list">
-                        ${MODELS.map(mx => {
+                        ${modelList.map(mx => {
                             const checked = models.includes(mx.id);
                             return `<div class="model-opt-row" data-desc="${mx.desc}"
                                          onclick="toggleModel(event,'${mx.id}')">
@@ -2532,9 +2794,8 @@ function switchType(btn) {
     // 选项区 vs 对话工具
     document.getElementById('optArea').style.display = 'flex';
     document.getElementById('chatExtra').style.display = 'none';
-    if (!isChat) document.getElementById('parseBtn').style.display =
-        document.querySelector('.ref-item') ? '' : 'none';
-    else document.getElementById('parseBtn').style.display = 'none';
+    syncToolboxParseState();
+    syncToolboxFormatState();
 
     // 发送/生成按钮外观
     const genBtn = document.getElementById('genBtn');
@@ -2573,15 +2834,22 @@ function doGenerate() {
     parent.postMessage({ action: 'openTab', title: '生成详情', url: 'AI 创作/生成详情.html' }, '*');
 }
 
-function closeAll() {
+function closeAll(e) {
+    if (e) {
+        const toolboxWrap = document.getElementById('toolboxWrap');
+        if (toolboxWrap && toolboxWrap.contains(e.target)) return;
+    }
     document.querySelectorAll('.opt-pill.open').forEach(p => p.classList.remove('open'));
     document.querySelectorAll('.opt-dd.show').forEach(d => d.classList.remove('show'));
+    unpinToolboxPanel();
 }
 
 let _tt;
-function showToast(msg) {
+function showToast(msg, type) {
     const el = document.getElementById('toast');
     el.textContent = msg;
+    el.classList.toggle('error', type === 'error');
+    el.classList.toggle('ghost', type === 'ghost');
     el.classList.add('show');
     clearTimeout(_tt);
     _tt = setTimeout(() => el.classList.remove('show'), 2400);
@@ -2603,122 +2871,45 @@ document.addEventListener('click', closeAll);
 
 updateSize(sel.image.ratio, sel.image.res);
 renderOpts();
+syncToolboxParseState();
+syncToolboxFormatState();
 </script>
 
 <!-- 项目选择弹窗 -->
-<div class="proj-modal-mask" id="projModalMask" onclick="if(event.target===this)closeProjModal()">
-  <div class="proj-modal">
-    <div class="proj-modal-header">
-      <div class="proj-modal-title">选择项目</div>
-      <div class="proj-modal-close" onclick="closeProjModal()">✕</div>
+<div class="cc-proj-modal-mask" id="ccProjModalMask" onclick="if(event.target===this)closeProjModal()">
+  <div class="cc-proj-modal">
+    <div class="cc-proj-modal-header">
+      <div class="cc-proj-modal-title">选择项目</div>
+      <div class="cc-proj-modal-close" onclick="closeProjModal()">✕</div>
     </div>
-    <div class="proj-modal-search">
-      <input id="projSearchInput" placeholder="搜索品类或产品..." oninput="renderProjModalBody()">
+    <div class="cc-proj-modal-search">
+      <input id="ccProjSearchInput" placeholder="搜索品类或产品..." oninput="renderProjModalBody()">
     </div>
-    <div class="proj-modal-body">
-      <div class="proj-modal-cats" id="projCatList"></div>
-      <div class="proj-modal-products" id="projProdList"></div>
+    <div class="cc-proj-modal-body">
+      <div class="cc-proj-modal-cats" id="ccProjCatList"></div>
+      <div class="cc-proj-modal-products" id="ccProjProdList"></div>
     </div>
-    <div class="proj-modal-footer">
+    <div class="cc-proj-modal-footer">
       <button onclick="closeProjModal()">取消</button>
       <button class="proj-confirm" onclick="confirmProjSelect()">确认</button>
     </div>
   </div>
 </div>
 
+<script src="../共享样式/project-picker.js"></script>
+<script src="../共享样式/confirm-modal.js"></script>
 <script>
-// project-picker 依赖的三个函数
-var PROJECT_TREE = PROJECTS.map(g => ({ name: g.category, children: g.products }));
-
-function getProjectValue() { return sel[curType].project || ''; }
-
 var PROJECT_TREE = PROJECTS.map(function(g) { return { name: g.category, children: g.products }; });
-var _projSelected = '';
-var _projActiveCat = '';
-
-function openProjModal() {
-    _projSelected = sel[curType].project || '';
-    _projActiveCat = '';
-    PROJECT_TREE.forEach(function(g) {
-        if (g.name === _projSelected) _projActiveCat = g.name;
-        g.children.forEach(function(c) { if (c === _projSelected) _projActiveCat = g.name; });
-    });
-    if (!_projActiveCat && PROJECT_TREE.length) _projActiveCat = PROJECT_TREE[0].name;
-    document.getElementById('projSearchInput').value = '';
-    renderProjModalBody();
-    document.getElementById('projModalMask').classList.add('show');
-}
-
-function closeProjModal() {
-    document.getElementById('projModalMask').classList.remove('show');
-}
-
-function confirmProjSelect() {
-    sel[curType].project = _projSelected;
-    closeProjModal();
-    renderOpts();
-}
-
-function projSelectItem(value) {
-    _projSelected = (_projSelected === value) ? '' : value;
-    renderProjModalBody();
-}
-
-function projClickCat(catName) {
-    _projActiveCat = catName;
-    renderProjModalBody();
-}
-
-function renderProjModalBody() {
-    var search = (document.getElementById('projSearchInput').value || '').trim().toLowerCase();
-    var filteredTree = PROJECT_TREE.map(function(g) {
-        var catMatch = !search || g.name.toLowerCase().indexOf(search) >= 0;
-        var filteredChildren = g.children.filter(function(c) {
-            return !search || c.toLowerCase().indexOf(search) >= 0;
-        });
-        if (catMatch || filteredChildren.length > 0) {
-            return { name: g.name, children: catMatch ? g.children : filteredChildren };
-        }
-        return null;
-    }).filter(Boolean);
-
-    var catNames = filteredTree.map(function(g) { return g.name; });
-    if (catNames.indexOf(_projActiveCat) < 0) _projActiveCat = catNames[0] || '';
-
-    var catHtml = filteredTree.map(function(g) {
-        var isActive = g.name === _projActiveCat;
-        var isSelected = g.name === _projSelected;
-        return '<div class="proj-cat-item'+(isActive?' active':'')+(isSelected?' checked':'')+'" onclick="projClickCat(\''+escHtml(g.name)+'\')">'
-            +'<span class="proj-cat-radio'+(isSelected?' selected':'')+'"></span>'
-            +'<span style="flex:1" onclick="event.stopPropagation();projSelectItem(\''+escHtml(g.name)+'\');projClickCat(\''+escHtml(g.name)+'\')">'+escHtml(g.name)+'</span>'
-            +'</div>';
-    }).join('');
-
-    var activeCatData = filteredTree.find(function(g) { return g.name === _projActiveCat; });
-    var prodHtml = '';
-    if (activeCatData && activeCatData.children.length > 0) {
-        prodHtml = activeCatData.children.map(function(c) {
-            var isSelected = c === _projSelected;
-            return '<div class="proj-prod-item'+(isSelected?' selected':'')+'" onclick="projSelectItem(\''+escHtml(c)+'\')">'
-                +'<span class="proj-cat-radio'+(isSelected?' selected':'')+'"></span>'
-                +escHtml(c)+'</div>';
-        }).join('');
-    } else {
-        prodHtml = '<div class="proj-modal-empty">该品类下暂无产品</div>';
-    }
-
-    document.getElementById('projCatList').innerHTML = catHtml;
-    document.getElementById('projProdList').innerHTML = prodHtml;
-}
-
-function onProjectConfirm(value) {
-    sel[curType].project = value;
-    renderOpts();
-}
 
 function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
+
+setProjectPickerAdapter({
+    getValue: function() { return sel[curType].project || ''; },
+    setValue: function(value) { sel[curType].project = value; },
+    refresh: function() { renderOpts(); }
+});
 </script>
 </body>
 </html>

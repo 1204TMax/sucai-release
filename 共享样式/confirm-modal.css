@@ -1,0 +1,80 @@
+/**
+ * 确认弹窗组件 - 样式
+ *
+ * 使用方式：
+ *   <link rel="stylesheet" href="../共享样式/confirm-modal.css">
+ *
+ * 说明：
+ *   - 使用 `cc-` 前缀，避免污染页面样式
+ *   - 关键样式带 fallback，减少对页面 design token 的强依赖
+ */
+
+.cc-confirm-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: var(--overlay, rgba(0,0,0,0.45));
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.cc-confirm-mask.show { display: flex; }
+
+.cc-confirm-dialog {
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  background: var(--bg-surface, #fff);
+  border-radius: var(--r-xl, 12px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  padding: var(--space-5, 20px) var(--space-5, 20px) var(--space-4, 16px);
+}
+
+.cc-confirm-title {
+  font-size: var(--text-lg, 16px);
+  font-weight: 600;
+  color: var(--text-hi, #1a1a1a);
+}
+
+.cc-confirm-desc {
+  margin-top: var(--space-3, 12px);
+  font-size: var(--text-md, 14px);
+  line-height: 1.6;
+  color: var(--text-muted, #666);
+}
+
+.cc-confirm-footer {
+  margin-top: var(--space-5, 20px);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2, 8px);
+}
+
+.cc-confirm-btn {
+  height: 34px;
+  padding: 0 16px;
+  border-radius: var(--r-lg, 8px);
+  border: 1px solid var(--border-2, #d9d9d9);
+  background: var(--bg-surface, #fff);
+  color: var(--text-lo, #333);
+  font-size: var(--text-md, 14px);
+  cursor: pointer;
+  transition: all var(--ease, 120ms ease);
+}
+
+.cc-confirm-btn:hover {
+  border-color: var(--accent-solid, #1677ff);
+  color: var(--accent-solid, #1677ff);
+}
+
+.cc-confirm-btn-primary {
+  background: var(--accent-solid, #1677ff);
+  border-color: var(--accent-solid, #1677ff);
+  color: var(--white, #fff);
+}
+
+.cc-confirm-btn-primary:hover {
+  background: var(--accent-solid-h, #4096ff);
+  border-color: var(--accent-solid-h, #4096ff);
+  color: var(--white, #fff);
+}

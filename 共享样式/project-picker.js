@@ -1,45 +1,46 @@
 /**
- * 项目选择弹窗组件
+ * 项目选择弹窗组件 - 逻辑
  *
- * 使用方式：
- *   1. 引入样式和脚本：
- *      <link rel="stylesheet" href="../共享样式/project-picker.css">
- *      <script src="../共享样式/project-picker.js"></script>
- *
- *   2. 页面中放置弹窗 HTML（见生成详情.html中 id="projModalMask" 部分）
- *
- *   3. 页面中定义 PROJECT_TREE 数据和 state.filters.project
- *
- *   4. 按钮 onclick="openProjModal()" 打开弹窗
- *
- * 依赖：页面需定义 escHtml()、PROJECT_TREE、state.filters.project、renderFilterBar()、renderTaskFeed()
+ * 依赖：
+ *   - 页面需定义 PROJECT_TREE
+ *   - 页面需定义 escHtml(str)
+ *   - 页面需在加载后调用 setProjectPickerAdapter({ getValue, setValue, refresh })
  */
 
 var _projSelected = '';
 var _projActiveCat = '';
+var _projDefaultLogo = window.PROJECT_PICKER_DEFAULT_LOGO || '../icon/xmiles.png';
+var _projPickerAdapter = {
+  getValue: function() { return ''; },
+  setValue: function() {},
+  refresh: function() {}
+};
+
+function setProjectPickerAdapter(adapter) {
+  _projPickerAdapter = Object.assign({}, _projPickerAdapter, adapter || {});
+}
 
 function openProjModal() {
-  _projSelected = state.filters.project || '';
+  _projSelected = _projPickerAdapter.getValue() || '';
   _projActiveCat = '';
   PROJECT_TREE.forEach(function(g) {
     if (g.name === _projSelected) _projActiveCat = g.name;
     g.children.forEach(function(c) { if (c === _projSelected) _projActiveCat = g.name; });
   });
   if (!_projActiveCat && PROJECT_TREE.length) _projActiveCat = PROJECT_TREE[0].name;
-  document.getElementById('projSearchInput').value = '';
+  document.getElementById('ccProjSearchInput').value = '';
   renderProjModalBody();
-  document.getElementById('projModalMask').classList.add('show');
+  document.getElementById('ccProjModalMask').classList.add('show');
 }
 
 function closeProjModal() {
-  document.getElementById('projModalMask').classList.remove('show');
+  document.getElementById('ccProjModalMask').classList.remove('show');
 }
 
 function confirmProjSelect() {
-  state.filters.project = _projSelected;
+  _projPickerAdapter.setValue(_projSelected);
   closeProjModal();
-  renderFilterBar();
-  renderTaskFeed();
+  _projPickerAdapter.refresh();
 }
 
 function projSelectItem(value) {
@@ -53,7 +54,7 @@ function projClickCat(catName) {
 }
 
 function renderProjModalBody() {
-  var search = (document.getElementById('projSearchInput').value || '').trim().toLowerCase();
+  var search = (document.getElementById('ccProjSearchInput').value || '').trim().toLowerCase();
 
   var filteredTree = PROJECT_TREE.map(function(g) {
     var catMatch = !search || g.name.toLowerCase().indexOf(search) >= 0;
@@ -72,9 +73,9 @@ function renderProjModalBody() {
   var catHtml = filteredTree.map(function(g) {
     var isActive = g.name === _projActiveCat;
     var isSelected = g.name === _projSelected;
-    return '<div class="proj-cat-item'+(isActive?' active':'')+(isSelected?' checked':'')+'" onclick="projClickCat(\''+escHtml(g.name)+'\')">'
-      +'<span class="proj-cat-radio'+(isSelected?' selected':'')+'"></span>'
-      +'<span style="flex:1" onclick="event.stopPropagation();projSelectItem(\''+escHtml(g.name)+'\');projClickCat(\''+escHtml(g.name)+'\')">'+escHtml(g.name)+'</span>'
+    return '<div class="cc-proj-cat-item'+(isActive?' active':'')+(isSelected?' checked':'')+'" onclick="projSelectItem(\''+escHtml(g.name)+'\');projClickCat(\''+escHtml(g.name)+'\')">'
+      +'<span class="cc-proj-cat-radio'+(isSelected?' selected':'')+'"></span>'
+      +'<span style="flex:1">'+escHtml(g.name)+'</span>'
       +'</div>';
   }).join('');
 
@@ -83,14 +84,16 @@ function renderProjModalBody() {
   if (activeCatData && activeCatData.children.length > 0) {
     prodHtml = activeCatData.children.map(function(c) {
       var isSelected = c === _projSelected;
-      return '<div class="proj-prod-item'+(isSelected?' selected':'')+'" onclick="projSelectItem(\''+escHtml(c)+'\')">'
-        +'<span class="proj-cat-radio'+(isSelected?' selected':'')+'"></span>'
-        +escHtml(c)+'</div>';
+      return '<div class="cc-proj-prod-item'+(isSelected?' selected':'')+'" onclick="projSelectItem(\''+escHtml(c)+'\')">'
+        +'<span class="cc-proj-cat-radio'+(isSelected?' selected':'')+'"></span>'
+        +'<img class="cc-proj-prod-logo" src="'+escHtml(_projDefaultLogo)+'" alt="">'
+        +'<span class="cc-proj-prod-name">'+escHtml(c)+'</span>'
+        +'</div>';
     }).join('');
   } else {
-    prodHtml = '<div class="proj-modal-empty">该品类下暂无产品</div>';
+    prodHtml = '<div class="cc-proj-modal-empty">该品类下暂无产品</div>';
   }
 
-  document.getElementById('projCatList').innerHTML = catHtml;
-  document.getElementById('projProdList').innerHTML = prodHtml;
+  document.getElementById('ccProjCatList').innerHTML = catHtml;
+  document.getElementById('ccProjProdList').innerHTML = prodHtml;
 }
