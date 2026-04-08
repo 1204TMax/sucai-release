@@ -178,7 +178,7 @@ openConfirmModal({
 - 关键颜色最好走 design token，并给 fallback
 
 **真实例子：**
-- `生成详情.html` 里的图片生成中 loading 和等待中灰占位一开始都写在页面内
+- `我的任务.html` 里的图片生成中 loading 和等待中灰占位一开始都写在页面内
 - 后来确认它们都只是轻量展示组件，没有业务状态逻辑
 - 所以抽到了 `components.css`，页面里只保留布局尺寸控制
 

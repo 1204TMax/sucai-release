@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生成结果 - 量化投放系统</title>
+    <link rel="stylesheet" href="../共享样式/components.css">
+    <link rel="stylesheet" href="../共享样式/image-preview.css">
+    <script src="../共享样式/components.js"></script>
+    <script src="../共享样式/image-preview.js"></script>
+    <style>
+        /* ══════════════════════════════════════════
+           Design System Variables
+        ══════════════════════════════════════════ */
+        :root {
+            /* ── 主色（Blue，10 级色阶） ── */
+            --primary-1:  #E8F4FF;
+            --primary-2:  #C4E2FF;
+            --primary-3:  #96C8FF;
+            --primary-4:  #6DAFFF;
+            --primary-5:  #5AA4FF;
+            --primary-6:  #4A9EFF;
+            --primary-7:  #3580DB;
+            --primary-8:  #2463B5;
+            --primary-9:  #164A8F;
+            --primary-10: #0B336A;
+
+            /* ── 灰阶（Slate，偏蓝冷灰，12 级） ── */
+            --gray-1:  #FCFCFD;
+            --gray-2:  #F8F9FA;
+            --gray-3:  #F1F3F5;
+            --gray-4:  #E9ECEF;
+            --gray-5:  #DEE2E6;
+            --gray-6:  #CED4DA;
+            --gray-7:  #ADB5BD;
+            --gray-8:  #868E96;
+            --gray-9:  #6C757D;
+            --gray-10: #5A6169;
+            --gray-11: #495057;
+            --gray-12: #212529;
+
+            /* ── 语义映射 ── */
+            --bg-page:      var(--gray-2);
+            --bg-surface:   var(--gray-1);
+            --bg-subtle:    var(--gray-3);
+            --bg-hover:     var(--gray-4);
+            --bg-active:    var(--gray-5);
+
+            --border-1:     var(--gray-4);
+            --border-2:     var(--gray-6);
+            --border-3:     var(--gray-7);
+
+            --text-hi:      var(--gray-12);
+            --text-lo:      var(--gray-11);
+            --text-muted:   var(--gray-9);
+            --text-ghost:   var(--gray-8);
+
+            --accent-bg:      var(--primary-1);
+            --accent-border:  var(--primary-2);
+            --accent-solid:   var(--primary-6);
+            --accent-solid-h: var(--primary-5);
+            --accent-text:    var(--primary-7);
+
+            /* ── 状态色 ── */
+            --success: #34C759;
+            --warning: #FF9500;
+            --error:   #E5484D;
+
+            /* ── 字体 ── */
+            --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", "Noto Sans SC", sans-serif;
+            --text-xs:   11px;
+            --text-sm:   12px;
+            --text-base: 13px;
+            --text-md:   14px;
+            --text-lg:   16px;
+
+            /* ── 间距（4px 网格） ── */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+            --space-7: 32px;
+            --space-8: 40px;
+            --space-9: 48px;
+
+            /* ── 组件高度 ── */
+            --h-xs: 22px;
+            --h-sm: 28px;
+            --h-md: 32px;
+            --h-lg: 36px;
+
+            /* ── 圆角 ── */
+            --r-sm:   4px;
+            --r-md:   6px;
+            --r-lg:   8px;
+            --r-xl:   12px;
+            --r-full: 9999px;
+
+            /* ── 过渡 ── */
+            --ease: 120ms ease;
+
+            /* ── 阴影（页面专用） ── */
+            --shadow-1: 0 1px 2px -2px rgba(0,0,0,0.16), 0 3px 6px 0 rgba(0,0,0,0.12), 0 5px 12px 4px rgba(0,0,0,0.09);
+            --shadow-2: 0 3px 6px -4px rgba(0,0,0,0.12), 0 6px 16px 0 rgba(0,0,0,0.08), 0 9px 28px 8px rgba(0,0,0,0.05);
+            --shadow-3: 0 6px 16px -8px rgba(0,0,0,0.08), 0 9px 28px 0 rgba(0,0,0,0.05), 0 12px 48px 16px rgba(0,0,0,0.03);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font);
+            font-size: var(--text-md);
+            line-height: 1.5715;
+            background: var(--bg-page);
+            color: var(--text-hi);
+            padding: var(--space-5);
+        }
+
+        /* ── Card ── */
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-1);
+            border-radius: var(--r-xl);
+            overflow: hidden;
+            margin-bottom: var(--space-4);
+        }
+
+        /* ── Row containers ── */
+        .row     { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+        .row-pad { padding: var(--space-3) var(--space-5); }
+        .row-sep { border-bottom: 1px solid var(--border-1); }
+        .row-end { margin-left: auto; display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+        .sep     { width: 1px; height: 16px; background: var(--border-1); flex-shrink: 0; }
+
+        /* ── Row 1: Title ── */
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--text-hi);
+        }
+        .card-subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .status-tag {
+            display: inline-flex;
+            align-items: center;
+            height: 22px;
+            padding: 0 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1;
+        }
+
+        .status-tag-waiting {
+            background: #e6f4ff;
+            border: 1px solid #91caff;
+            color: #1677ff;
+        }
+
+        .status-tag-warning {
+            background: #fff7e6;
+            border: 1px solid #ffd591;
+            color: #d46b08;
+        }
+
+        .status-tag-success {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #389e0d;
+        }
+
+        .status-tag-error {
+            background: #fff1f0;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+        }
+
+        .batch-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        /* ── Row 2: Meta info (compact horizontal) ── */
+        .meta-label {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .meta-value {
+            font-size: var(--text-sm);
+            color: var(--text-lo);
+            max-width: 480px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ref-thumbs {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+        .ref-thumb {
+            width: 28px;
+            height: 28px;
+            border-radius: var(--r-sm);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform var(--ease), box-shadow var(--ease);
+        }
+        .ref-thumb:hover {
+            transform: scale(1.08);
+            box-shadow: var(--shadow-1);
+        }
+
+        /* ── Row 3: Filters ── */
+        .filter-label {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        /* ── Pill Group (density toggle) ── */
+        .pills {
+            display: inline-flex;
+            align-items: center;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-1);
+            border-radius: var(--r-full);
+            padding: 2px;
+            gap: 1px;
+            flex-shrink: 0;
+        }
+
+        .pill {
+            height: var(--h-xs);
+            padding: 0 var(--space-3);
+            border-radius: var(--r-full);
+            font: 500 var(--text-sm)/1 var(--font);
+            color: var(--text-muted);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: all var(--ease);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+
+        .pill:hover { color: var(--text-lo); }
+
+        .pill.on {
+            background: var(--bg-surface);
+            color: var(--text-hi);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .pills.single-ratio {
+            background: transparent;
+            border: none;
+            padding: 0;
+            gap: 0;
+        }
+
+        .pills.single-ratio .pill {
+            padding: 0;
+            color: var(--text-hi);
+        }
+
+        .pills.single-ratio .pill.on {
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .pills.single-ratio .pill-n {
+            background: transparent;
+            padding: 0;
+            margin-left: 0;
+            color: var(--text-muted);
+        }
+
+        .pill-n {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            background: var(--bg-subtle);
+            padding: 0 var(--space-1);
+            border-radius: var(--r-full);
+            margin-left: 1px;
+        }
+        .pill.on .pill-n { background: var(--bg-hover); color: var(--text-lo); }
+
+        /* ── Buttons ── */
+        .b {
+            height: var(--h-sm);
+            padding: 0 var(--space-3);
+            border-radius: var(--r-md);
+            font: 500 var(--text-sm)/1 var(--font);
+            border: 1px solid transparent;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-1);
+            white-space: nowrap;
+            transition: all var(--ease);
+            flex-shrink: 0;
+        }
+        .b:focus-visible { outline: 2px solid var(--accent-solid); outline-offset: 1px; }
+
+        .b-solid { background: var(--accent-solid); color: white; }
+        .b-solid:hover { background: var(--accent-solid-h); }
+
+        .b-soft { background: var(--bg-subtle); color: var(--text-lo); border-color: var(--border-1); }
+        .b-soft:hover { background: var(--bg-hover); color: var(--text-hi); border-color: var(--border-2); }
+
+        .b-ghost { background: transparent; color: var(--text-muted); }
+        .b-ghost:hover { background: var(--bg-subtle); color: var(--text-lo); }
+
+        .b-icon { width: var(--h-sm); padding: 0; }
+        .b-icon.on { background: var(--accent-bg); color: var(--accent-text); border-color: var(--accent-border); }
+
+        .b-danger { background: var(--error); border-color: var(--error); color: white; }
+        .b-danger:hover { opacity: 0.9; }
+
+        .sep {
+            width: 1px;
+            height: 16px;
+            background: var(--border-1);
+            flex-shrink: 0;
+        }
+
+        .batch-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        /* ── Filter Chips ── */
+        .f-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-1);
+            align-items: center;
+        }
+
+        .chip {
+            height: var(--h-xs);
+            padding: 0 var(--space-2);
+            border-radius: var(--r-sm);
+            font: 500 var(--text-xs)/1 var(--font);
+            color: var(--text-lo);
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-1);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            white-space: nowrap;
+            transition: all var(--ease);
+        }
+
+        .chip:hover { border-color: var(--border-2); color: var(--text-hi); }
+
+        .chip.on {
+            background: var(--accent-bg);
+            border-color: var(--accent-border);
+            color: var(--accent-text);
+            font-weight: 600;
+        }
+
+        /* ── Ratio pills (reuses .pills / .pill above) ── */
+        .ratio-pills { }
+
+        /* ── Image Grid ── */
+        .grid-row {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-2);
+        }
+
+        .grid-row-last {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-2);
+        }
+
+        /* ── Image Item ── */
+        .img-item {
+            position: relative;
+            border-radius: var(--r-lg);
+            overflow: hidden;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform var(--ease), box-shadow var(--ease);
+        }
+
+        .img-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-2);
+            z-index: 1;
+        }
+
+        .img-block {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--text-sm);
+            font-weight: 500;
+            color: rgba(255,255,255,0.8);
+            user-select: none;
+        }
+
+        /* ── Overlay ── */
+        .img-overlay {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+
+        .img-overlay::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 56px;
+            background: linear-gradient(to top, rgba(0,0,0,0.45), transparent);
+            border-radius: 0 0 var(--r-lg) var(--r-lg);
+            pointer-events: none;
+        }
+
+        .img-item:hover .img-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .img-item.selected .img-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .img-item.selected .thumb-overlay {
+            display: none;
+        }
+
+        body.batch-mode .img-item .thumb-overlay {
+            display: none;
+        }
+
+        /* ── Checkbox (batch mode) ── */
+        .img-cb {
+            position: absolute;
+            top: var(--space-2);
+            left: var(--space-2);
+            z-index: 3;
+            width: 18px;
+            height: 18px;
+            border-radius: var(--r-sm);
+            border: 2px solid rgba(255,255,255,0.85);
+            background: rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--ease);
+            opacity: 0;
+        }
+
+        .img-cb.checked {
+            background: var(--accent-solid);
+            border-color: var(--accent-solid);
+        }
+
+        .img-cb svg { opacity: 0; }
+        .img-cb.checked svg { opacity: 1; }
+
+        body.batch-mode .img-item:hover .img-cb,
+        body.batch-mode .img-item.selected .img-cb {
+            opacity: 1;
+        }
+
+        .img-item.selected .img-cb { opacity: 1; }
+
+        .img-item.selected {
+            outline: 2px solid var(--accent-solid);
+            outline-offset: -2px;
+        }
+
+        .batch-preview-btn {
+            position: absolute;
+            right: var(--space-2);
+            bottom: var(--space-2);
+            z-index: 3;
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: var(--r-full);
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background var(--ease), transform var(--ease);
+        }
+
+        .batch-preview-btn:hover {
+            background: rgba(0, 0, 0, 0.68);
+            transform: translateY(-1px);
+        }
+
+        body.batch-mode .img-item:not(.is-loading):hover .batch-preview-btn,
+        body.batch-mode .img-item.selected:not(.is-loading) .batch-preview-btn {
+            display: inline-flex;
+        }
+
+        /* ── Modal Overlay ── */
+        .modal-mask {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-mask.visible { display: flex; }
+
+        /* ── Preview Modal ── */
+        .preview-box {
+            background: var(--bg-surface);
+            border-radius: var(--r-xl);
+            box-shadow: var(--shadow-3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-width: 90vw;
+            max-height: 90vh;
+        }
+
+        .preview-img-area {
+            position: relative;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-canvas {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--text-lg);
+            font-weight: 500;
+            color: rgba(255,255,255,0.85);
+            user-select: none;
+        }
+
+        .preview-close {
+            position: absolute;
+            top: var(--space-3);
+            right: var(--space-3);
+            width: var(--h-md);
+            height: var(--h-md);
+            border-radius: var(--r-full);
+            border: none;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background var(--ease);
+            z-index: 2;
+        }
+
+        .preview-close:hover { background: rgba(255,255,255,0.3); }
+
+        .preview-footer {
+            padding: var(--space-3) var(--space-4);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: var(--space-2);
+            border-top: 1px solid var(--border-1);
+        }
+
+        /* ── Confirm Modal ── */
+        .confirm-box {
+            width: 416px;
+            padding: var(--space-6);
+            background: var(--bg-surface);
+            border-radius: var(--r-xl);
+            box-shadow: var(--shadow-3);
+        }
+
+        .confirm-head {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+
+        .confirm-icon { color: var(--warning); flex-shrink: 0; margin-top: 1px; }
+
+        .confirm-title {
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--text-hi);
+            margin-bottom: var(--space-1);
+        }
+
+        .confirm-desc {
+            font-size: var(--text-md);
+            color: var(--text-muted);
+        }
+
+        .confirm-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-2);
+        }
+
+        /* ── Selected count ── */
+        .sel-count {
+            font-size: var(--text-sm);
+            color: var(--text-muted);
+            margin-right: var(--space-1);
+        }
+
+        /* ── Badge ── */
+        .badge {
+            height: 18px;
+            padding: 0 var(--space-2);
+            border-radius: var(--r-full);
+            font: 500 var(--text-xs)/1 var(--font);
+            display: inline-flex;
+            align-items: center;
+        }
+        .badge-default { background: var(--bg-subtle); color: var(--text-lo); }
+        .badge-accent  { background: var(--accent-bg); color: var(--accent-text); }
+
+        /* ── Range input ── */
+        .range { display: flex; align-items: center; gap: var(--space-2); }
+        .range-input {
+            height: var(--h-xs);
+            width: 88px;
+            padding: 0 var(--space-2);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-1);
+            border-radius: var(--r-sm);
+            font: 400 var(--text-xs)/1 var(--font);
+            color: var(--text-lo);
+            text-align: center;
+        }
+        .range-input:focus { outline: none; border-color: var(--accent-border); box-shadow: 0 0 0 2px var(--accent-bg); }
+        .range-dash { color: var(--text-ghost); font-size: var(--text-xs); }
+        /* ── Archive Dropdown ── */
+        .archive-wrap {
+            position: relative;
+            display: inline-flex;
+        }
+
+        .archive-dropdown {
+            position: absolute;
+            bottom: calc(100% + var(--space-1));
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-1);
+            border-radius: var(--r-xl);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            padding: var(--space-2);
+            min-width: 120px;
+            z-index: 100;
+            display: none;
+        }
+
+        .archive-dropdown.visible { display: block; }
+
+        .archive-dropdown.drop-down {
+            bottom: auto;
+            top: calc(100% + var(--space-1));
+        }
+
+        .archive-opt {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            width: 100%;
+            padding: var(--space-2) var(--space-3);
+            border: none;
+            background: none;
+            font-size: var(--text-base);
+            font-family: inherit;
+            color: var(--text-lo);
+            cursor: pointer;
+            border-radius: var(--r-sm);
+            transition: background var(--ease);
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        .archive-opt:hover {
+            background: var(--bg-subtle);
+            color: var(--text-hi);
+        }
+
+        .page-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 16px;
+            border-radius: var(--r-lg);
+            background: rgba(33, 37, 41, 0.88);
+            color: #fff;
+            font-size: var(--text-md);
+            line-height: 1;
+            box-shadow: var(--shadow-2);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 160ms ease;
+            z-index: 1200;
+        }
+
+        .page-toast.visible {
+            opacity: 1;
+        }
+
+    </style>
+</head>
+<body>
+<div class="page-toast" id="pageToast"></div>
+
+<!-- ══════════════════════════════════════════
+     Toolbar
+══════════════════════════════════════════ -->
+<div class="card">
+    <!-- Row 1: Title -->
+    <div class="row row-pad row-sep">
+        <div style="min-width:0;flex:1;">
+            <div class="card-title" id="cardTitle"></div>
+            <div class="card-subtitle" id="cardSubtitle"></div>
+        </div>
+    </div>
+
+    <!-- Row 2: Refs + Prompt -->
+    <div class="row row-pad row-sep" style="gap:var(--space-4);flex-wrap:nowrap;" id="metaRow">
+        <div style="display:flex;align-items:center;gap:var(--space-2);flex-shrink:0;" id="refGroup">
+            <div class="ref-thumbs" id="refThumbs"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:var(--space-2);min-width:0;flex:1;">
+            <span class="meta-value" id="infoPrompt"></span>
+        </div>
+    </div>
+
+    <!-- Row 3: Filters + Actions -->
+    <div class="row row-pad" id="filterRow">
+        <div class="f-chips" id="modelChips"></div>
+        <div class="sep" id="filterSep1"></div>
+        <div class="pills ratio-pills" id="ratioTabs"></div>
+
+        <div class="row-end" id="toolbarActions">
+            <!-- Density toggle -->
+            <div class="pills">
+                <button class="pill" onclick="setDensity('sparse',this)">大</button>
+                <button class="pill on" onclick="setDensity('medium',this)">中</button>
+                <button class="pill" onclick="setDensity('dense',this)">小</button>
+            </div>
+            <div class="sep"></div>
+            <button class="b b-danger" id="abortBtn" onclick="openAbortConfirm()">中止生成</button>
+            <button class="b b-soft" id="dlAllBtn" onclick="downloadAll()" style="display:none;">下载全部</button>
+            <button class="b b-solid" id="batchBtn" onclick="toggleBatch()" style="display:none;">批量选择</button>
+
+            <!-- Batch action buttons -->
+            <div class="batch-actions" id="batchBar" style="display:none;">
+                <span class="sel-count" id="selCount">已选 0 项</span>
+                <button class="b b-soft" id="selAllBtn" onclick="selectAll()">全选</button>
+                <button class="b b-soft" onclick="batchDownload()">下载</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     Image Grid (Justified Layout)
+══════════════════════════════════════════ -->
+<div id="grid"></div>
+
+<!-- ══════════════════════════════════════════
+     Preview Modal
+══════════════════════════════════════════ -->
+<div class="modal-mask" id="previewMask" onclick="if(event.target===this)closePreview()">
+    <div class="preview-box">
+        <div class="preview-img-area">
+            <button class="preview-close" onclick="closePreview()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div class="preview-canvas" id="previewCanvas"></div>
+        </div>
+        <div class="preview-footer" id="previewFoot"></div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     Confirm Delete Modal
+══════════════════════════════════════════ -->
+<div class="modal-mask" id="confirmMask">
+    <div class="confirm-box">
+        <div class="confirm-head">
+            <div class="confirm-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+            <div>
+                <div class="confirm-title" id="cfmTitle">确定删除？</div>
+                <div class="confirm-desc" id="cfmDesc">此操作不可撤销，图像将被永久删除。</div>
+            </div>
+        </div>
+        <div class="confirm-footer">
+            <button class="b b-soft" onclick="closeCfm()">取消</button>
+            <button class="b b-danger" onclick="execDelete()">删除</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-mask" id="abortConfirmMask" onclick="if(event.target===this)closeAbortConfirm()">
+    <div class="confirm-box">
+        <div class="confirm-head">
+            <div class="confirm-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+            <div>
+                <div class="confirm-title">是否中止生成？</div>
+                <div class="confirm-desc">中止后当前页面将切换为已中止状态。</div>
+            </div>
+        </div>
+        <div class="confirm-footer">
+            <button class="b b-soft" onclick="closeAbortConfirm()">取消</button>
+            <button class="b b-solid" onclick="confirmAbortGeneration()">确认</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// Page Info (single model)
+// ═══════════════════════════════════════════════════
+const PAGE_INFO = {
+    entry:   '通用生成',          // '通用生成' 或 '工作流：xxx'
+    type:    'video',             // 'image' | 'video'
+    prompt:  '在阳光明媚的草地上奔跑的金毛寻回犬，毛发蓬松，背景虚化，高清写实风格，自然光照',
+    refs:    [
+        { color: '#FF6B6B', name: '参考图 1' },
+        { color: '#4ECDC4', name: '参考图 2' },
+    ],
+    model:   'Seedance 2.0',
+    settings: {
+        ratios:   ['9:16', '16:9', '1:1'],
+        clarity:  null,     // image only；视频传 null
+        duration: '5s',     // video only；图片传 null
+    },
+    videoMode: '首尾帧',
+    project: '走路赚金币',  // 无项目时传 null
+};
+
+function renderInfo() {
+    const p = PAGE_INFO;
+    const totalCount = images.length;
+
+    // Row 1: title + subtitle
+    const statusText = generationAborted ? '已中断' : '正在生成';
+    const statusClass = generationAborted ? 'status-tag-warning' : 'status-tag-waiting';
+    document.getElementById('cardTitle').innerHTML = `已生成:${totalCount}条 <span class="status-tag ${statusClass}">${statusText}</span>`;
+    const parts = [];
+    if (p.project) parts.push(p.project);
+    if (p.type === 'video') {
+        const videoParts = [p.entry, '视频'];
+        if (p.videoMode) videoParts.push(p.videoMode);
+        if (p.settings.duration) videoParts.push(p.settings.duration);
+        parts.push(videoParts.join('·'));
+    } else {
+        parts.push(p.entry);
+        parts.push('图片');
+        if (p.settings.clarity) parts.push(p.settings.clarity);
+    }
+    document.getElementById('cardSubtitle').textContent = parts.join(' · ');
+
+    // Row 2: prompt
+    document.getElementById('infoPrompt').textContent = p.prompt;
+
+    // Row 2: refs (放到提示词前面，无标题)
+    const refGroup = document.getElementById('refGroup');
+    const refThumbs = document.getElementById('refThumbs');
+    if (p.refs && p.refs.length) {
+        refThumbs.innerHTML = p.refs.map((r, i) =>
+            `<div class="ref-thumb" style="background:${r.color}" title="${r.name}"
+                  onclick="openRefPreview(${i})"></div>`
+        ).join('');
+        refGroup.style.display = '';
+    } else {
+        refGroup.style.display = 'none';
+    }
+}
+
+function openRefPreview(idx) {
+    const ref = PAGE_INFO.refs[idx];
+    if (!ref) return;
+    const mask   = document.getElementById('previewMask');
+    const canvas = document.getElementById('previewCanvas');
+    const foot   = document.getElementById('previewFoot');
+    canvas.style.cssText = `
+        background: ${ref.color};
+        width: 400px; height: 400px;
+        max-width: 80vw; max-height: 70vh;
+        border-radius: 8px 8px 0 0;
+    `;
+    canvas.textContent = ref.name;
+    foot.innerHTML = `<button class="b b-soft" onclick="closePreview()">关闭</button>`;
+    mask.classList.add('visible');
+}
+
+// ═══════════════════════════════════════════════════
+// Mock Data — 16 images, 3 ratio groups
+// ═══════════════════════════════════════════════════
+const COLORS = [
+    '#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD',
+    '#FF8C69','#6C5CE7','#00B894','#FD79A8','#FDCB6E','#74B9FF',
+    '#A29BFE','#55EFC4','#E17055','#81ECEC'
+];
+
+let images = [
+    { id:1,  ratio:'9:16',  ar:9/16,  color:COLORS[0],  name:'竖屏-001', model:'Seedance 2.0' },
+    { id:2,  ratio:'9:16',  ar:9/16,  color:COLORS[1],  name:'竖屏-002', model:'Seedance 2.0' },
+    { id:3,  ratio:'9:16',  ar:9/16,  color:COLORS[2],  name:'竖屏-003', model:'Seedance 2.0' },
+    { id:4,  ratio:'9:16',  ar:9/16,  color:COLORS[3],  name:'竖屏-004', model:'Seedance 2.0' },
+    { id:5,  ratio:'9:16',  ar:9/16,  color:COLORS[4],  name:'竖屏-005', model:'Seedance 2.0' },
+    { id:6,  ratio:'9:16',  ar:9/16,  color:COLORS[5],  name:'竖屏-006', model:'Seedance 2.0' },
+    { id:7,  ratio:'16:9',  ar:16/9,  color:COLORS[6],  name:'横屏-001', model:'Seedance 2.0' },
+    { id:8,  ratio:'16:9',  ar:16/9,  color:COLORS[7],  name:'横屏-002', model:'Seedance 2.0' },
+    { id:9,  ratio:'16:9',  ar:16/9,  color:COLORS[8],  name:'横屏-003', model:'Seedance 2.0' },
+    { id:10, ratio:'16:9',  ar:16/9,  color:COLORS[9],  name:'横屏-004', model:'Seedance 2.0' },
+    { id:11, ratio:'16:9',  ar:16/9,  color:COLORS[10], name:'横屏-005', model:'Seedance 2.0' },
+    { id:12, ratio:'16:9',  ar:16/9,  color:COLORS[11], name:'横屏-006', model:'Seedance 2.0' },
+    { id:13, ratio:'1:1',   ar:1,     color:COLORS[12], name:'方图-001', model:'Seedance 2.0' },
+    { id:14, ratio:'1:1',   ar:1,     color:COLORS[13], name:'方图-002', model:'Seedance 2.0' },
+    { id:15, ratio:'1:1',   ar:1,     color:COLORS[14], name:'方图-003', model:'Seedance 2.0' },
+    { id:16, ratio:'1:1',   ar:1,     color:COLORS[15], name:'方图-004', model:'Seedance 2.0' },
+];
+
+function previewUrlFor(item) {
+    var w = item.ratio === '9:16' ? 900 : (item.ratio === '16:9' ? 1600 : 1200);
+    var h = item.ratio === '9:16' ? 1600 : (item.ratio === '16:9' ? 900 : 1200);
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'">'
+        + '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+item.color+'" stop-opacity="0.88"/><stop offset="1" stop-color="'+item.color+'"/></linearGradient></defs>'
+        + '<rect width="100%" height="100%" fill="url(#g)"/>'
+        + '<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="rgba(255,255,255,0.88)" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="56" font-weight="600">'+item.name+'</text>'
+        + '</svg>';
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+// ═══════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════
+let curModel  = 'all';
+let curRatio  = 'all';
+let density   = 'medium';          // sparse | medium | dense
+let batchMode = false;
+let selected  = new Set();
+let delCtx    = null;               // { type:'single'|'batch', id }
+let generationAborted = false;
+
+const ROW_H = { sparse: 260, medium: 200, dense: 150 };
+const GAP = 8;
+
+// ═══════════════════════════════════════════════════
+// SVG icon helpers
+// ═══════════════════════════════════════════════════
+const ico = {
+    dl:     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+    del:    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>',
+    eye:    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+    inbox:  '<svg width="14" height="14" viewBox="0 0 1024 1024" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M102.4 69.12h819.2l102.4 204.8v716.8h-51.2H0v-716.8l102.4-204.8z m819.2 302.08H102.4v512h819.2v-512z m-22.016-107.52l-50.176-93.184H174.08l-50.176 93.184h775.68z"/><path d="M558.592 632.32h114.688l-153.088 153.088-152.576-153.088h114.688V479.232h76.288v153.088z"/></svg>',
+    edit:   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+    chk:    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+};
+
+// ═══════════════════════════════════════════════════
+// Justified Layout (Flickr-style)
+// ═══════════════════════════════════════════════════
+function justify(imgs, cw, th) {
+    const rows = [];
+    let row = [], arSum = 0;
+
+    for (const img of imgs) {
+        row.push(img);
+        arSum += img.ar;
+        if (arSum * th + GAP * (row.length - 1) >= cw) {
+            const aw = cw - GAP * (row.length - 1);
+            const rh = aw / arSum;
+            rows.push({ items: row.map(i => ({ ...i, w: i.ar * rh, h: rh })), last: false });
+            row = []; arSum = 0;
+        }
+    }
+    if (row.length) {
+        rows.push({ items: row.map(i => ({ ...i, w: i.ar * th, h: th })), last: true });
+    }
+    return rows;
+}
+
+// ═══════════════════════════════════════════════════
+// Render
+// ═══════════════════════════════════════════════════
+function filtered() {
+    return images.filter(i =>
+        (curModel === 'all' || i.model === curModel) &&
+        (curRatio === 'all' || i.ratio === curRatio)
+    );
+}
+
+function renderModelTabs() {
+    const el = document.getElementById('modelChips');
+    const sep1 = document.getElementById('filterSep1');
+
+    el.style.display = 'flex';
+    sep1.style.display = '';
+    el.innerHTML = '';
+
+    const b = document.createElement('button');
+    b.className = 'chip on';
+    b.textContent = 'Seedance 2.0';
+    el.appendChild(b);
+
+    curModel = 'all';
+}
+
+function renderTabs() {
+    const el = document.getElementById('ratioTabs');
+    // 按当前模型过滤后，再统计各比例数量
+    const base = curModel === 'all' ? images : images.filter(i => i.model === curModel);
+    const counts = {};
+    base.forEach(i => counts[i.ratio] = (counts[i.ratio] || 0) + 1);
+    const ratios = Object.keys(counts);
+
+    const sep2 = document.getElementById('filterSep2');
+
+    el.style.display = 'inline-flex';
+    if (sep2) sep2.style.display = '';
+    el.innerHTML = '';
+    el.classList.toggle('single-ratio', ratios.length === 1);
+
+    const mk = (label, key) => {
+        const b = document.createElement('button');
+        b.className = 'pill' + (curRatio === key ? ' on' : '');
+        b.innerHTML = label;
+        b.onclick = () => { curRatio = key; render(); };
+        el.appendChild(b);
+    };
+
+    if (ratios.length > 1) {
+        mk(`全部比例`, 'all');
+    } else if (ratios.length === 1 && curRatio === 'all') {
+        curRatio = ratios[0];
+    }
+
+    ratios.forEach(r => mk(r, r));
+}
+
+function getLoadingIds(cw, sourceItems) {
+    if (generationAborted) return new Set();
+    const rows = justify(sourceItems, cw, ROW_H[density]);
+    const ids = new Set();
+
+    rows.forEach((row, rowIndex) => {
+        const firstRowSuccessCount = rowIndex === 0 ? Math.floor(row.items.length / 2) : 0;
+        row.items.forEach((item, itemIndex) => {
+            const isLoading = (rowIndex === 0 && itemIndex >= firstRowSuccessCount) || rowIndex === 1;
+            if (isLoading) ids.add(item.id);
+        });
+    });
+
+    return ids;
+}
+
+function renderGrid() {
+    const container = document.getElementById('grid');
+    const cw = container.offsetWidth;
+    if (!cw) return;
+
+    const sourceItems = filtered();
+    const loadingIds = getLoadingIds(cw, sourceItems);
+    const rows = justify(sourceItems, cw, ROW_H[density]);
+    container.innerHTML = '';
+
+    rows.forEach(row => {
+        const rowEl = document.createElement('div');
+        rowEl.className = row.last ? 'grid-row-last' : 'grid-row';
+
+        row.items.forEach(item => {
+            rowEl.appendChild(mkCard(item, loadingIds.has(item.id)));
+        });
+        container.appendChild(rowEl);
+    });
+}
+
+function mkCard(item, isLoading) {
+    const el = document.createElement('div');
+    el.className = 'img-item cc-thumb-host' + (selected.has(item.id) ? ' selected' : '') + (isLoading ? ' is-loading' : '');
+    el.style.width  = Math.round(item.w) + 'px';
+    el.style.height = Math.round(item.h) + 'px';
+    el.dataset.id = item.id;
+
+    const contentHtml = isLoading
+        ? `<div class="cc-img-loading-thumb" style="width:100%;height:100%;"><div class="cc-img-loading-spinner"></div></div>`
+        : `<div class="img-block" style="background:linear-gradient(135deg,${item.color}dd,${item.color})">${item.name}</div>`;
+
+    const batchPreviewBtn = !isLoading
+        ? `<button class="batch-preview-btn" title="预览" onclick="event.stopPropagation();openPreview(find(${item.id}))">${ico.eye}</button>`
+        : '';
+
+    el.innerHTML = `
+        ${contentHtml}
+        <div class="img-cb${selected.has(item.id) ? ' checked' : ''}" data-cb="1">${ico.chk}</div>
+        ${batchPreviewBtn}
+        ${isLoading ? '' : thumbOverlayHtml('', `event.stopPropagation();dlItem(${item.id})`)}
+    `;
+
+    el.addEventListener('click', e => {
+        if (!isLoading && e.target.closest('[data-ib], .batch-preview-btn')) return;
+        if (batchMode) {
+            toggleSel(item.id);
+        } else if (!isLoading) {
+            openPreview(item);
+        }
+    });
+
+    return el;
+}
+
+// ═══════════════════════════════════════════════════
+// Actions
+// ═══════════════════════════════════════════════════
+function find(id) { return images.find(i => i.id === id); }
+
+function setDensity(d, el) {
+    density = d;
+    el.parentElement.querySelectorAll('.pill').forEach(b => b.classList.remove('on'));
+    el.classList.add('on');
+    renderGrid();
+}
+
+function toggleBatch() {
+    batchMode = !batchMode;
+    selected.clear();
+    const btn = document.getElementById('batchBtn');
+    const bar = document.getElementById('batchBar');
+    const dlAll = document.getElementById('dlAllBtn');
+    if (batchMode) {
+        btn.textContent = '取消';
+        btn.classList.remove('b-solid');
+        btn.classList.add('b-soft');
+        bar.style.display = 'inline-flex';
+        dlAll.style.display = 'none';
+        document.body.classList.add('batch-mode');
+    } else {
+        btn.textContent = '批量选择';
+        btn.classList.remove('b-soft');
+        btn.classList.add('b-solid');
+        bar.style.display = 'none';
+        dlAll.style.display = '';
+        document.body.classList.remove('batch-mode');
+    }
+    updateSelCount();
+    renderGrid();
+}
+
+function selectAll() {
+    const imgs = filtered();
+    const allSelected = imgs.every(i => selected.has(i.id));
+    if (allSelected) {
+        imgs.forEach(i => selected.delete(i.id));
+    } else {
+        imgs.forEach(i => selected.add(i.id));
+    }
+    updateSelCount();
+    renderGrid();
+}
+
+function toggleSel(id) {
+    selected.has(id) ? selected.delete(id) : selected.add(id);
+    const card = document.querySelector(`.img-item[data-id="${id}"]`);
+    if (card) {
+        card.classList.toggle('selected', selected.has(id));
+        const cb = card.querySelector('[data-cb]');
+        if (cb) cb.classList.toggle('checked', selected.has(id));
+    }
+    updateSelCount();
+}
+
+function updateSelCount() {
+    const el = document.getElementById('selCount');
+    if (el) el.textContent = selected.size ? `已选 ${selected.size} 项` : '';
+}
+
+function updateToolbarActions() {
+    const container = document.getElementById('grid');
+    const cw = container ? container.offsetWidth : 0;
+    const hasLoading = cw ? getLoadingIds(cw, filtered()).size > 0 : !generationAborted;
+    const abortBtn = document.getElementById('abortBtn');
+    const dlAll = document.getElementById('dlAllBtn');
+    const batchBtn = document.getElementById('batchBtn');
+    const batchBar = document.getElementById('batchBar');
+
+    abortBtn.style.display = hasLoading ? '' : 'none';
+    dlAll.style.display = hasLoading || batchMode ? 'none' : '';
+    batchBtn.style.display = hasLoading ? 'none' : '';
+    if (hasLoading) batchBar.style.display = 'none';
+}
+
+function openAbortConfirm() {
+    document.getElementById('abortConfirmMask').classList.add('visible');
+}
+
+function closeAbortConfirm() {
+    document.getElementById('abortConfirmMask').classList.remove('visible');
+}
+
+function confirmAbortGeneration() {
+    closeAbortConfirm();
+    abortGeneration();
+}
+
+function abortGeneration() {
+    const container = document.getElementById('grid');
+    const cw = container ? container.offsetWidth : 0;
+    const loadingIds = cw ? getLoadingIds(cw, filtered()) : new Set();
+
+    images = images.filter(item => !loadingIds.has(item.id));
+    selected.forEach(id => {
+        if (loadingIds.has(id)) selected.delete(id);
+    });
+    generationAborted = true;
+    batchMode = false;
+    document.body.classList.remove('batch-mode');
+    updateSelCount();
+    renderInfo();
+    render();
+    showToast('已中止');
+}
+
+function downloadAll()   { alert('下载全部（' + filtered().length + ' 张）'); }
+function batchDownload()  { if (!selected.size) return alert('请先选择图像'); alert('下载已选 ' + selected.size + ' 张'); }
+function dlItem(id)       { alert('下载：' + find(id).name); }
+function editItem(id)     { alert('编辑：' + find(id).name); }
+
+// ═══════════════════════════════════════════════════
+// Archive Dropdown
+// ═══════════════════════════════════════════════════
+const ARCHIVE_TARGETS = ['素材库', '物料库', '原料库'];
+let _curArchiveCtx = null; // { type:'single'|'batch', id }
+
+function buildArchiveMenu(dropdown, ctx) {
+    dropdown.innerHTML = ARCHIVE_TARGETS.map(t =>
+        `<button class="archive-opt" onclick="doArchive('${t}')">${t}</button>`
+    ).join('');
+    _curArchiveCtx = ctx;
+}
+
+function toggleArchiveMenu(triggerBtn) {
+    const wrap = triggerBtn.closest('.archive-wrap');
+    const dropdown = wrap.querySelector('.archive-dropdown');
+    const wasVisible = dropdown.classList.contains('visible');
+
+    closeAllArchiveMenus();
+
+    if (!wasVisible) {
+        // 判断上下文
+        const isBatch = wrap.closest('#batchBar');
+        if (isBatch) {
+            if (!selected.size) { alert('请先选择图像'); return; }
+            buildArchiveMenu(dropdown, { type: 'batch' });
+        }
+        dropdown.classList.add('visible');
+    }
+}
+
+function showArchiveForItem(id, triggerBtn) {
+    closeAllArchiveMenus();
+    const wrap = triggerBtn.closest('.archive-wrap');
+    const dropdown = wrap.querySelector('.archive-dropdown');
+    buildArchiveMenu(dropdown, { type: 'single', id });
+    dropdown.classList.add('visible');
+}
+
+function closeAllArchiveMenus() {
+    document.querySelectorAll('.archive-dropdown.visible').forEach(d => d.classList.remove('visible'));
+}
+
+function doArchive(target) {
+    if (!_curArchiveCtx) return;
+    if (_curArchiveCtx.type === 'batch') {
+        alert(`已将 ${selected.size} 张图片入库到「${target}」`);
+    } else {
+        const img = find(_curArchiveCtx.id);
+        alert(`已将「${img ? img.name : '图片'}」入库到「${target}」`);
+    }
+    closeAllArchiveMenus();
+    _curArchiveCtx = null;
+}
+
+// 点击空白处关闭
+document.addEventListener('click', e => {
+    if (!e.target.closest('.archive-wrap')) closeAllArchiveMenus();
+});
+
+// ═══════════════════════════════════════════════════
+// Delete Confirm
+// ═══════════════════════════════════════════════════
+function askDel(type, id) {
+    delCtx = { type, id };
+    const t = document.getElementById('cfmTitle');
+    const d = document.getElementById('cfmDesc');
+    if (type === 'batch') {
+        t.textContent = `确定删除选中的 ${selected.size} 张图像？`;
+        d.textContent = '此操作不可撤销，选中的图像将被永久删除。';
+    } else {
+        const img = find(id);
+        t.textContent = `确定删除「${img ? img.name : '该图像'}」？`;
+        d.textContent = '此操作不可撤销，该图像将被永久删除。';
+    }
+    document.getElementById('confirmMask').classList.add('visible');
+}
+
+function closeCfm() {
+    document.getElementById('confirmMask').classList.remove('visible');
+    delCtx = null;
+}
+
+function execDelete() {
+    if (!delCtx) return;
+    if (delCtx.type === 'batch') {
+        images = images.filter(i => !selected.has(i.id));
+        selected.clear();
+        updateSelCount();
+    } else {
+        images = images.filter(i => i.id !== delCtx.id);
+        closePreview();
+    }
+    closeCfm();
+    render();
+}
+
+// ═══════════════════════════════════════════════════
+// Preview Modal
+// ═══════════════════════════════════════════════════
+function openPreview(item) {
+    if (!item) return;
+    var items = filtered();
+    var list = items.map(function(img){ return previewUrlFor(img); });
+    var currentUrl = previewUrlFor(item);
+    var idx = items.findIndex(function(img){ return img.id === item.id; });
+    window.__previewImage(currentUrl, list, idx >= 0 ? idx : 0);
+}
+
+function closePreview() {
+    closeImagePreview();
+}
+
+// ═══════════════════════════════════════════════════
+// Master render
+// ═══════════════════════════════════════════════════
+function render() {
+    renderModelTabs();
+    renderTabs();
+    renderGrid();
+    updateToolbarActions();
+}
+
+let _rt;
+window.addEventListener('resize', () => { clearTimeout(_rt); _rt = setTimeout(renderGrid, 100); });
+
+renderInfo();
+render();
+</script>
+<script>
+let _toastTimer;
+function showToast(msg) {
+    const el = document.getElementById('pageToast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('visible');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => {
+        el.classList.remove('visible');
+    }, 1600);
+}
+initImagePreview();
+</script>
+</body>
+</html>

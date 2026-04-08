@@ -323,7 +323,7 @@
     .card-act-more:hover { border-color: var(--accent-solid); color: var(--accent-solid); }
     .card-act-stop { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-2) var(--space-4); border-radius: var(--r-full); border: 1px solid #fecaca; background: var(--bg-surface); font-size: var(--text-base); color: var(--error); cursor: pointer; transition: all var(--ease); }
     .card-act-stop:hover { border-color: var(--error); background: #fef2f2; }
-    .card-act-stop svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .card-act-stop svg, .card-act-stop img { width: 14px; height: 14px; flex-shrink: 0; }
 
     /* 重新编辑下拉菜单 */
 
@@ -683,6 +683,10 @@ const vid = (s,i,d) => ({ type:'video', thumb:`https://picsum.photos/seed/${s}/8
 
 // ═══ Mock 数据 ═══
 const INITIAL_TASKS = [
+  { id:'11', name:'新品详情页主图', type:'image', status:'failed', createdTime:'2026-04-01 10:18', creator:'我', partialFailed:true, successCount:3, failedCount:4,
+    source:'universal',
+    input:{ prompt:'大字报风格新品上市详情页首屏，深红色背景，烫金繁体大字"新品震撼上市"，副文案"颠覆传统 品质革命"，产品图居中打光，高端质感与复古宣传画风格融合', refImages:[], inputType:'text', models:['seedream5'], ratio:'3:4', res:'4K', count:7 },
+    output:{ byModel:{ seedream5:{ total:7, items:[img('pf1'),img('pf2'),img('pf3')] }}}},
   { id:'1', name:'夏季促销主视觉批量生成', type:'image', status:'generating', createdTime:'2026-04-02 14:32', creator:'我',
     source:'universal', project:'走路赚金币',
     input:{ prompt:'大字报风格618大促主图，红底金字，毛笔书法标题"618超级钜惠"，副标题"全场五折起"，搭配产品图与喜庆纹样，写实风格，高清细节丰富', refImages:[], inputType:'text', models:['seedream5'], ratio:'广点通-1080X1920', res:'2K', count:8 },
@@ -748,10 +752,16 @@ function getAllOutputTotal(task) {
   return Object.values(task.output.byModel).reduce((s,m) => s + (m.total||0), 0);
 }
 
+function getTaskRequestedCount(task, modelId) {
+  const cfg = getTaskModelConfig(task, modelId || task.input.models[0]);
+  return parseInt(cfg.count || 0, 10) || 0;
+}
+
 // ═══ 辅助函数 ═══
 function getTaskById(id) { return state.tasks.find(t => t.id === id); }
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function icon(path, size) { size = size||14; return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">'+path+'</svg>'; }
+function imageIcon(src, size, alt) { size = size||14; return '<img src="'+src+'" alt="'+(alt||'')+'" width="'+size+'" height="'+size+'">'; }
 
 const SVG = {
   eye:      '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
@@ -830,11 +840,23 @@ function positionTaskFloatingPanel() {
   var panel = document.getElementById('taskFloatingPanel');
   var filterBar = document.getElementById('filterBar');
   var feed = document.querySelector('.task-feed-shell');
-  if (!panel || !filterBar || !feed || state.contentTab === 'chat') return;
+  if (!panel) return;
+  if (!filterBar || !feed || state.contentTab === 'chat' || panel.style.display === 'none') {
+    panel.style.top = '0px';
+    panel.style.left = '0px';
+    return;
+  }
   var filterRect = filterBar.getBoundingClientRect();
   var feedRect = feed.getBoundingClientRect();
   panel.style.top = (filterRect.bottom + 12) + 'px';
   panel.style.left = Math.max(feedRect.left - panel.offsetWidth - 20, 12) + 'px';
+}
+
+function scheduleTaskFloatingPanelPosition() {
+  requestAnimationFrame(function() {
+    positionTaskFloatingPanel();
+    requestAnimationFrame(positionTaskFloatingPanel);
+  });
 }
 
 function updateScrollBtn() {
@@ -858,7 +880,7 @@ function renderFilterBar() {
 
   // Tab 行（独占一行）
   var tabBtns = [
-    {k:'chat',l:'文本'},{k:'image',l:'图像'},{k:'video',l:'视频'}
+    {k:'image',l:'图像'},{k:'video',l:'视频'}
   ].map(function(t){
     return '<button class="ds-tab'+(tab===t.k?' on':'')+'" onclick="switchContentTab(\''+t.k+'\')">'+t.l+'</button>';
   }).join('');
@@ -952,6 +974,7 @@ document.addEventListener('click', function(e) {
 
 
 function switchContentTab(tab) {
+  if (tab === 'chat') tab = 'image';
   state.contentTab = tab;
   window.dispatchEvent(new CustomEvent('contentTabChanged', { detail: tab }));
   renderFilterBar();
@@ -1108,7 +1131,7 @@ function renderTaskFeed() {
   } else {
     wrap.innerHTML = '<div class="task-feed-shell"><div class="task-feed">'+tasks.map(renderTaskCard).join('')+'</div></div>';
   }
-  requestAnimationFrame(positionTaskFloatingPanel);
+  scheduleTaskFloatingPanelPosition();
   updateScrollBtn();
 }
 
@@ -1118,6 +1141,7 @@ function renderTaskCard(task) {
   var collapsed = state.viewMode === 'collapsed';
   var currentOutput = getTaskOutput(task, activeModel);
   var sourceName = GEN_SOURCES[task.source] || task.source || '通用生成';
+  var displayMeta = getTaskDisplayMeta(task, activeModel);
 
   var refThumbs = '';
   if (task.input.refImages && task.input.refImages.length > 0) {
@@ -1141,14 +1165,14 @@ function renderTaskCard(task) {
 
   var statusLabel = {pending:'等待中',generating:'生成中',completed:'已完成',failed:'已失败',aborted:'已中止'}[task.status]||task.status;
   var pulseDot = task.status==='generating' ? '<span class="pulse-dot"></span>' : '';
-  var resMeta = task.type==='video' ? '<span class="card-meta-item">'+task.input.dur+'</span>' : '<span class="card-meta-item">'+(task.input.res||'')+'</span>';
+  var resMeta = displayMeta.extra ? '<span class="card-meta-item">'+displayMeta.extra+'</span>' : '';
   var modelMeta = isMulti ? '多模型' : (MODELS_MAP[activeModel]||activeModel);
 
   return '<div class="task-card'+(task._new?' new-highlight':'')+'" id="task-card-'+task.id+'" data-task-id="'+task.id+'"><div class="card-header">'
     +'<span class="c-tag" style="background:var(--bg-subtle);color:var(--text-lo)">'+escHtml(sourceName)+'</span>'
     +refThumbs
     +'<div class="card-prompt-wrap"><span class="card-prompt" title="'+escHtml(task.input.prompt)+'">'+escHtml(task.input.prompt)+'</span><div class="card-prompt-fade"></div><button class="card-prompt-use-btn" onclick="event.stopPropagation();usePrompt(\''+task.id+'\')">使用提示词</button></div>'
-    +'<div class="card-meta"><span class="card-meta-item">'+escHtml(modelMeta)+'</span><span class="card-meta-item">'+task.input.ratio+'</span>'+resMeta+(task.project?'<span class="card-meta-item">'+escHtml(task.project)+'</span>':'')+'</div>'
+    +'<div class="card-meta"><span class="card-meta-item">'+escHtml(modelMeta)+'</span><span class="card-meta-item">'+escHtml(displayMeta.ratioText)+'</span>'+resMeta+(task.project?'<span class="card-meta-item">'+escHtml(task.project)+'</span>':'')+'</div>'
     +'</div>'
     +modelTabsHtml
     +'<div class="card-output">'+renderOutputArea(task, currentOutput, collapsed)+'</div>'
@@ -1162,6 +1186,9 @@ function renderOutputArea(task, currentOutput, collapsed) {
     return renderGeneratingOutputRow(task, currentOutput, collapsed);
   }
   if (s === 'failed') {
+    if (task.partialFailed) {
+      return renderPartialFailedOutputRow(task, currentOutput, collapsed);
+    }
     return collapsed
       ? '<div style="padding:8px 0;font-size:12px;color:#dc2626">生成失败 <button class="card-act-btn" style="margin-left:8px;padding:2px 10px;font-size:11px" onclick="handleRetryById(\''+task.id+'\')">重试</button></div>'
       : '<div class="status-placeholder"><div class="status-placeholder-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.5">'+SVG.err+'</svg></div><div class="status-placeholder-text">生成失败，请重试</div><div class="status-placeholder-text" style="font-size:12px;margin-top:-6px;">此处显示具体失败原因，具体原因列表见文档。</div><button class="card-act-btn" onclick="handleRetryById(\''+task.id+'\')">重试</button></div>';
@@ -1197,26 +1224,50 @@ function renderGeneratingOutputRow(task, output, collapsed) {
   }).join('');
   var loadingCount = Math.max(baseSlots - showItems.length, 0);
   var loadingHtml = Array(loadingCount + 1).join('<div class="cc-img-loading-thumb"><div class="cc-img-loading-spinner"></div></div>');
-  var remaining = Math.max((task.input.count || 0) - showItems.length, 0);
+  var remaining = Math.max(getTaskRequestedCount(task, state.cardModels[task.id] || task.input.models[0]) - showItems.length, 0);
   var viewAll = remaining > 0 ? renderViewAllCard(task, remaining) : '';
   return '<div class="output-row '+(collapsed?'collapsed':'expanded')+'">'+thumbs+loadingHtml+viewAll+'</div>';
+}
+
+function renderPartialFailedOutputRow(task, output, collapsed) {
+  var MAX = collapsed ? 8 : 4;
+  var baseSlots = Math.max(MAX - 1, 0);
+  var showItems = output.items.slice(0, baseSlots);
+  var thumbs = showItems.map(function(item, i){
+    return item.type === 'video' ? renderVideoThumb(item, collapsed) : renderImageThumb(item, i);
+  }).join('');
+  var remaining = Math.max((task.failedCount || 0), 0);
+  var viewAll = remaining > 0 ? renderViewAllCard(task, remaining) : '';
+  return '<div class="output-row '+(collapsed?'collapsed':'expanded')+'">'+thumbs+viewAll+'</div>';
 }
 
 function renderPendingOutputRow(task, collapsed) {
   var MAX = collapsed ? 8 : 4;
   var baseSlots = Math.max(MAX - 1, 0);
   var placeholders = Array(baseSlots + 1).join('<div class="cc-img-pending-thumb"></div>');
-  var remaining = Math.max(task.input.count || 0, 0);
+  var remaining = Math.max(getTaskRequestedCount(task, state.cardModels[task.id] || task.input.models[0]), 0);
   var viewAll = remaining > 0 ? renderViewAllCard(task, remaining) : '';
   return '<div class="output-row '+(collapsed?'collapsed':'expanded')+'">'+placeholders+viewAll+'</div>';
 }
 
 function getViewAllTarget(task) {
-  var isSpecialCard = task && task.input && task.input.ratio === '广点通-1080X1920';
-  if (isSpecialCard || (task && task.type === 'video')) {
-    return { title:'全部视频', url:'AI 创作/全部视频-单模型-加载中.html' };
+  if (!task) return { title:'全部结果', url:'AI 创作/全部结果_等待中.html' };
+  if (task.status === 'completed') {
+    return { title:'全部结果', url:'AI 创作/全部结果-已成功.html' };
   }
-  return { title:'全部图片', url:'AI 创作/全部图片.html' };
+  if (task.status === 'pending' || task.status === 'generating') {
+    return { title:'全部结果', url:'AI 创作/全部结果_等待中.html' };
+  }
+  if (task.status === 'failed' && task.partialFailed) {
+    return { title:'全部结果', url:'AI 创作/全部结果_部分失败.html' };
+  }
+  if (task.status === 'failed') {
+    return { title:'全部结果', url:'AI 创作/全部结果_全部失败.html' };
+  }
+  if (task.status === 'aborted') {
+    return { title:'全部结果', url:'AI 创作/全部结果-正在生成:已中止.html' };
+  }
+  return { title:'全部结果', url:'AI 创作/全部结果_等待中.html' };
 }
 
 function renderViewAllCard(task, remaining) {
@@ -1259,16 +1310,31 @@ function renderCardActions(task) {
       +'<button class="card-act-more" onclick="parent.postMessage({action:\'openTab\',title:\''+target.title+'\',url:\''+target.url+'\'},\'*\')">查看全部</button>'
       +'</div>';
   }
+  if (s === 'failed') {
+    if (task.partialFailed) {
+      var target = getViewAllTarget(task);
+      return '<div class="card-actions">'
+        +'<button class="card-act-btn" style="border-color:var(--accent-border);background:var(--accent-bg);color:var(--accent-solid)" onclick="event.stopPropagation()">重试失败项</button>'
+        +'<button class="card-act-btn" onclick="handleReEditById(\''+id+'\')">'+icon(SVG.edit)+' 重新编辑</button>'
+        +'<button class="card-act-btn" onclick="handleRetryById(\''+id+'\')">'+icon(SVG.retry)+' 再次生成</button>'
+        +'<button class="card-act-more" onclick="parent.postMessage({action:\'openTab\',title:\''+target.title+'\',url:\''+target.url+'\'},\'*\')">查看全部</button>'
+        +'</div>';
+    }
+    return '<div class="card-actions">'
+      +'<button class="card-act-btn" onclick="handleReEditById(\''+id+'\')">'+icon(SVG.edit)+' 重新编辑</button>'
+      +'<button class="card-act-btn" onclick="handleRetryById(\''+id+'\')">'+icon(SVG.retry)+' 再次生成</button>'
+      +'</div>';
+  }
   if (s === 'generating') {
     return '<div class="card-actions">'
       +'<button class="card-act-btn" onclick="handleReEditById(\''+id+'\')">'+icon(SVG.edit)+' 重新编辑</button>'
-      +'<button class="card-act-stop" onclick="handleStopById(\''+id+'\')">'+icon(SVG.stop)+' 停止生成</button>'
+      +'<button class="card-act-stop" onclick="handleStopById(\''+id+'\')">'+imageIcon('../icon/停止生成.svg', 14, '停止生成')+' 停止生成</button>'
       +'</div>';
   }
   if (s === 'pending') {
     return '<div class="card-actions">'
       +'<button class="card-act-btn" onclick="handleReEditById(\''+id+'\')">'+icon(SVG.edit)+' 重新编辑</button>'
-      +'<button class="card-act-stop" onclick="handleStopById(\''+id+'\')">'+icon(SVG.stop)+' 停止生成</button>'
+      +'<button class="card-act-stop" onclick="handleStopById(\''+id+'\')">'+imageIcon('../icon/停止生成.svg', 14, '停止生成')+' 停止生成</button>'
       +'</div>';
   }
   return '';
@@ -1341,13 +1407,15 @@ function renderDetailModalBody() {
   var page = state.detailPage, activeModel = state.detailActiveModel;
   var isMulti = task.input.models.length > 1;
   var currentOutput = getTaskOutput(task, activeModel);
+  var displayMeta = getTaskDisplayMeta(task, activeModel);
   var pageItems = currentOutput.items.slice((page-1)*DM_PAGE_SIZE, page*DM_PAGE_SIZE);
   var totalPages = Math.ceil(currentOutput.total / DM_PAGE_SIZE);
   var sourceName = GEN_SOURCES[task.source] || task.source || '通用生成';
 
   var modelTabsHtml = isMulti ? '<div class="model-tabs" style="margin:0 -24px;padding:0 24px">'
     +task.input.models.map(function(m){
-      return '<button class="model-tab'+(m===activeModel?' active':'')+'" onclick="switchDetailModel(\''+m+'\')">'+escHtml(MODELS_MAP[m]||m)+'<span class="model-tab-count">('+getTaskOutput(task,m).total+')</span></button>';
+      var meta = getTaskDisplayMeta(task, m);
+      return '<button class="model-tab'+(m===activeModel?' active':'')+'" onclick="switchDetailModel(\''+m+'\')">'+escHtml(MODELS_MAP[m]||m)+'<span class="model-tab-count">('+getTaskOutput(task,m).total+'/'+meta.count+')</span></button>';
     }).join('')+'</div>' : '';
 
   var refImgsHtml = (task.input.refImages && task.input.refImages.length > 0)
@@ -1375,10 +1443,10 @@ function renderDetailModalBody() {
     +'<div class="detail-input-section"><div class="detail-label">输入信息</div><div class="detail-prompt">'+escHtml(task.input.prompt)+'</div>'
     +'<div class="detail-params">'
     +task.input.models.map(function(m){ return '<span class="detail-param">模型: <strong>'+escHtml(MODELS_MAP[m]||m)+'</strong></span>'; }).join('')
-    +(task.input.ratio?'<span class="detail-param">比例: <strong>'+task.input.ratio+'</strong></span>':'')
-    +(task.input.res?'<span class="detail-param">分辨率: <strong>'+task.input.res+'</strong></span>':'')
-    +(task.input.dur?'<span class="detail-param">时长: <strong>'+task.input.dur+'</strong></span>':'')
-    +'<span class="detail-param">数量: <strong>'+task.input.count+'</strong></span></div>'
+    +(displayMeta.ratioText?'<span class="detail-param">比例: <strong>'+escHtml(displayMeta.ratioText)+'</strong></span>':'')
+    +(task.type==='image' && displayMeta.extra?'<span class="detail-param">分辨率: <strong>'+escHtml(displayMeta.extra)+'</strong></span>':'')
+    +(task.type==='video' && displayMeta.extra?'<span class="detail-param">时长: <strong>'+escHtml(displayMeta.extra)+'</strong></span>':'')
+    +'<span class="detail-param">数量: <strong>'+displayMeta.count+'</strong></span></div>'
     +refImgsHtml+'</div>'
     +modelTabsHtml
     +'<div style="margin-top:12px"><div class="detail-label">输出内容 ('+currentOutput.total+' '+(task.type==='video'?'个':'张')+')</div><div class="detail-output-grid">'+thumbGridHtml+'</div>'+paginationHtml+'</div>';
@@ -1399,7 +1467,6 @@ window.addEventListener('taskUpdated', function(e) {
 });
 
 renderAll();
-setTimeout(function(){ var el=document.getElementById('taskScrollArea'); if(el) el.scrollTop=el.scrollHeight; }, 0);
 </script>
 
 <script src="../共享样式/project-picker.js"></script>
@@ -1440,9 +1507,51 @@ const CHAT_MODELS = {
 let curType = 'image';
 const sel = {
   chat:  { model:'gpt54mini', think:false, search:false },
-  image: { model:'seedream5', ratio:'1:1', res:'2K', count:'1' },
-  video: { model:'seedream5', ratio:'16:9', dur:'5秒', mode:'智能参考', count:'1' },
+  image: { models:['seedream5'], activeModel:'seedream5', modelConfigs:{ seedream5:{ count:'1', ratio:'1:1', res:'2K' } } },
+  video: { models:['seedream5'], activeModel:'seedream5', modelConfigs:{ seedream5:{ count:'1', ratio:'16:9', dur:'5秒', mode:'智能参考' } } },
 };
+
+function ensureInputModelConfig(type, modelId) {
+  const typeSel = sel[type];
+  if (!typeSel.modelConfigs) typeSel.modelConfigs = {};
+  if (!typeSel.modelConfigs[modelId]) {
+    const fallbackId = typeSel.models && typeSel.models[0];
+    const fallback = fallbackId && typeSel.modelConfigs[fallbackId] ? typeSel.modelConfigs[fallbackId] : {};
+    typeSel.modelConfigs[modelId] = type === 'video'
+      ? { count:String(fallback.count || '1'), ratio:fallback.ratio || '16:9', dur:fallback.dur || '5秒', mode:fallback.mode || '智能参考' }
+      : { count:String(fallback.count || '1'), ratio:fallback.ratio || '1:1', res:fallback.res || '2K' };
+  }
+  return typeSel.modelConfigs[modelId];
+}
+
+function getInputActiveModelId(type = curType) {
+  const typeSel = sel[type];
+  if (!typeSel.activeModel || !typeSel.models.includes(typeSel.activeModel)) typeSel.activeModel = typeSel.models[0];
+  return typeSel.activeModel;
+}
+
+function getInputActiveConfig(type = curType) {
+  return ensureInputModelConfig(type, getInputActiveModelId(type));
+}
+
+function getTaskModelConfig(task, modelId) {
+  if (task.input && task.input.modelConfigs && task.input.modelConfigs[modelId]) return task.input.modelConfigs[modelId];
+  return {
+    ratio: task.input.ratio,
+    res: task.input.res,
+    dur: task.input.dur,
+    count: task.input.count,
+    mode: task.input.mode,
+    platformSize: task.input.platformSize || null,
+  };
+}
+
+function getTaskDisplayMeta(task, modelId) {
+  const cfg = getTaskModelConfig(task, modelId);
+  const ratioText = cfg.platformSize ? `${cfg.platformSize.w}×${cfg.platformSize.h}` : (cfg.ratio || '');
+  const extra = task.type === 'video' ? (cfg.dur || '') : (cfg.res || '');
+  return { ratioText, extra, count: cfg.count || 0 };
+}
 
 (function initInputBox() {
   const root = document.getElementById('input-box-root');
@@ -1596,11 +1705,17 @@ function clearRefImages() {
 
 function restoreTaskToInput(task) {
   curType = task.type === 'video' ? 'video' : 'image';
-  if (task.input.models && task.input.models[0]) sel[curType].model = task.input.models[0];
-  if (task.input.ratio) sel[curType].ratio = task.input.ratio;
-  if (task.input.res) sel[curType].res = task.input.res;
-  if (task.input.dur) sel[curType].dur = task.input.dur;
-  if (task.input.count) sel[curType].count = String(task.input.count);
+  const typeSel = sel[curType];
+  const models = (task.input.models && task.input.models.length) ? task.input.models.slice() : [curType === 'video' ? 'seedream5' : 'seedream5'];
+  typeSel.models = models;
+  typeSel.activeModel = models[0];
+  typeSel.modelConfigs = {};
+  models.forEach(function(modelId) {
+    const cfg = getTaskModelConfig(task, modelId);
+    typeSel.modelConfigs[modelId] = curType === 'video'
+      ? { count:String(cfg.count || 1), ratio:cfg.ratio || '16:9', dur:cfg.dur || '5秒', mode:cfg.mode || '智能参考', platformSize: cfg.platformSize || null }
+      : { count:String(cfg.count || 1), ratio:cfg.ratio || '1:1', res:cfg.res || '2K', platformSize: cfg.platformSize || null };
+  });
   expandInputBox();
   document.getElementById('inputPrompt').value = task.input.prompt || '';
   onInputChange();
@@ -1698,6 +1813,22 @@ function renderInputOpts() {
   if (!area) return;
   area.innerHTML = '';
 
+  if (curType !== 'chat') {
+    const models = sel[curType].models || [];
+    const activeId = getInputActiveModelId();
+    const activeCfg = getInputActiveConfig();
+    const modelNames = models.map(id => (MODELS_DATA.find(m=>m.id===id)||{name:id}).name).join('、');
+    area.innerHTML += `<div class="opt-pill" style="cursor:default;"><span>${models.length > 1 ? `${models.length} 个模型` : modelNames}</span></div>`;
+    if (models.length > 1) {
+      area.innerHTML += `<div class="opt-pill" style="cursor:default;"><span>当前：${(MODELS_DATA.find(m=>m.id===activeId)||{name:activeId}).name}</span></div>`;
+    }
+    if (curType === 'video') {
+      area.innerHTML += `<div class="opt-pill" style="cursor:default;"><span>${activeCfg.ratio || '16:9'} · ${activeCfg.dur || '5秒'} · ${activeCfg.count || '1'} 个</span></div>`;
+    } else {
+      area.innerHTML += `<div class="opt-pill" style="cursor:default;"><span>${activeCfg.ratio || '1:1'} · ${activeCfg.res || '2K'} · ${activeCfg.count || '1'} 张</span></div>`;
+    }
+  }
+
   if (curType === 'chat') {
     // ── 对话模型选择 ──
     const mid = sel.chat.model;
@@ -1736,113 +1867,8 @@ function renderInputOpts() {
       <span class="opt-pill-val"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> 上传文件</span>
     </div>`;
 
-  } else if (curType === 'video') {
-    // ── 模型 ──
-    const modelId = sel.video.model || 'seedream5';
-    const modelName = (MODELS_DATA.find(m=>m.id===modelId)||MODELS_DATA[0]).name;
-    area.innerHTML += `<div class="opt-pill" id="pill-model" onclick="togglePill(event,'model')">
-      <span>${modelName}</span><span class="arr">▼</span>
-      <div class="opt-dd" id="dd-model">
-        <div class="dd-section-title">模型</div>
-        ${MODELS_DATA.map(m=>`<div class="model-opt${m.id===modelId?' active':''}" onclick="pickModel(event,'${m.id}')">${m.name}</div>`).join('')}
-      </div>
-    </div>`;
-
-    // ── 数量 ──
-    const vCount = sel.video.count || '1';
-    area.innerHTML += `<div class="opt-pill" id="pill-count" onclick="togglePill(event,'count')">
-      <span>${vCount} 个</span><span class="arr">▼</span>
-      <div class="opt-dd" id="dd-count">
-        <div class="dd-section-title">生成数量</div>
-        <div class="dd-chips" style="flex-wrap:nowrap">
-          ${['1','2','3','4','5','6','7','8','9','10'].map(n=>`<span class="dd-chip${n===vCount?' active':''}" onclick="pickCount(event,'${n}')">${n}</span>`).join('')}
-        </div>
-      </div>
-    </div>`;
-
-    // ── 生成模式 ──
-    const vMode = sel.video.mode || '智能参考';
-    area.innerHTML += `<div class="opt-pill" id="pill-mode" onclick="togglePill(event,'mode')">
-      <span>${vMode}</span><span class="arr">▼</span>
-      <div class="opt-dd" id="dd-mode">
-        <div class="dd-section-title">生成模式</div>
-        <div class="dd-chips">
-          ${['智能参考','首尾帧'].map(v=>`<span class="dd-chip${v===vMode?' active':''}" onclick="pickMode(event,'${v}')">${v}</span>`).join('')}
-        </div>
-      </div>
-    </div>`;
-
-    // ── 比例 + 时长 ──
-    const vRatio = sel.video.ratio || '16:9';
-    const vDur = sel.video.dur || '5秒';
-    const vrs = RATIO_SIZES[vRatio]||[16,9]; const vsc = 11/Math.max(vrs[0],vrs[1]);
-    const viw=Math.round(vrs[0]*vsc), vih=Math.round(vrs[1]*vsc);
-    const videoRatioVals = ['16:9','4:3','1:1','3:4','9:16'];
-    area.innerHTML += `<div class="opt-pill" id="pill-ratio" onclick="togglePill(event,'ratio')">
-      <span class="pill-ratio-box" style="width:${viw}px;height:${vih}px"></span>
-      <span>${vRatio} · ${vDur}</span><span class="arr">▼</span>
-      <div class="opt-dd" id="dd-ratio" style="min-width:300px">
-        <div class="dd-section-title">比例</div>
-        <div class="ratio-row">${videoRatioVals.map(r=>{
-          const s=RATIO_SIZES[r]||[14,14]; const sc2=11/Math.max(s[0],s[1]);
-          return `<div class="ratio-chip${r===vRatio?' active':''}" onclick="pickRatio(event,'${r}')">
-            <div class="ratio-box" style="width:${Math.round(s[0]*sc2)}px;height:${Math.round(s[1]*sc2)}px"></div>
-            <span class="ratio-lbl">${r}</span></div>`;
-        }).join('')}</div>
-        <div class="dd-section-title" style="margin-top:10px">时长</div>
-        <div class="dd-chips">
-          ${['5秒','10秒','15秒','30秒'].map(v=>`<span class="dd-chip${v===vDur?' active':''}" onclick="pickDur(event,'${v}')">${v}</span>`).join('')}
-        </div>
-      </div>
-    </div>`;
-
   } else {
-    // ── Image 模式（默认） ──
-    // 模型
-    const modelName = (MODELS_DATA.find(m=>m.id===sel[curType].model)||MODELS_DATA[0]).name;
-    area.innerHTML += `<div class="opt-pill" id="pill-model" onclick="togglePill(event,'model')">
-      <span>${modelName}</span><span class="arr">▼</span>
-      <div class="opt-dd" id="dd-model">
-        <div class="dd-section-title">模型</div>
-        ${MODELS_DATA.map(m=>`<div class="model-opt${m.id===sel[curType].model?' active':''}" onclick="pickModel(event,'${m.id}')">${m.name}</div>`).join('')}
-      </div>
-    </div>`;
-
-    // 数量
-    const count = sel[curType].count || '1';
-    area.innerHTML += `<div class="opt-pill" id="pill-count" onclick="togglePill(event,'count')">
-      <span>${count} 张</span><span class="arr">▼</span>
-      <div class="opt-dd" id="dd-count">
-        <div class="dd-section-title">生成数量</div>
-        <div class="dd-count-row">${['1','2','3','4','5','6','7','8','9','10'].map(n=>
-          `<div class="dd-count-chip${n===count?' active':''}" onclick="pickCount(event,'${n}')">${n}</div>`
-        ).join('')}</div>
-      </div>
-    </div>`;
-
-    // 比例 + 分辨率
-    const ratio = sel[curType].ratio;
-    const rs = RATIO_SIZES[ratio]||[14,14]; const sc = 11/Math.max(rs[0],rs[1]);
-    const iw=Math.round(rs[0]*sc), ih=Math.round(rs[1]*sc);
-    const resLabel = sel[curType].res==='4K'?'超清 4K':sel[curType].res==='1K'?'1K':'高清 2K';
-    const ratioVals = ['1:1','2:3','3:2','3:4','4:3','9:16','16:9'];
-    area.innerHTML += `<div class="opt-pill" id="pill-ratio" onclick="togglePill(event,'ratio')">
-      <span class="pill-ratio-box" style="width:${iw}px;height:${ih}px"></span>
-      <span>${ratio} · ${resLabel}</span><span class="arr">▼</span>
-      <div class="opt-dd" id="dd-ratio" style="min-width:280px">
-        <div class="dd-section-title">画面比例</div>
-        <div class="ratio-row">${ratioVals.map(r=>{
-          const s=RATIO_SIZES[r]||[14,14]; const sc2=11/Math.max(s[0],s[1]);
-          return `<div class="ratio-chip${r===ratio?' active':''}" onclick="pickRatio(event,'${r}')">
-            <div class="ratio-box" style="width:${Math.round(s[0]*sc2)}px;height:${Math.round(s[1]*sc2)}px"></div>
-            <span class="ratio-lbl">${r}</span></div>`;
-        }).join('')}</div>
-        <div class="dd-section-title" style="margin-top:10px">分辨率</div>
-        <div class="dd-res-row">
-          ${['1K','2K','4K'].map(r=>`<div class="dd-res-chip${r===sel[curType].res?' active':''}" onclick="pickRes(event,'${r}')">${r==='4K'?'超清 4K':r==='1K'?'1K':'高清 2K'}</div>`).join('')}
-        </div>
-      </div>
-    </div>`;
+    // 我的任务页底部输入区先展示摘要，不再提供逐模型编辑，避免误改丢配置
   }
 }
 
@@ -1862,28 +1888,31 @@ document.addEventListener('click', function(e) {
   }
 });
 
-function pickModel(e,id){ e.stopPropagation(); sel[curType].model=id; renderInputOpts(); }
-function pickRatio(e,r){ e.stopPropagation(); sel[curType].ratio=r; renderInputOpts(); }
-function pickRes(e,r){ e.stopPropagation(); sel[curType].res=r; renderInputOpts(); }
-function pickCount(e,n){ e.stopPropagation(); sel[curType].count=n; renderInputOpts(); }
+function pickModel(e,id){ e.stopPropagation(); sel[curType].activeModel=id; ensureInputModelConfig(curType, id); renderInputOpts(); }
+function pickRatio(e,r){ e.stopPropagation(); getInputActiveConfig().ratio=r; renderInputOpts(); }
+function pickRes(e,r){ e.stopPropagation(); getInputActiveConfig().res=r; renderInputOpts(); }
+function pickCount(e,n){ e.stopPropagation(); getInputActiveConfig().count=n; renderInputOpts(); }
 function pickChatModel(e,id){ e.stopPropagation(); sel.chat.model=id; renderInputOpts(); }
 function toggleChatOpt(key){ sel.chat[key]=!sel.chat[key]; renderInputOpts(); }
-function pickMode(e,v){ e.stopPropagation(); sel.video.mode=v; renderInputOpts(); }
-function pickDur(e,v){ e.stopPropagation(); sel.video.dur=v; renderInputOpts(); }
+function pickMode(e,v){ e.stopPropagation(); getInputActiveConfig().mode=v; renderInputOpts(); }
+function pickDur(e,v){ e.stopPropagation(); getInputActiveConfig().dur=v; renderInputOpts(); }
 
 function doGenerate() {
   const txt = document.getElementById('inputPrompt').value.trim();
   if (!txt) { document.getElementById('inputPrompt').focus(); return; }
   const refImgs = [];
   document.querySelectorAll('#inputRefStrip .input-ref-item img').forEach(img => refImgs.push({ thumb: img.src, url: img.src }));
-  const modelId = sel[curType].model || 'seedream5';
+  const models = (sel[curType].models && sel[curType].models.length) ? sel[curType].models.slice() : [getInputActiveModelId()];
+  const modelConfigs = {};
+  models.forEach(function(id){ modelConfigs[id] = Object.assign({}, ensureInputModelConfig(curType, id)); });
+  const firstCfg = modelConfigs[models[0]] || {};
   const newTask = {
     id: String(Date.now()), name: txt.length>30?txt.substring(0,30)+'...':txt,
     type: curType==='video'?'video':'image', status:'generating',
     createdTime: new Date().toISOString().replace('T',' ').substring(0,16),
     creator:'我', source:'universal',
-    input: { prompt:txt, refImages:refImgs, inputType:refImgs.length>1?'multi_image':refImgs.length===1?'image':'text', models:[modelId], ratio:sel[curType].ratio, res:sel[curType].res, dur:sel[curType].dur, count:parseInt(sel[curType].count)||1 },
-    output: { byModel: { [modelId]: { total:0, items:[] } } }
+    input: { prompt:txt, refImages:refImgs, inputType:refImgs.length>1?'multi_image':refImgs.length===1?'image':'text', models:models, modelConfigs:modelConfigs, ratio:firstCfg.ratio, res:firstCfg.res, dur:firstCfg.dur, count:parseInt(firstCfg.count)||1, mode:firstCfg.mode },
+    output: { byModel: Object.fromEntries(models.map(function(id){ return [id, { total:0, items:[] }]; })) }
   };
   window.dispatchEvent(new CustomEvent('taskCreated', { detail: newTask }));
   collapseInputBox();
@@ -1891,15 +1920,18 @@ function doGenerate() {
   onInputChange();
   showToast('任务已提交');
   setTimeout(() => {
-    const cnt = 10;
-    const items = Array.from({length:cnt}, (_,i) => ({
-      type: curType==='video'?'video':'image',
-      thumb: `https://picsum.photos/seed/new${newTask.id}_${i}/200/200`,
-      url: `https://picsum.photos/seed/new${newTask.id}_${i}/800/800`,
-      gradientIdx: i, duration: '5s',
-    }));
+    const byModel = {};
+    models.forEach(function(id) {
+      const cnt = parseInt((modelConfigs[id] && modelConfigs[id].count) || 1, 10) || 1;
+      byModel[id] = { total: cnt, items: Array.from({length:cnt}, (_,i) => ({
+        type: curType==='video'?'video':'image',
+        thumb: `https://picsum.photos/seed/new${newTask.id}_${id}_${i}/200/200`,
+        url: `https://picsum.photos/seed/new${newTask.id}_${id}_${i}/800/800`,
+        gradientIdx: i, duration: (modelConfigs[id] && modelConfigs[id].dur) || '5s',
+      })) };
+    });
     window.dispatchEvent(new CustomEvent('taskUpdated', {
-      detail: { id: newTask.id, status:'completed', output: { byModel: { [modelId]: { total:cnt, items } } } }
+      detail: { id: newTask.id, status:'completed', output: { byModel: byModel } }
     }));
   }, 3000);
 }

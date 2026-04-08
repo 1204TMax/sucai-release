@@ -284,6 +284,13 @@
         .toggle-pill .arr { display: none; }
         .toggle-pill.on { background: rgba(22,119,255,0.08); border-color: rgba(22,119,255,0.28); color: #1677ff; }
 
+        .model-config-wrap {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
         .model-count-wrap {
             display: flex; align-items: center; gap: 4px; flex-shrink: 0;
         }
@@ -299,6 +306,32 @@
         .model-count-input::-webkit-outer-spin-button { -webkit-appearance: none; }
         .model-count-input:focus { border-color: #1a1a1a; background: #fff; }
         .model-count-unit { font-size: 12px; color: #999; }
+        .model-param-select {
+            height: 24px;
+            min-width: 76px;
+            padding: 0 24px 0 8px;
+            border: 1px solid rgba(0,0,0,0.12);
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: inherit;
+            color: #555;
+            background: rgba(0,0,0,0.03);
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+        }
+        .model-param-select:focus {
+            border-color: #1a1a1a;
+            background-color: #fff;
+        }
+        .model-opt-row:not(.checked) .model-count-input,
+        .model-opt-row:not(.checked) .model-param-select {
+            opacity: 0.45;
+            pointer-events: none;
+        }
 
         /* 比例 chips */
         .ratio-row { display: flex; flex-wrap: nowrap; gap: 3px; }
@@ -991,11 +1024,6 @@
 
     <div class="toggle-row">
         <div class="type-toggle">
-            <button class="type-btn" data-type="chat" onclick="switchType(this)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                </svg>文本
-            </button>
             <button class="type-btn active" data-type="image" onclick="switchType(this)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
@@ -1100,7 +1128,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         本地上传
     </div>
-    <div class="upload-dropdown-item" onclick="openAssetModal('素材库')">
+    <div class="upload-dropdown-item" onclick="openAssetModal('产品物料')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         系统资源
     </div>
@@ -1133,19 +1161,7 @@
         </div>
         <div class="asset-modal-body">
             <div class="asset-sidebar" id="assetSidebar">
-                <div class="asset-sidebar-item active" data-cat="素材库" onclick="switchAssetCat(this)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                    素材库
-                </div>
-                <div class="asset-sidebar-item" data-cat="物料库" onclick="switchAssetCat(this)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                    物料库
-                </div>
-                <div class="asset-sidebar-item" data-cat="原料库" onclick="switchAssetCat(this)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                    原料库
-                </div>
-                <div class="asset-sidebar-item" data-cat="产品物料" onclick="switchAssetCat(this)">
+                <div class="asset-sidebar-item active" data-cat="产品物料" onclick="switchAssetCat(this)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     产品物料
                 </div>
@@ -1204,17 +1220,15 @@ const RATIO_SIZES = {
 };
 
 const MODELS = [
-    { id: 'seedream5', name: 'seedream5.0', desc: '字节最强大的图像模型，对中文字体支持友好' },
-    { id: 'banana2',   name: 'banana2',     desc: '谷歌的图像模型，对提示词的理解能力很强大' },
+    { id: 'banana2', name: 'Banana 2', desc: '图像模型 · 支持 1K / 2K / 4K 清晰度', qualities: ['1K', '2K', '4K'] },
+    { id: 'seedream5lite', name: 'Seedream 5.0 Lite', desc: '图像模型 · 支持 2K / 3K 清晰度', qualities: ['2K', '3K'] },
+    { id: 'seedream46', name: 'Seedream 4.6', desc: '图像模型 · 支持 2K / 4K 清晰度', qualities: ['2K', '4K'] },
 ];
 
 const VIDEO_MODELS = [
-    { id: 'seedance2',     name: 'Seedance 2.0',        desc: '标准版视频生成模型' },
-    { id: 'seedance2fast', name: 'Seedance 2.0 Fast',   desc: '快速版视频生成模型' },
-    { id: 'viduq3ref',     name: 'Vidu Q3 Reference',   desc: '支持参考图的视频生成模型' },
-    { id: 'kling30',       name: 'Kling 3.0',           desc: 'Kling 标准视频模型' },
-    { id: 'kling30omni',   name: 'Kling 3.0 Omni',      desc: 'Kling 多能力视频模型' },
-    { id: 'wan26',         name: 'Wan 2.6',             desc: 'Wan 视频生成模型' },
+    { id: 'seedance2', name: 'Seedance 2.0', desc: '视频模型 · 支持 4 秒到 15 秒', durations: ['4秒', '5秒', '6秒', '7秒', '8秒', '9秒', '10秒', '11秒', '12秒', '13秒', '14秒', '15秒'] },
+    { id: 'seedance2fast', name: 'Seedance 2.0 Fast', desc: '视频模型 · 支持 4 秒到 15 秒', durations: ['4秒', '5秒', '6秒', '7秒', '8秒', '9秒', '10秒', '11秒', '12秒', '13秒', '14秒', '15秒'] },
+    { id: 'seedance15pro', name: 'Seedance 1.5Pro', desc: '视频模型 · 支持 5 秒 / 10 秒 / 12 秒', durations: ['5秒', '10秒', '12秒'] },
 ];
 
 const CHAT_MODELS = {
@@ -1311,8 +1325,7 @@ const OPTS = {
         { key: 'mode',       type: 'chips', label: '生成模式',
           values: ['智能参考','首尾帧'], def: '智能参考' },
         { key: 'ratio-dur',  type: 'ratio-dur',
-          ratioValues: ['16:9','4:3','1:1','3:4','9:16'],
-          durValues: ['5秒','10秒','15秒','30秒'] },
+          ratioValues: ['16:9','4:3','1:1','3:4','9:16'] },
         { key: 'project',    type: 'project' },
     ],
 };
@@ -1320,8 +1333,8 @@ const OPTS = {
 let curType = 'image';
 const sel = {
     chat:  { model: 'gpt54mini', think: false, search: false, project: '' },
-    image: { models: ['seedream5'], modelCounts: {}, ratio: '1:1', res: '2K', sizeW: 2048, sizeH: 2048, count: '1', project: '', ratioTab: '常用', platformSize: null, customRatios: [] },
-    video: { models: ['seedance2'], modelCounts: {}, count: '1', mode: '智能参考', ratio: '16:9', ratioTab: '常用', platformSize: null, dur: '5秒', project: '', frameFirst: null, frameLast: null },
+    image: { models: ['banana2'], modelCounts: {}, modelQuality: {}, ratio: '1:1', res: '2K', sizeW: 2048, sizeH: 2048, count: '1', project: '', ratioTab: '常用', platformSize: null, customRatios: [] },
+    video: { models: ['seedance2'], modelCounts: {}, modelDuration: {}, count: '1', mode: '智能参考', ratio: '16:9', ratioTab: '常用', platformSize: null, dur: '5秒', project: '', frameFirst: null, frameLast: null },
 };
 
 function onInput() {
@@ -1563,31 +1576,6 @@ function previewImage(url) {
 
 // ── 素材库弹窗 ──
 const MOCK_ASSETS = {
-    '素材库': [
-        { id: 's1', name: '城市夜景.jpg',   thumb: 'https://picsum.photos/seed/city1/200/200',  type: 'image' },
-        { id: 's2', name: '海滩日落.jpg',   thumb: 'https://picsum.photos/seed/beach1/200/200', type: 'image' },
-        { id: 's3', name: '山间晨雾.jpg',   thumb: 'https://picsum.photos/seed/mount1/200/200', type: 'image' },
-        { id: 's4', name: '都市街景.jpg',   thumb: 'https://picsum.photos/seed/street1/200/200',type: 'image' },
-        { id: 's5', name: '星空银河.jpg',   thumb: 'https://picsum.photos/seed/star1/200/200',  type: 'image' },
-        { id: 's6', name: '古镇小巷.jpg',   thumb: 'https://picsum.photos/seed/town1/200/200',  type: 'image' },
-        { id: 's7', name: '樱花公园.jpg',   thumb: 'https://picsum.photos/seed/sakura1/200/200',type: 'image' },
-        { id: 's8', name: '高山流水.jpg',   thumb: 'https://picsum.photos/seed/river1/200/200', type: 'image' },
-    ],
-    '物料库': [
-        { id: 'm1', name: '产品主图_A.jpg', thumb: 'https://picsum.photos/seed/prod1/200/200',  type: 'image' },
-        { id: 'm2', name: '产品主图_B.jpg', thumb: 'https://picsum.photos/seed/prod2/200/200',  type: 'image' },
-        { id: 'm3', name: '广告背景_1.jpg', thumb: 'https://picsum.photos/seed/ad1/200/200',    type: 'image' },
-        { id: 'm4', name: '广告背景_2.jpg', thumb: 'https://picsum.photos/seed/ad2/200/200',    type: 'image' },
-        { id: 'm5', name: 'Banner模板.jpg', thumb: 'https://picsum.photos/seed/ban1/200/200',   type: 'image' },
-        { id: 'm6', name: '详情页头图.jpg', thumb: 'https://picsum.photos/seed/detail1/200/200',type: 'image' },
-    ],
-    '原料库': [
-        { id: 'r1', name: '肌理纹理_01.jpg', thumb: 'https://picsum.photos/seed/tex1/200/200', type: 'image' },
-        { id: 'r2', name: '肌理纹理_02.jpg', thumb: 'https://picsum.photos/seed/tex2/200/200', type: 'image' },
-        { id: 'r3', name: '光效素材_01.jpg', thumb: 'https://picsum.photos/seed/light1/200/200',type: 'image' },
-        { id: 'r4', name: '渐变背景_01.jpg', thumb: 'https://picsum.photos/seed/grad1/200/200', type: 'image' },
-        { id: 'r5', name: '噪点背景_01.jpg', thumb: 'https://picsum.photos/seed/noise1/200/200',type: 'image' },
-    ],
     '产品物料': [],
     '我的任务': [],
 };
@@ -1666,7 +1654,7 @@ const FILTER_PRODUCT = `
 
 let assetSelected = new Set();
 let assetSelectedMap = new Map(); // id → { thumb, name }
-let assetCurrentCat = '素材库';
+let assetCurrentCat = '产品物料';
 
 function renderFilterBar() {
     const bar = document.getElementById('assetFilterBar');
@@ -2101,7 +2089,7 @@ function onToolboxFormat() {
 
 // ── 尺寸推算 ──
 function updateSize(ratio, res) {
-    const base = res === '4K' ? 4096 : res === '1K' ? 1024 : 2048;
+    const base = res === '4K' ? 4096 : res === '3K' ? 3072 : res === '1K' ? 1024 : 2048;
     const parts = ratio.split(':').map(Number);
     if (parts.length !== 2 || !parts[1]) {
         sel[curType].sizeW = sel[curType].sizeH = base;
@@ -2156,40 +2144,50 @@ function renderOpts() {
             const models = sel[curType].models || [modelList[0].id];
             const isMulti = models.length > 1;
 
+            const countUnit = curType === 'video' ? '个' : '张';
+            const firstName = (modelList.find(x => x.id === models[0]) || modelList[0]).name;
+            pillVal = isMulti ? `${firstName} 等 ${models.length} 个模型` : firstName;
             if (isMulti) {
-                const firstName = (modelList.find(x => x.id === models[0]) || modelList[0]).name;
-                const countUnit = curType === 'video' ? '个' : '张';
-                pillVal = `${firstName} 等 ${models.length} 个模型`;
                 ddInner = `<div class="dd-section">
-                    <div class="dd-section-title">模型与张数</div>
+                    <div class="dd-section-title">模型配置</div>
                     <div class="model-list">
                         ${modelList.map(mx => {
                             const checked = models.includes(mx.id);
-                            const cnt = sel[curType].modelCounts[mx.id] || '1';
-                            return `<div class="model-opt-row" data-desc="${mx.desc}"
+                            const cnt = checked ? (sel[curType].modelCounts[mx.id] || sel[curType].count || '1') : '';
+                            const paramValues = curType === 'video' ? (mx.durations || []) : (mx.qualities || []);
+                            const paramValue = curType === 'video'
+                                ? (sel.video.modelDuration[mx.id] || mx.durations?.[0] || sel.video.dur)
+                                : (sel.image.modelQuality[mx.id] || mx.qualities?.[0] || sel.image.res);
+                            const paramLabel = curType === 'video' ? '时长' : '清晰度';
+                            return `<div class="model-opt-row${checked ? ' checked' : ''}" data-desc="${mx.desc}"
                                          onclick="toggleModel(event,'${mx.id}')">
                                 <div class="model-check${checked ? ' active' : ''}"></div>
                                 <span class="model-opt-name">${mx.name}</span>
-                                ${checked ? `<div class="model-count-wrap" onclick="event.stopPropagation()">
-                                    <input class="model-count-input" type="number" min="1" max="99"
-                                           value="${cnt}"
-                                           onchange="setModelCount(event,'${mx.id}')"
-                                           onkeydown="if(event.key==='Enter'){event.target.blur()}">
-                                    <span class="model-count-unit">${countUnit}</span>
-                                </div>` : ''}
+                                <div class="model-config-wrap" onclick="event.stopPropagation()">
+                                    <div class="model-count-wrap">
+                                        <input class="model-count-input" type="number" min="1" max="99"
+                                               value="${cnt}"
+                                               placeholder="1"
+                                               onchange="setModelCount(event,'${mx.id}')"
+                                               onkeydown="if(event.key==='Enter'){event.target.blur()}">
+                                        <span class="model-count-unit">${countUnit}</span>
+                                    </div>
+                                    <select class="model-param-select"
+                                            onchange="setModelParam(event,'${mx.id}','${curType === 'video' ? 'duration' : 'quality'}')">
+                                        ${paramValues.map(v => `<option value="${v}"${v === paramValue ? ' selected' : ''}>${paramLabel}：${v}</option>`).join('')}
+                                    </select>
+                                </div>
                             </div>`;
                         }).join('')}
                     </div>
                 </div>`;
             } else {
-                const m = modelList.find(x => x.id === models[0]) || modelList[0];
-                pillVal = m.name;
                 ddInner = `<div class="dd-section">
                     <div class="dd-section-title">模型</div>
                     <div class="model-list">
                         ${modelList.map(mx => {
                             const checked = models.includes(mx.id);
-                            return `<div class="model-opt-row" data-desc="${mx.desc}"
+                            return `<div class="model-opt-row${checked ? ' checked' : ''}" data-desc="${mx.desc}"
                                          onclick="toggleModel(event,'${mx.id}')">
                                 <div class="model-check${checked ? ' active' : ''}"></div>
                                 <span class="model-opt-name">${mx.name}</span>
@@ -2202,7 +2200,7 @@ function renderOpts() {
         } else if (opt.type === 'ratio-res') {
             const ratio = sel[curType].ratio;
             const res   = sel[curType].res;
-            const resLabel = res === '4K' ? '超清 4K' : res === '1K' ? '1K' : '高清 2K';
+            const resLabel = res === '4K' ? '超清 4K' : res === '3K' ? '高清 3K' : res === '1K' ? '1K' : '高清 2K';
             const customRatios = sel[curType].customRatios || [];
             const ratioTab = sel[curType].ratioTab || '常用';
             const ps = sel[curType].platformSize;
@@ -2225,9 +2223,9 @@ function renderOpts() {
             const iw = Math.round(rw * sc), ih = Math.round(rh * sc);
 
             if (ratioTab !== '常用' && ps) {
-                pillVal = `${ps.w}×${ps.h} · ${resLabel}`;
+                pillVal = sel[curType].models.length > 1 ? `${ps.w}×${ps.h}` : `${ps.w}×${ps.h} · ${resLabel}`;
             } else {
-                pillVal = `${ratio} · ${resLabel}`;
+                pillVal = sel[curType].models.length > 1 ? `${ratio}` : `${ratio} · ${resLabel}`;
             }
 
             // Platform tab bar
@@ -2319,12 +2317,10 @@ function renderOpts() {
                     <button class="custom-cancel" onclick="cancelCustomInput(event)">✕</button>
                 </div>
             </div>
-            ${opt.showRes !== false ? `<div class="dd-section">
+            ${opt.showRes !== false && sel[curType].models.length === 1 ? `<div class="dd-section">
                 <div class="dd-section-title">质量</div>
                 <div class="res-toggle">
-                    <div class="res-large${res==='1K'?' active':''}" onclick="pickRatioRes(event,'res','1K')">1K</div>
-                    <div class="res-large${res==='2K'?' active':''}" onclick="pickRatioRes(event,'res','2K')">高清 2K</div>
-                    <div class="res-large${res==='4K'?' active':''}" onclick="pickRatioRes(event,'res','4K')">超清 4K <span class="res-star">✦</span></div>
+                    ${(MODELS.find(x => x.id === sel[curType].models[0])?.qualities || [res]).map(v => `<div class="res-large${res===v?' active':''}" onclick="pickRatioRes(event,'res','${v}')">${v === '4K' ? '超清 4K <span class=\"res-star\">✦</span>' : v === '3K' ? '高清 3K' : v === '2K' ? '高清 2K' : v}</div>`).join('')}
                 </div>
             </div>` : ''}`;
 
@@ -2341,7 +2337,7 @@ function renderOpts() {
             const iw = Math.round(rw * sc), ih = Math.round(rh * sc);
             const ratioDisplay = (ratioTab !== '常用' && ps) ? `${ps.w}×${ps.h}` : ratio;
             const dur = sel[curType].dur || '5秒';
-            pillVal = `${ratioDisplay} · ${dur}`;
+            pillVal = sel[curType].models.length > 1 ? `${ratioDisplay}` : `${ratioDisplay} · ${dur}`;
 
             // 平台 tab bar
             const tabBar = `<div class="ratio-platform-tabs">
@@ -2394,15 +2390,15 @@ function renderOpts() {
                 ${tabBar}
                 ${presetContent}
             </div>
-            <div class="dd-section">
+            ${sel[curType].models.length === 1 ? `<div class="dd-section">
                 <div class="dd-section-title">时长</div>
                 <div class="dd-chips">
-                    ${(opt.durValues || ['5秒','10秒','15秒','30秒']).map(v =>
+                    ${(VIDEO_MODELS.find(x => x.id === sel[curType].models[0])?.durations || [dur]).map(v =>
                         `<span class="dd-chip${v===dur?' active':''}"
                                onclick="pickDur(event,'${v}')">${v}</span>`
                     ).join('')}
                 </div>
-            </div>`;
+            </div>` : ''}`;
 
         } else if (opt.type === 'ratio') {
             const val = sel[curType][opt.key] || opt.def;
@@ -2614,30 +2610,69 @@ function pickOpt(e, key, val) {
     if (curType === 'video' && key === 'mode') renderKeyframeStrip();
 }
 
+function getModelList(type = curType) {
+    return type === 'video' ? VIDEO_MODELS : MODELS;
+}
+
+function getModelMeta(type, modelId) {
+    return getModelList(type).find(item => item.id === modelId);
+}
+
+function getDefaultModelParam(type, modelId) {
+    const meta = getModelMeta(type, modelId);
+    if (!meta) return type === 'video' ? '5秒' : '2K';
+    return type === 'video' ? (meta.durations?.[0] || '5秒') : (meta.qualities?.[0] || '2K');
+}
+
+function syncSingleModelState(type = curType, modelId) {
+    if (!modelId) return;
+    const state = sel[type];
+    state.count = state.modelCounts[modelId] || state.count || '1';
+    if (type === 'image') {
+        state.res = state.modelQuality[modelId] || getDefaultModelParam(type, modelId);
+        updateSize(state.ratio, state.res);
+        state.modelQuality = {};
+    } else if (type === 'video') {
+        state.dur = state.modelDuration[modelId] || getDefaultModelParam(type, modelId);
+        state.modelDuration = {};
+    }
+    state.modelCounts = {};
+}
+
+function ensureModelState(type, modelId) {
+    const state = sel[type];
+    if (!state.modelCounts[modelId]) state.modelCounts[modelId] = state.count || '1';
+    if (type === 'image') {
+        const meta = getModelMeta(type, modelId);
+        const fallback = meta?.qualities?.includes(state.res) ? state.res : getDefaultModelParam(type, modelId);
+        if (!state.modelQuality[modelId]) state.modelQuality[modelId] = fallback;
+    } else if (type === 'video') {
+        const meta = getModelMeta(type, modelId);
+        const fallback = meta?.durations?.includes(state.dur) ? state.dur : getDefaultModelParam(type, modelId);
+        if (!state.modelDuration[modelId]) state.modelDuration[modelId] = fallback;
+    }
+}
+
 function toggleModel(e, modelId) {
     e.stopPropagation();
-    const ms = sel[curType].models;
+    const state = sel[curType];
+    const ms = state.models;
     const idx = ms.indexOf(modelId);
     if (idx >= 0) {
-        if (ms.length <= 1) return; // 至少保留一个
+        if (ms.length <= 1) return;
         ms.splice(idx, 1);
+        delete state.modelCounts[modelId];
+        if (curType === 'image') delete state.modelQuality[modelId];
+        if (curType === 'video') delete state.modelDuration[modelId];
         if (ms.length === 1) {
-            // 回到单选模式：同步 count
-            sel[curType].count = sel[curType].modelCounts[ms[0]] || sel[curType].count || '1';
-            sel[curType].modelCounts = {};
-        } else {
-            delete sel[curType].modelCounts[modelId];
+            syncSingleModelState(curType, ms[0]);
         }
     } else {
         ms.push(modelId);
         if (ms.length === 2) {
-            // 首次进入多选：为所有已选模型初始化张数
-            ms.forEach(id => {
-                if (!sel[curType].modelCounts[id])
-                    sel[curType].modelCounts[id] = sel[curType].count || '1';
-            });
+            ms.forEach(id => ensureModelState(curType, id));
         } else {
-            sel[curType].modelCounts[modelId] = sel[curType].count || '1';
+            ensureModelState(curType, modelId);
         }
     }
     reopenModelPanel();
@@ -2649,6 +2684,25 @@ function setModelCount(e, modelId) {
     if (v && v >= 1) {
         sel[curType].modelCounts[modelId] = String(Math.min(99, v));
     }
+}
+
+function setModelParam(e, modelId, kind) {
+    e.stopPropagation();
+    const value = e.target.value;
+    if (curType === 'image' && kind === 'quality') {
+        sel.image.modelQuality[modelId] = value;
+        if (sel.image.models.length === 1) {
+            sel.image.res = value;
+            updateSize(sel.image.ratio, value);
+        }
+    }
+    if (curType === 'video' && kind === 'duration') {
+        sel.video.modelDuration[modelId] = value;
+        if (sel.video.models.length === 1) {
+            sel.video.dur = value;
+        }
+    }
+    reopenModelPanel();
 }
 
 function reopenModelPanel() {
@@ -2663,13 +2717,25 @@ const _projectOpen = new Set();
 function pickDur(e, val) {
     e.stopPropagation();
     sel[curType].dur = val;
+    if (sel[curType].models.length === 1) {
+        const mid = sel[curType].models[0];
+        sel[curType].modelDuration[mid] = val;
+    }
     reopenRatioPanel();
 }
 
 function pickRatioRes(e, type, val) {
     e.stopPropagation();
-    if (type === 'ratio') { sel[curType].ratio = val; sel[curType].platformSize = null; }
-    else sel[curType].res = val;
+    if (type === 'ratio') {
+        sel[curType].ratio = val;
+        sel[curType].platformSize = null;
+    } else {
+        sel[curType].res = val;
+        if (sel[curType].models.length === 1) {
+            const mid = sel[curType].models[0];
+            sel[curType].modelQuality[mid] = val;
+        }
+    }
     updateSize(sel[curType].ratio, sel[curType].res);
     reopenRatioPanel();
 }
@@ -2770,7 +2836,7 @@ function reopenRatioPanel() {
 }
 
 function openHistory() {
-    parent.postMessage({ action: 'openTab', title: '生成详情', url: 'AI 创作/生成详情.html' }, '*');
+    parent.postMessage({ action: 'openTab', title: '我的任务', url: 'AI 创作/我的任务.html' }, '*');
 }
 
 function switchType(btn) {
@@ -2831,7 +2897,7 @@ function doGenerate() {
         opts: sel[curType] ? JSON.parse(JSON.stringify(sel[curType])) : {}
     }));
     showNotif();
-    parent.postMessage({ action: 'openTab', title: '生成详情', url: 'AI 创作/生成详情.html' }, '*');
+    parent.postMessage({ action: 'openTab', title: '我的任务', url: 'AI 创作/我的任务.html' }, '*');
 }
 
 function closeAll(e) {

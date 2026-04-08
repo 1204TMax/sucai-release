@@ -9,7 +9,6 @@
 
 var CC_PREVIEW_STORAGE_TARGETS = ['素材库', '物料库', '原料库'];
 var CC_PREVIEW_EDIT_OPTIONS = [
-  { l: '文本创作' },
   { l: '图像创作' },
   { l: '视频创作' },
   { l: '工作流', children: ['图片衍生'] }
@@ -34,10 +33,6 @@ function thumbOverlayHtml(url, downloadAction) {
   }
   if (!downloadAction) downloadAction = "event.stopPropagation();showToast('已下载')";
 
-  var storeDD = CC_PREVIEW_STORAGE_TARGETS.map(function(t) {
-    return '<div class="storage-dd-item" onclick="event.stopPropagation();showToast(\'已入库到' + t + '\');this.closest(\'.storage-dropdown\').style.display=\'none\'">' + t + '</div>';
-  }).join('');
-
   var editDD = CC_PREVIEW_EDIT_OPTIONS.map(function(opt) {
     if (opt.children) {
       var subs = opt.children.map(function(s) {
@@ -51,8 +46,6 @@ function thumbOverlayHtml(url, downloadAction) {
 
   return '<div class="thumb-overlay">'
     + '<button class="thumb-act" title="下载" onclick="' + downloadAction + '">' + CC_PREVIEW_ICONS.download + '</button>'
-    + '<button class="thumb-act" title="入库" onclick="event.stopPropagation();toggleThumbDD(this,\'store\')">' + CC_PREVIEW_ICONS.store
-    + '<div class="storage-dropdown" onclick="event.stopPropagation()">' + storeDD + '</div></button>'
     + '<button class="thumb-act" title="编辑" onclick="event.stopPropagation();toggleThumbDD(this,\'edit\')">' + CC_PREVIEW_ICONS.edit
     + '<div class="edit-menu" onclick="event.stopPropagation()">' + editDD + '</div></button>'
     + '</div>';
@@ -84,10 +77,6 @@ var _ccPvType = 'image';
 function initImagePreview() {
   if (document.getElementById('imgPreviewMask')) return;
 
-  var storeItems = CC_PREVIEW_STORAGE_TARGETS.map(function(t) {
-    return '<div class="pv-dd-item" onclick="showToast(\'已入库到' + t + '\');this.closest(\'.img-preview-store-dd\').classList.remove(\'show\')">' + t + '</div>';
-  }).join('');
-
   var editItems = CC_PREVIEW_EDIT_OPTIONS.map(function(opt) {
     if (opt.children) {
       var subs = opt.children.map(function(s) {
@@ -104,10 +93,6 @@ function initImagePreview() {
     + '<div class="img-preview-bar" onclick="event.stopPropagation()">'
     +   '<button title="关闭" onclick="closeImagePreview()">' + CC_PREVIEW_ICONS.close + '</button>'
     +   '<button title="下载" onclick="pvDownload()">' + CC_PREVIEW_ICONS.downloadLg + '</button>'
-    +   '<div class="img-preview-store-wrap">'
-    +     '<button title="入库" onclick="pvToggleDD(this)">' + CC_PREVIEW_ICONS.storeLg + '</button>'
-    +     '<div class="img-preview-store-dd" onclick="event.stopPropagation()">' + storeItems + '</div>'
-    +   '</div>'
     +   '<div class="img-preview-store-wrap">'
     +     '<button title="编辑" onclick="pvToggleDD(this)">' + CC_PREVIEW_ICONS.editLg + '</button>'
     +     '<div class="img-preview-store-dd" onclick="event.stopPropagation()">' + editItems + '</div>'

@@ -62,31 +62,6 @@
    2. 小图操作菜单
    ═══════════════════════════════════════════ */
 
-.storage-dropdown {
-  position: absolute;
-  bottom: calc(100% + var(--space-2));
-  right: 0;
-  background: var(--bg-surface);
-  border-radius: var(--r-xl);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-  padding: var(--space-1);
-  min-width: 140px;
-  z-index: 200;
-  display: none;
-}
-.storage-dd-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--r-md);
-  cursor: pointer;
-  font-size: var(--text-base);
-  color: var(--text-hi);
-  transition: background var(--ease);
-}
-.storage-dd-item:hover { background: var(--bg-subtle); }
-
 .edit-menu {
   position: absolute;
   bottom: calc(100% + var(--space-1));

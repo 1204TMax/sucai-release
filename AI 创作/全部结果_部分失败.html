@@ -145,6 +145,19 @@
             color: var(--text-muted);
             margin-top: 2px;
         }
+        .status-tag {
+            display: inline-flex;
+            align-items: center;
+            margin-left: var(--space-2);
+            height: 24px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: #fff1f0;
+            border: 1px solid #ffccc7;
+            color: #cf1322;
+            font: 500 var(--text-sm)/1 var(--font);
+            vertical-align: middle;
+        }
 
         .batch-actions {
             display: inline-flex;
@@ -228,15 +241,29 @@
         }
 
         .pill-single {
-            background: transparent;
-            box-shadow: none;
-            padding: 0;
+            background: #fff;
+            border: 1px solid var(--border-1);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.72);
+            padding: 0 var(--space-3);
             color: var(--text-lo);
             cursor: default;
         }
 
         .pill-single:hover {
             color: var(--text-lo);
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            height: 28px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border-1);
+            background: #fff;
+            color: var(--text-lo);
+            font: 500 var(--text-sm)/1 var(--font);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.72);
         }
 
         .pill-n {
@@ -691,6 +718,43 @@
             color: var(--text-hi);
         }
 
+        /* ── Failure Empty State ── */
+        .failure-state {
+            min-height: 520px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 96px 24px;
+        }
+
+        .failure-state-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 12px;
+        }
+
+        .failure-title {
+            font-size: 24px;
+            line-height: 1.3333;
+            font-weight: 600;
+            color: #ff4d4f;
+        }
+
+        .failure-desc {
+            font-size: 14px;
+            line-height: 1.5715;
+            color: var(--text-muted);
+        }
+
+        .failure-actions {
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+        }
+
     </style>
 </head>
 <body>
@@ -705,6 +769,7 @@
             <div class="card-title" id="cardTitle"></div>
             <div class="card-subtitle" id="cardSubtitle"></div>
         </div>
+        <div class="status-pill" id="currentStatus"></div>
     </div>
 
     <!-- Row 2: Refs + Prompt -->
@@ -739,22 +804,23 @@
                 <span class="sel-count" id="selCount">已选 0 项</span>
                 <button class="b b-soft" id="selAllBtn" onclick="selectAll()">全选</button>
                 <button class="b b-soft" onclick="batchDownload()">下载</button>
-                <div class="archive-wrap">
-                    <button class="b b-soft" onclick="toggleArchiveMenu(this)">
-                        <svg width="14" height="14" viewBox="0 0 1024 1024" fill="currentColor"><path d="M102.4 69.12h819.2l102.4 204.8v716.8h-51.2H0v-716.8l102.4-204.8z m819.2 302.08H102.4v512h819.2v-512z m-22.016-107.52l-50.176-93.184H174.08l-50.176 93.184h775.68z"/><path d="M558.592 632.32h114.688l-153.088 153.088-152.576-153.088h114.688V479.232h76.288v153.088z"/></svg>
-                        入库
-                    </button>
-                    <div class="archive-dropdown"></div>
-                </div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- ══════════════════════════════════════════
-     Image Grid (Justified Layout)
+     Failure Empty State
 ══════════════════════════════════════════ -->
-<div id="grid"></div>
+<div class="card failure-state">
+    <div class="failure-state-inner">
+        <div class="failure-title">部分生成失败</div>
+        <div class="failure-desc" id="failureReason">此处显示具体失败原因，具体原因列表见文档。</div>
+        <div class="failure-actions">
+            <button class="b b-solid" onclick="retryTask()">重试失败任务</button>
+        </div>
+    </div>
+</div>
 
 <!-- ══════════════════════════════════════════
      Preview Modal
@@ -807,19 +873,23 @@ const PAGE_INFO = {
     ],
     model:   'Seedream 5.0',
     settings: {
-        ratios:   ['9:16', '16:9', '1:1'],
+        ratios:   ['9:16'],
         clarity:  '2K',     // image only；视频传 null
         duration: null,     // video only；图片传 null
     },
     project: '走路赚金币',  // 无项目时传 null
+    status: '已失败',
+    successCount: 3,
+    failedCount: 4,
+    allStatuses: ['等待中', '生成中', '已成功', '已失败', '已中断'],
+    failureReason: '7 条任务中有 4 条失败，以下展示 3 张成功生成的图片，可继续重试失败任务。'
 };
 
 function renderInfo() {
     const p = PAGE_INFO;
-    const totalCount = images.length;
 
     // Row 1: title + subtitle
-    document.getElementById('cardTitle').textContent = '生成结果 · ' + totalCount + ' 条';
+    document.getElementById('cardTitle').innerHTML = `已生成:${p.successCount}条 <span class="status-tag">${p.status}</span>`;
     const parts = [];
     if (p.project) parts.push(p.project);
     parts.push(p.entry);
@@ -827,9 +897,11 @@ function renderInfo() {
     if (p.type === 'image' && p.settings.clarity) parts.push(p.settings.clarity);
     if (p.type === 'video' && p.settings.duration) parts.push('时长 ' + p.settings.duration);
     document.getElementById('cardSubtitle').textContent = parts.join(' · ');
+    document.getElementById('currentStatus').textContent = '当前状态：' + p.allStatuses.join('、');
 
     // Row 2: prompt
     document.getElementById('infoPrompt').textContent = p.prompt;
+    document.getElementById('failureReason').textContent = p.failureReason;
 
     // Row 2: refs (放到提示词前面，无标题)
     const refGroup = document.getElementById('refGroup');
@@ -843,6 +915,8 @@ function renderInfo() {
     } else {
         refGroup.style.display = 'none';
     }
+
+    document.getElementById('filterRow').style.display = 'none';
 }
 
 function openRefPreview(idx) {
@@ -862,32 +936,21 @@ function openRefPreview(idx) {
     mask.classList.add('visible');
 }
 
+function retryTask() {
+    alert('重试');
+}
+
 // ═══════════════════════════════════════════════════
-// Mock Data — 16 images, 3 ratio groups
+// Mock Data — 7 images, single ratio
 // ═══════════════════════════════════════════════════
 const COLORS = [
-    '#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD',
-    '#FF8C69','#6C5CE7','#00B894','#FD79A8','#FDCB6E','#74B9FF',
-    '#A29BFE','#55EFC4','#E17055','#81ECEC'
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#FF8C69'
 ];
 
 let images = [
-    { id:1,  ratio:'9:16',  ar:9/16,  color:COLORS[0],  name:'竖屏-001', model:'Seedream 5.0' },
-    { id:2,  ratio:'9:16',  ar:9/16,  color:COLORS[1],  name:'竖屏-002', model:'Seedream 5.0' },
-    { id:3,  ratio:'9:16',  ar:9/16,  color:COLORS[2],  name:'竖屏-003', model:'Banana 2' },
-    { id:4,  ratio:'9:16',  ar:9/16,  color:COLORS[3],  name:'竖屏-004', model:'Banana 2' },
-    { id:5,  ratio:'9:16',  ar:9/16,  color:COLORS[4],  name:'竖屏-005', model:'Seedream 5.0' },
-    { id:6,  ratio:'9:16',  ar:9/16,  color:COLORS[5],  name:'竖屏-006', model:'Banana 2' },
-    { id:7,  ratio:'16:9',  ar:16/9,  color:COLORS[6],  name:'横屏-001', model:'Seedream 5.0' },
-    { id:8,  ratio:'16:9',  ar:16/9,  color:COLORS[7],  name:'横屏-002', model:'Seedream 5.0' },
-    { id:9,  ratio:'16:9',  ar:16/9,  color:COLORS[8],  name:'横屏-003', model:'Banana 2' },
-    { id:10, ratio:'16:9',  ar:16/9,  color:COLORS[9],  name:'横屏-004', model:'Banana 2' },
-    { id:11, ratio:'16:9',  ar:16/9,  color:COLORS[10], name:'横屏-005', model:'Seedream 5.0' },
-    { id:12, ratio:'16:9',  ar:16/9,  color:COLORS[11], name:'横屏-006', model:'Banana 2' },
-    { id:13, ratio:'1:1',   ar:1,     color:COLORS[12], name:'方图-001', model:'Seedream 5.0' },
-    { id:14, ratio:'1:1',   ar:1,     color:COLORS[13], name:'方图-002', model:'Banana 2' },
-    { id:15, ratio:'1:1',   ar:1,     color:COLORS[14], name:'方图-003', model:'Seedream 5.0' },
-    { id:16, ratio:'1:1',   ar:1,     color:COLORS[15], name:'方图-004', model:'Banana 2' },
+    { id: 1, ratio: '9:16', ar: 9 / 16, color: COLORS[0], name: '竖屏-001', model: 'Seedream 5.0' },
+    { id: 2, ratio: '9:16', ar: 9 / 16, color: COLORS[1], name: '竖屏-002', model: 'Seedream 5.0' },
+    { id: 3, ratio: '9:16', ar: 9 / 16, color: COLORS[2], name: '竖屏-003', model: 'Seedream 5.0' },
 ];
 
 function previewUrlFor(item) {
@@ -963,22 +1026,29 @@ function renderModelTabs() {
     const el = document.getElementById('modelChips');
     const models = [...new Set(images.map(i => i.model))];
 
-    // 只有一个模型时不显示
     const sep1 = document.getElementById('filterSep1');
-    if (models.length <= 1) { el.style.display = 'none'; sep1.style.display = 'none'; return; }
+    if (!models.length) { el.style.display = 'none'; sep1.style.display = 'none'; return; }
 
     el.style.display = 'flex';
     sep1.style.display = '';
     el.innerHTML = '';
 
-    const mk = (text, key) => {
+    const mk = (text, key, extraClass = '') => {
         const b = document.createElement('button');
-        b.className = 'chip' + (curModel === key ? ' on' : '');
+        b.className = 'chip' + (curModel === key ? ' on' : '') + (extraClass ? ' ' + extraClass : '');
         b.innerHTML = text;
-        b.onclick = () => { curModel = key; curRatio = 'all'; render(); };
+        if (!extraClass) b.onclick = () => { curModel = key; curRatio = 'all'; render(); };
+        else b.type = 'button';
         el.appendChild(b);
     };
 
+    if (models.length === 1) {
+        curModel = models[0];
+        mk(models[0], models[0], 'pill-single');
+        return;
+    }
+
+    if (curModel !== 'all' && !models.includes(curModel)) curModel = 'all';
     mk('全部模型', 'all');
     models.forEach(m => mk(m, m));
 }
@@ -1281,7 +1351,6 @@ let _rt;
 window.addEventListener('resize', () => { clearTimeout(_rt); _rt = setTimeout(renderGrid, 100); });
 
 renderInfo();
-render();
 </script>
 <script>
 function showToast(msg) { alert(msg); }

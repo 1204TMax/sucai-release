@@ -18,23 +18,6 @@
 
 const MENU_CONFIG = [
   {
-    id: 'home',
-    name: '首页',
-    children: [
-      {
-        name: '首页',
-        page: '首页/index.html',
-        icon: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>'
-      }
-    ],
-    shortcuts: {
-      title: '常用功能',
-      items: [
-        { name: '通用生成', page: 'AI 创作/通用生成.html', icon: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>' }
-      ]
-    }
-  },
-  {
     id: 'ai',
     name: 'AI创作',
     children: [
@@ -45,14 +28,9 @@ const MENU_CONFIG = [
       },
       {
         name: '我的任务',
-        page: 'AI 创作/生成详情.html',
+        page: 'AI 创作/我的任务.html',
         icon: '<path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>',
         badge: { generating: 3, unviewed: 5 }
-      },
-      {
-        name: '原料管理',
-        page: '共享样式/该需求暂未完成.html',
-        icon: '<line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line>'
       },
       {
         name: '项目管理',
@@ -87,24 +65,8 @@ const MENU_CONFIG = [
       }
     ]
   },
-  {
-    id: 'settings',
-    name: '系统设置',
-    children: [
-      {
-        name: '模型配置',
-        page: '共享样式/该需求暂未完成.html',
-        icon: '<path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path>'
-      },
-      {
-        name: '算力成本',
-        page: '共享样式/该需求暂未完成.html',
-        icon: '<line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>'
-      }
-    ]
-  }
 ];
 
 // 默认首页（打开系统时加载的页面）
-const DEFAULT_PAGE = '首页/index.html';
-const DEFAULT_TAB_NAME = '首页';
+const DEFAULT_PAGE = 'AI 创作/通用生成.html';
+const DEFAULT_TAB_NAME = '通用生成';

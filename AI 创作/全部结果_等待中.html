@@ -146,6 +146,29 @@
             margin-top: 2px;
         }
 
+        .status-tag {
+            display: inline-flex;
+            align-items: center;
+            height: 22px;
+            padding: 0 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1;
+        }
+
+        .status-tag-waiting {
+            background: #e6f4ff;
+            border: 1px solid #91caff;
+            color: #1677ff;
+        }
+
+        .status-tag-warning {
+            background: #fff7e6;
+            border: 1px solid #ffd591;
+            color: #d46b08;
+        }
+
         .batch-actions {
             display: inline-flex;
             align-items: center;
@@ -227,28 +250,16 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
 
-        .pills.single-ratio {
-            background: transparent;
-            border: none;
-            padding: 0;
-            gap: 0;
-        }
-
-        .pills.single-ratio .pill {
-            padding: 0;
-            color: var(--text-hi);
-        }
-
-        .pills.single-ratio .pill.on {
+        .pill-single {
             background: transparent;
             box-shadow: none;
+            padding: 0;
+            color: var(--text-lo);
+            cursor: default;
         }
 
-        .pills.single-ratio .pill-n {
-            background: transparent;
-            padding: 0;
-            margin-left: 0;
-            color: var(--text-muted);
+        .pill-single:hover {
+            color: var(--text-lo);
         }
 
         .pill-n {
@@ -260,6 +271,7 @@
             margin-left: 1px;
         }
         .pill.on .pill-n { background: var(--bg-hover); color: var(--text-lo); }
+        .pill-single .pill-n { background: transparent; padding: 0; }
 
         /* ── Buttons ── */
         .b {
@@ -344,6 +356,28 @@
         .ratio-pills { }
 
         /* ── Image Grid ── */
+        .model-group {
+            margin-bottom: var(--space-5);
+        }
+
+        .model-group-head {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-3);
+        }
+
+        .model-group-title {
+            font-size: var(--text-md);
+            font-weight: 600;
+            color: var(--text-hi);
+        }
+
+        .model-group-count {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+        }
+
         .grid-row {
             display: flex;
             gap: var(--space-2);
@@ -361,27 +395,23 @@
             position: relative;
             border-radius: var(--r-lg);
             overflow: hidden;
-            cursor: pointer;
+            cursor: default;
             flex-shrink: 0;
-            transition: transform var(--ease), box-shadow var(--ease);
+            transition: none;
         }
 
         .img-item:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-2);
-            z-index: 1;
+            transform: none;
+            box-shadow: none;
+            z-index: auto;
         }
 
         .img-block {
             width: 100%;
             height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: var(--text-sm);
-            font-weight: 500;
-            color: rgba(255,255,255,0.8);
+            display: block;
             user-select: none;
+            pointer-events: none;
         }
 
         /* ── Overlay ── */
@@ -389,8 +419,9 @@
             position: absolute;
             inset: 0;
             opacity: 0;
-            transition: opacity 0.2s;
+            transition: none;
             pointer-events: none;
+            display: none;
         }
 
         .img-overlay::after {
@@ -419,6 +450,34 @@
 
         body.batch-mode .img-item .thumb-overlay {
             display: none;
+        }
+
+        .batch-preview-btn {
+            position: absolute;
+            right: var(--space-2);
+            bottom: var(--space-2);
+            z-index: 3;
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: var(--r-full);
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background var(--ease), transform var(--ease);
+        }
+
+        .batch-preview-btn:hover {
+            background: rgba(0, 0, 0, 0.68);
+            transform: translateY(-1px);
+        }
+
+        body.batch-mode .img-item:not(.is-loading):hover .batch-preview-btn,
+        body.batch-mode .img-item.selected:not(.is-loading) .batch-preview-btn {
+            display: inline-flex;
         }
 
         /* ── Checkbox (batch mode) ── */
@@ -457,34 +516,6 @@
         .img-item.selected {
             outline: 2px solid var(--accent-solid);
             outline-offset: -2px;
-        }
-
-        .batch-preview-btn {
-            position: absolute;
-            right: var(--space-2);
-            bottom: var(--space-2);
-            z-index: 3;
-            width: 28px;
-            height: 28px;
-            border: none;
-            border-radius: var(--r-full);
-            background: rgba(0, 0, 0, 0.5);
-            color: #fff;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background var(--ease), transform var(--ease);
-        }
-
-        .batch-preview-btn:hover {
-            background: rgba(0, 0, 0, 0.68);
-            transform: translateY(-1px);
-        }
-
-        body.batch-mode .img-item:not(.is-loading):hover .batch-preview-btn,
-        body.batch-mode .img-item.selected:not(.is-loading) .batch-preview-btn {
-            display: inline-flex;
         }
 
         /* ── Modal Overlay ── */
@@ -611,6 +642,13 @@
             display: inline-flex;
             align-items: center;
         }
+
+        .card-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
         .badge-default { background: var(--bg-subtle); color: var(--text-lo); }
         .badge-accent  { background: var(--accent-bg); color: var(--accent-text); }
 
@@ -680,32 +718,9 @@
             color: var(--text-hi);
         }
 
-        .page-toast {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 10px 16px;
-            border-radius: var(--r-lg);
-            background: rgba(33, 37, 41, 0.88);
-            color: #fff;
-            font-size: var(--text-md);
-            line-height: 1;
-            box-shadow: var(--shadow-2);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 160ms ease;
-            z-index: 1200;
-        }
-
-        .page-toast.visible {
-            opacity: 1;
-        }
-
     </style>
 </head>
 <body>
-<div class="page-toast" id="pageToast"></div>
 
 <!-- ══════════════════════════════════════════
      Toolbar
@@ -714,7 +729,10 @@
     <!-- Row 1: Title -->
     <div class="row row-pad row-sep">
         <div style="min-width:0;flex:1;">
-            <div class="card-title" id="cardTitle"></div>
+            <div class="card-title-wrap">
+                <div class="card-title" id="cardTitle"></div>
+                <span class="badge badge-default" id="cardStatusBadge">等待中</span>
+            </div>
             <div class="card-subtitle" id="cardSubtitle"></div>
         </div>
     </div>
@@ -736,14 +754,13 @@
         <div class="pills ratio-pills" id="ratioTabs"></div>
 
         <div class="row-end" id="toolbarActions">
-            <!-- Density toggle -->
-            <div class="pills">
+            <div class="pills" id="densityGroup">
                 <button class="pill" onclick="setDensity('sparse',this)">大</button>
                 <button class="pill on" onclick="setDensity('medium',this)">中</button>
                 <button class="pill" onclick="setDensity('dense',this)">小</button>
             </div>
-            <div class="sep"></div>
-            <button class="b b-danger" id="abortBtn" onclick="abortGeneration()">中止生成</button>
+            <div class="sep" id="densitySep"></div>
+            <button class="b b-danger" id="abortBtn" onclick="openAbortConfirm()">中止生成</button>
             <button class="b b-soft" id="dlAllBtn" onclick="downloadAll()" style="display:none;">下载全部</button>
             <button class="b b-solid" id="batchBtn" onclick="toggleBatch()" style="display:none;">批量选择</button>
 
@@ -752,13 +769,6 @@
                 <span class="sel-count" id="selCount">已选 0 项</span>
                 <button class="b b-soft" id="selAllBtn" onclick="selectAll()">全选</button>
                 <button class="b b-soft" onclick="batchDownload()">下载</button>
-                <div class="archive-wrap">
-                    <button class="b b-soft" onclick="toggleArchiveMenu(this)">
-                        <svg width="14" height="14" viewBox="0 0 1024 1024" fill="currentColor"><path d="M102.4 69.12h819.2l102.4 204.8v716.8h-51.2H0v-716.8l102.4-204.8z m819.2 302.08H102.4v512h819.2v-512z m-22.016-107.52l-50.176-93.184H174.08l-50.176 93.184h775.68z"/><path d="M558.592 632.32h114.688l-153.088 153.088-152.576-153.088h114.688V479.232h76.288v153.088z"/></svg>
-                        入库
-                    </button>
-                    <div class="archive-dropdown"></div>
-                </div>
             </div>
         </div>
     </div>
@@ -798,10 +808,27 @@
                 <div class="confirm-desc" id="cfmDesc">此操作不可撤销，图像将被永久删除。</div>
             </div>
         </div>
-        <!-- Confirm delete buttons -->
         <div class="confirm-footer">
             <button class="b b-soft" onclick="closeCfm()">取消</button>
             <button class="b b-danger" onclick="execDelete()">删除</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-mask" id="abortConfirmMask" onclick="if(event.target===this)closeAbortConfirm()">
+    <div class="confirm-box">
+        <div class="confirm-head">
+            <div class="confirm-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+            <div>
+                <div class="confirm-title">是否中止生成？</div>
+                <div class="confirm-desc">中止后当前页面将切换为已中止状态，结果区清空。</div>
+            </div>
+        </div>
+        <div class="confirm-footer">
+            <button class="b b-soft" onclick="closeAbortConfirm()">取消</button>
+            <button class="b b-solid" onclick="confirmAbortGeneration()">确认</button>
         </div>
     </div>
 </div>
@@ -812,19 +839,18 @@
 // ═══════════════════════════════════════════════════
 const PAGE_INFO = {
     entry:   '通用生成',          // '通用生成' 或 '工作流：xxx'
-    type:    'video',             // 'image' | 'video'
+    type:    'image',             // 'image' | 'video'
     prompt:  '在阳光明媚的草地上奔跑的金毛寻回犬，毛发蓬松，背景虚化，高清写实风格，自然光照',
     refs:    [
         { color: '#FF6B6B', name: '参考图 1' },
         { color: '#4ECDC4', name: '参考图 2' },
     ],
-    model:   'Seedance 2.0',
+    model:   'Seedream 5.0',
     settings: {
-        ratios:   ['9:16', '16:9', '1:1'],
-        clarity:  null,     // image only；视频传 null
-        duration: '5s',     // video only；图片传 null
+        ratios:   ['9:16'],
+        clarity:  '2K',     // image only；视频传 null
+        duration: null,     // video only；图片传 null
     },
-    videoMode: '首尾帧',
     project: '走路赚金币',  // 无项目时传 null
 };
 
@@ -833,19 +859,17 @@ function renderInfo() {
     const totalCount = images.length;
 
     // Row 1: title + subtitle
-    document.getElementById('cardTitle').textContent = '生成结果 · ' + totalCount + ' 条';
+    const statusText = generationAborted ? '已中止' : '正在生成';
+    const statusClass = generationAborted ? 'status-tag-warning' : 'status-tag-waiting';
+    document.getElementById('cardTitle').textContent = `已生成:${totalCount}条`;
+    document.getElementById('cardStatusBadge').className = `status-tag ${statusClass}`;
+    document.getElementById('cardStatusBadge').textContent = statusText;
     const parts = [];
     if (p.project) parts.push(p.project);
-    if (p.type === 'video') {
-        const videoParts = [p.entry, '视频'];
-        if (p.videoMode) videoParts.push(p.videoMode);
-        if (p.settings.duration) videoParts.push(p.settings.duration);
-        parts.push(videoParts.join('·'));
-    } else {
-        parts.push(p.entry);
-        parts.push('图片');
-        if (p.settings.clarity) parts.push(p.settings.clarity);
-    }
+    parts.push(p.entry);
+    parts.push(p.type === 'image' ? '图片' : '视频');
+    if (p.type === 'image' && p.settings.clarity) parts.push(p.settings.clarity);
+    if (p.type === 'video' && p.settings.duration) parts.push('时长 ' + p.settings.duration);
     document.getElementById('cardSubtitle').textContent = parts.join(' · ');
 
     // Row 2: prompt
@@ -883,31 +907,20 @@ function openRefPreview(idx) {
 }
 
 // ═══════════════════════════════════════════════════
-// Mock Data — 16 images, 3 ratio groups
+// Mock Data — 7 images, single ratio
 // ═══════════════════════════════════════════════════
 const COLORS = [
-    '#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD',
-    '#FF8C69','#6C5CE7','#00B894','#FD79A8','#FDCB6E','#74B9FF',
-    '#A29BFE','#55EFC4','#E17055','#81ECEC'
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#FF8C69'
 ];
 
 let images = [
-    { id:1,  ratio:'9:16',  ar:9/16,  color:COLORS[0],  name:'竖屏-001', model:'Seedance 2.0' },
-    { id:2,  ratio:'9:16',  ar:9/16,  color:COLORS[1],  name:'竖屏-002', model:'Seedance 2.0' },
-    { id:3,  ratio:'9:16',  ar:9/16,  color:COLORS[2],  name:'竖屏-003', model:'Seedance 2.0' },
-    { id:4,  ratio:'9:16',  ar:9/16,  color:COLORS[3],  name:'竖屏-004', model:'Seedance 2.0' },
-    { id:5,  ratio:'9:16',  ar:9/16,  color:COLORS[4],  name:'竖屏-005', model:'Seedance 2.0' },
-    { id:6,  ratio:'9:16',  ar:9/16,  color:COLORS[5],  name:'竖屏-006', model:'Seedance 2.0' },
-    { id:7,  ratio:'16:9',  ar:16/9,  color:COLORS[6],  name:'横屏-001', model:'Seedance 2.0' },
-    { id:8,  ratio:'16:9',  ar:16/9,  color:COLORS[7],  name:'横屏-002', model:'Seedance 2.0' },
-    { id:9,  ratio:'16:9',  ar:16/9,  color:COLORS[8],  name:'横屏-003', model:'Seedance 2.0' },
-    { id:10, ratio:'16:9',  ar:16/9,  color:COLORS[9],  name:'横屏-004', model:'Seedance 2.0' },
-    { id:11, ratio:'16:9',  ar:16/9,  color:COLORS[10], name:'横屏-005', model:'Seedance 2.0' },
-    { id:12, ratio:'16:9',  ar:16/9,  color:COLORS[11], name:'横屏-006', model:'Seedance 2.0' },
-    { id:13, ratio:'1:1',   ar:1,     color:COLORS[12], name:'方图-001', model:'Seedance 2.0' },
-    { id:14, ratio:'1:1',   ar:1,     color:COLORS[13], name:'方图-002', model:'Seedance 2.0' },
-    { id:15, ratio:'1:1',   ar:1,     color:COLORS[14], name:'方图-003', model:'Seedance 2.0' },
-    { id:16, ratio:'1:1',   ar:1,     color:COLORS[15], name:'方图-004', model:'Seedance 2.0' },
+    { id: 1, ratio: '9:16', ar: 9 / 16, color: COLORS[0], name: '竖屏-001', model: 'Seedream 5.0', status: 'pending' },
+    { id: 2, ratio: '9:16', ar: 9 / 16, color: COLORS[1], name: '竖屏-002', model: 'Seedream 5.0', status: 'pending' },
+    { id: 3, ratio: '9:16', ar: 9 / 16, color: COLORS[2], name: '竖屏-003', model: 'Seedream 5.0', status: 'pending' },
+    { id: 4, ratio: '9:16', ar: 9 / 16, color: COLORS[3], name: '竖屏-004', model: 'Seedream 5.0', status: 'pending' },
+    { id: 5, ratio: '9:16', ar: 9 / 16, color: COLORS[4], name: '竖屏-005', model: 'Seedream 5.0', status: 'pending' },
+    { id: 6, ratio: '9:16', ar: 9 / 16, color: COLORS[5], name: '竖屏-006', model: 'Seedream 5.0', status: 'pending' },
+    { id: 7, ratio: '9:16', ar: 9 / 16, color: COLORS[6], name: '竖屏-007', model: 'Seedream 5.0', status: 'pending' },
 ];
 
 function previewUrlFor(item) {
@@ -982,18 +995,33 @@ function filtered() {
 
 function renderModelTabs() {
     const el = document.getElementById('modelChips');
+    const models = [...new Set(images.map(i => i.model))];
+
     const sep1 = document.getElementById('filterSep1');
+    if (!models.length) { el.style.display = 'none'; sep1.style.display = 'none'; return; }
 
     el.style.display = 'flex';
     sep1.style.display = '';
     el.innerHTML = '';
 
-    const b = document.createElement('button');
-    b.className = 'chip on';
-    b.textContent = 'Seedance 2.0';
-    el.appendChild(b);
+    const mk = (text, key, extraClass = '') => {
+        const b = document.createElement('button');
+        b.className = 'chip' + (curModel === key ? ' on' : '') + (extraClass ? ' ' + extraClass : '');
+        b.innerHTML = text;
+        if (!extraClass) b.onclick = () => { curModel = key; curRatio = 'all'; render(); };
+        else b.type = 'button';
+        el.appendChild(b);
+    };
 
-    curModel = 'all';
+    if (models.length === 1) {
+        curModel = models[0];
+        mk(models[0], models[0], 'pill-single');
+        return;
+    }
+
+    if (curModel !== 'all' && !models.includes(curModel)) curModel = 'all';
+    mk('全部模型', 'all');
+    models.forEach(m => mk(m, m));
 }
 
 function renderTabs() {
@@ -1004,44 +1032,42 @@ function renderTabs() {
     base.forEach(i => counts[i.ratio] = (counts[i.ratio] || 0) + 1);
     const ratios = Object.keys(counts);
 
+    // 只有一个比例时只显示该比例，不显示“全部比例”
     const sep2 = document.getElementById('filterSep2');
+    if (!ratios.length) { el.style.display = 'none'; if (sep2) sep2.style.display = 'none'; return; }
 
     el.style.display = 'inline-flex';
     if (sep2) sep2.style.display = '';
     el.innerHTML = '';
-    el.classList.toggle('single-ratio', ratios.length === 1);
 
-    const mk = (label, key) => {
+    const mk = (label, key, extraClass = '') => {
         const b = document.createElement('button');
-        b.className = 'pill' + (curRatio === key ? ' on' : '');
+        b.className = 'pill' + (curRatio === key ? ' on' : '') + (extraClass ? ' ' + extraClass : '');
         b.innerHTML = label;
-        b.onclick = () => { curRatio = key; render(); };
+        if (!extraClass) b.onclick = () => { curRatio = key; render(); };
+        else b.type = 'button';
         el.appendChild(b);
     };
 
-    if (ratios.length > 1) {
-        mk(`全部比例`, 'all');
-    } else if (ratios.length === 1 && curRatio === 'all') {
-        curRatio = ratios[0];
+    if (ratios.length === 1) {
+        if (curRatio === 'all') curRatio = ratios[0];
+        mk(`${ratios[0]} <span class="pill-n"></span>`, ratios[0], 'pill-single');
+        return;
     }
 
-    ratios.forEach(r => mk(r, r));
+    if (curRatio !== 'all' && !counts[curRatio]) curRatio = 'all';
+    mk(`全部比例`, 'all');
+    ratios.forEach(r => mk(`${r} <span class="pill-n"></span>`, r));
 }
 
-function getLoadingIds(cw, sourceItems) {
-    if (generationAborted) return new Set();
-    const rows = justify(sourceItems, cw, ROW_H[density]);
-    const ids = new Set();
-
-    rows.forEach((row, rowIndex) => {
-        const firstRowSuccessCount = rowIndex === 0 ? Math.floor(row.items.length / 2) : 0;
-        row.items.forEach((item, itemIndex) => {
-            const isLoading = (rowIndex === 0 && itemIndex >= firstRowSuccessCount) || rowIndex === 1;
-            if (isLoading) ids.add(item.id);
-        });
+function renderRows(container, list, cw) {
+    const rows = justify(list, cw, ROW_H[density]);
+    rows.forEach(row => {
+        const rowEl = document.createElement('div');
+        rowEl.className = row.last ? 'grid-row-last' : 'grid-row';
+        row.items.forEach(item => rowEl.appendChild(mkCard(item)));
+        container.appendChild(rowEl);
     });
-
-    return ids;
 }
 
 function renderGrid() {
@@ -1049,50 +1075,43 @@ function renderGrid() {
     const cw = container.offsetWidth;
     if (!cw) return;
 
-    const sourceItems = filtered();
-    const loadingIds = getLoadingIds(cw, sourceItems);
-    const rows = justify(sourceItems, cw, ROW_H[density]);
+    const list = filtered();
     container.innerHTML = '';
 
-    rows.forEach(row => {
-        const rowEl = document.createElement('div');
-        rowEl.className = row.last ? 'grid-row-last' : 'grid-row';
-
-        row.items.forEach(item => {
-            rowEl.appendChild(mkCard(item, loadingIds.has(item.id)));
-        });
-        container.appendChild(rowEl);
+    const models = curModel === 'all' ? [...new Set(list.map(i => i.model))] : [curModel];
+    models.forEach(model => {
+        const items = list.filter(i => i.model === model);
+        if (!items.length) return;
+        const group = document.createElement('section');
+        group.className = 'model-group';
+        group.innerHTML = `
+            <div class="model-group-head">
+                <div class="model-group-title">${model}</div>
+                <div class="model-group-count">${items.length} 张</div>
+            </div>
+        `;
+        renderRows(group, items, cw);
+        container.appendChild(group);
     });
 }
 
-function mkCard(item, isLoading) {
+function mkCard(item) {
     const el = document.createElement('div');
-    el.className = 'img-item cc-thumb-host' + (selected.has(item.id) ? ' selected' : '') + (isLoading ? ' is-loading' : '');
+    el.className = 'img-item cc-thumb-host' + (selected.has(item.id) ? ' selected' : '');
     el.style.width  = Math.round(item.w) + 'px';
     el.style.height = Math.round(item.h) + 'px';
     el.dataset.id = item.id;
 
-    const contentHtml = isLoading
-        ? `<div class="cc-img-loading-thumb" style="width:100%;height:100%;"><div class="cc-img-loading-spinner"></div></div>`
-        : `<div class="img-block" style="background:linear-gradient(135deg,${item.color}dd,${item.color})">${item.name}</div>`;
-
-    const batchPreviewBtn = !isLoading
-        ? `<button class="batch-preview-btn" title="预览" onclick="event.stopPropagation();openPreview(find(${item.id}))">${ico.eye}</button>`
-        : '';
+    const contentHtml = `<div class="img-block"><div class="cc-img-pending-thumb" style="width:100%;height:100%;"></div></div>`;
 
     el.innerHTML = `
         ${contentHtml}
         <div class="img-cb${selected.has(item.id) ? ' checked' : ''}" data-cb="1">${ico.chk}</div>
-        ${batchPreviewBtn}
-        ${isLoading ? '' : thumbOverlayHtml('', `event.stopPropagation();dlItem(${item.id})`)}
     `;
 
-    el.addEventListener('click', e => {
-        if (!isLoading && e.target.closest('[data-ib], .batch-preview-btn')) return;
+    el.addEventListener('click', () => {
         if (batchMode) {
             toggleSel(item.id);
-        } else if (!isLoading) {
-            openPreview(item);
         }
     });
 
@@ -1165,30 +1184,38 @@ function updateSelCount() {
 }
 
 function updateToolbarActions() {
-    const container = document.getElementById('grid');
-    const cw = container ? container.offsetWidth : 0;
-    const hasLoading = cw ? getLoadingIds(cw, filtered()).size > 0 : !generationAborted;
+    const densityGroup = document.getElementById('densityGroup');
+    const densitySep = document.getElementById('densitySep');
     const abortBtn = document.getElementById('abortBtn');
     const dlAll = document.getElementById('dlAllBtn');
     const batchBtn = document.getElementById('batchBtn');
     const batchBar = document.getElementById('batchBar');
 
-    abortBtn.style.display = hasLoading ? '' : 'none';
-    dlAll.style.display = hasLoading || batchMode ? 'none' : '';
-    batchBtn.style.display = hasLoading ? 'none' : '';
-    if (hasLoading) batchBar.style.display = 'none';
+    if (densityGroup) densityGroup.style.display = generationAborted ? 'none' : 'inline-flex';
+    if (densitySep) densitySep.style.display = generationAborted ? 'none' : '';
+    abortBtn.style.display = generationAborted ? 'none' : '';
+    dlAll.style.display = 'none';
+    batchBtn.style.display = 'none';
+    if (batchBar) batchBar.style.display = 'none';
+}
+
+function openAbortConfirm() {
+    document.getElementById('abortConfirmMask').classList.add('visible');
+}
+
+function closeAbortConfirm() {
+    document.getElementById('abortConfirmMask').classList.remove('visible');
+}
+
+function confirmAbortGeneration() {
+    closeAbortConfirm();
+    abortGeneration();
 }
 
 function abortGeneration() {
-    const container = document.getElementById('grid');
-    const cw = container ? container.offsetWidth : 0;
-    const loadingIds = cw ? getLoadingIds(cw, filtered()) : new Set();
-
-    images = images.filter(item => !loadingIds.has(item.id));
-    selected.forEach(id => {
-        if (loadingIds.has(id)) selected.delete(id);
-    });
     generationAborted = true;
+    images = [];
+    selected.clear();
     batchMode = false;
     document.body.classList.remove('batch-mode');
     updateSelCount();
@@ -1318,12 +1345,7 @@ function closePreview() {
 // ═══════════════════════════════════════════════════
 // Master render
 // ═══════════════════════════════════════════════════
-function render() {
-    renderModelTabs();
-    renderTabs();
-    renderGrid();
-    updateToolbarActions();
-}
+function render() { renderModelTabs(); renderTabs(); renderGrid(); updateToolbarActions(); }
 
 let _rt;
 window.addEventListener('resize', () => { clearTimeout(_rt); _rt = setTimeout(renderGrid, 100); });
@@ -1341,7 +1363,7 @@ function showToast(msg) {
     clearTimeout(_toastTimer);
     _toastTimer = setTimeout(() => {
         el.classList.remove('visible');
-    }, 1600);
+    }, 1800);
 }
 initImagePreview();
 </script>
