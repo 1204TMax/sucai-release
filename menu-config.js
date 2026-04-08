@@ -42,28 +42,7 @@ const MENU_CONFIG = [
   {
     id: 'material',
     name: '素材管理',
-    children: [
-      {
-        name: '素材库',
-        page: '素材管理/素材库.html',
-        icon: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><circle cx="15.5" cy="8.5" r="1.5"></circle><circle cx="15.5" cy="15.5" r="1.5"></circle><circle cx="8.5" cy="15.5" r="1.5"></circle>'
-      },
-      {
-        name: '物料库',
-        page: '素材管理/物料库.html',
-        icon: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>'
-      },
-      {
-        name: '手动合成',
-        page: '共享样式/该需求暂未完成.html',
-        icon: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>'
-      },
-      {
-        name: '自动合成',
-        page: '共享样式/该需求暂未完成.html',
-        icon: '<polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>'
-      }
-    ]
+    children: []
   },
 ];
 
